@@ -230,6 +230,87 @@ const PhotoGridItem = ({ config, className = '', onClick, isInteractive = true, 
   )
 }
 
+
+
+// Optimized game card component
+const GameCard = ({ game, className = '' }) => {
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
+
+  return (
+    <div className={`max-w-4xl mx-auto ${className}`}>
+      <div className="bg-[#CD5C5C] rounded-3xl p-6 md:p-12 shadow-2xl relative overflow-hidden">
+        {/* Game Tag */}
+        <div className="inline-block bg-white text-black px-4 py-2 rounded-full text-sm font-medium mb-4 md:mb-8 border border-black">
+          {game.tag}
+        </div>
+
+        {/* Desktop Layout: Image Left, Content Right */}
+        <div className="md:flex md:items-center md:gap-12">
+          {/* Left Side - Illustration Section */}
+          <div className="md:w-1/2 relative mb-4 md:mb-0">
+            {/* Light blob background */}
+            <div className="w-48 md:w-64 h-32 md:h-40 mx-auto md:mx-0 md:ml-8 bg-white/20 rounded-full blur-sm mb-3 md:mb-4"></div>
+            
+            {/* Main illustration with figures */}
+            <div className="relative z-10">
+              {!imageLoaded && !imageError && (
+                <div className="w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 bg-white/20 rounded-2xl flex items-center justify-center image-loading">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                </div>
+              )}
+              
+              {!imageError ? (
+                <img 
+                  src="/object.svg" 
+                  alt="Guess My Ganesha Game Illustration" 
+                  className={`w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 object-contain transition-opacity duration-300 ${
+                    imageLoaded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <div className="w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <div className="text-4xl mb-2">🎮</div>
+                    <p className="text-sm">Game Illustration</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Floating question marks - restored to original inline positioning */}
+            <div className="absolute top-0 left-8 md:left-20 text-3xl md:text-4xl text-orange-300 animate-bounce">?</div>
+            <div className="absolute top-4 right-12 md:right-24 text-2xl md:text-3xl text-orange-200 animate-bounce-delay-1">?</div>
+            <div className="absolute bottom-8 left-16 md:left-28 text-xl md:text-2xl text-orange-100 animate-bounce-delay-2">?</div>
+          </div>
+
+          {/* Right Side - Content */}
+          <div className="md:w-1/2 md:text-left text-center">
+            {/* Game Title */}
+            <h3 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-6">
+              {game.title}
+            </h3>
+
+            {/* Game Description */}
+            <p className="text-white/90 mb-6 md:mb-10 text-sm md:text-base leading-relaxed max-w-sm md:max-w-lg mx-auto md:mx-0">
+              {game.description}
+            </p>
+
+            {/* Play Now Button */}
+            <Link href="/games">
+              <Button className="bg-black hover:bg-gray-800 text-white px-8 md:px-12 py-4 md:py-5 rounded-full text-lg md:text-xl font-semibold w-full md:w-auto transition-all duration-300 hover:scale-105 shadow-lg">
+                Play Now
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const { user, loading } = useSupabaseAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -354,6 +435,17 @@ export default function Home() {
                 <GradientHeading>{SITE_CONFIG.tagline}</GradientHeading>
               </h1>
 
+              {/* Mobile: Ganesh Image below heading */}
+              <div className="lg:hidden flex justify-center mb-6">
+                <div className="relative">
+                  <img 
+                    src={SITE_CONFIG.heroImage} 
+                    alt={SITE_CONFIG.heroImageAlt} 
+                    className="w-80 h-80 object-contain"
+                  />
+                </div>
+              </div>
+
               <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
                 {SITE_CONFIG.description}
               </p>
@@ -363,13 +455,13 @@ export default function Home() {
               </CTAButton>
             </div>
 
-            {/* Right Image */}
-            <div className="flex justify-center lg:justify-end">
+            {/* Desktop: Right Image */}
+            <div className="hidden lg:flex justify-end">
               <div className="relative">
                 <img 
                   src={SITE_CONFIG.heroImage} 
                   alt={SITE_CONFIG.heroImageAlt} 
-                  className="w-96 h-96 md:w-[500px] md:h-[500px] object-contain"
+                  className="w-[500px] h-[500px] object-contain"
                 />
               </div>
             </div>
@@ -394,57 +486,7 @@ export default function Home() {
           </p>
 
           {/* Game Card - Updated Design */}
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-[#CD5C5C] rounded-3xl p-6 md:p-12 shadow-2xl relative overflow-hidden">
-              {/* Game Tag */}
-              <div className="inline-block bg-white text-black px-4 py-2 rounded-full text-sm font-medium mb-4 md:mb-8 border border-black">
-                {GAME_CONFIG.game.tag}
-              </div>
-
-              {/* Desktop Layout: Image Left, Content Right */}
-              <div className="md:flex md:items-center md:gap-12">
-                {/* Left Side - Illustration Section */}
-                <div className="md:w-1/2 relative mb-4 md:mb-0">
-                  {/* Light blob background */}
-                  <div className="w-48 md:w-64 h-32 md:h-40 mx-auto md:mx-0 md:ml-8 bg-white/20 rounded-full blur-sm mb-3 md:mb-4"></div>
-                  
-                  {/* Main illustration with figures */}
-                  <div className="relative z-10">
-                    <img 
-                      src="/object.svg" 
-                      alt="Guess My Ganesha Game Illustration" 
-                      className="w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 object-contain"
-                    />
-                  </div>
-
-                  {/* Floating question marks */}
-                  <div className="absolute top-0 left-8 md:left-20 text-3xl md:text-4xl text-orange-300 animate-bounce">?</div>
-                  <div className="absolute top-4 right-12 md:right-24 text-2xl md:text-3xl text-orange-200 animate-bounce" style={{animationDelay: '0.5s'}}>?</div>
-                  <div className="absolute bottom-8 left-16 md:left-28 text-xl md:text-2xl text-orange-100 animate-bounce" style={{animationDelay: '1s'}}>?</div>
-                </div>
-
-                {/* Right Side - Content */}
-                <div className="md:w-1/2 md:text-left text-center">
-                  {/* Game Title */}
-                  <h3 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-6">
-                    {GAME_CONFIG.game.title}
-                  </h3>
-
-                  {/* Game Description */}
-                  <p className="text-white/90 mb-6 md:mb-10 text-sm md:text-base leading-relaxed max-w-sm md:max-w-lg mx-auto md:mx-0">
-                    {GAME_CONFIG.game.description}
-                  </p>
-
-                  {/* Play Now Button */}
-                  <Link href="/games">
-                    <Button className="bg-black hover:bg-gray-800 text-white px-8 md:px-12 py-4 md:py-5 rounded-full text-lg md:text-xl font-semibold w-full md:w-auto transition-all duration-300 hover:scale-105 shadow-lg">
-                      Play Now
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
+          <GameCard game={GAME_CONFIG.game} />
         </div>
       </section>
 
@@ -542,7 +584,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             {/* Left - Logo and Copyright */}
             <div className="space-y-4">
-              <div className="text-2xl font-bold text-[#8B4513]">
+              <div className="text-2xl font-bold text-[#DE4E1C]">
                 {SITE_CONFIG.title}
               </div>
               <p className="text-gray-400">

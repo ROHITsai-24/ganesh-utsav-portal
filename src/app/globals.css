@@ -291,6 +291,15 @@ html {
   animation: bounce 2s infinite;
 }
 
+/* Delayed bounce animations for question marks */
+.animate-bounce-delay-1 {
+  animation: bounce 2s infinite 0.5s;
+}
+
+.animate-bounce-delay-2 {
+  animation: bounce 2s infinite 1s;
+}
+
 /* Pulse animation for the orbs */
 @keyframes pulse {
   0%, 100% {
@@ -335,4 +344,31 @@ html {
 
 .hover\:shadow-xl:hover {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Loading spinner for game card */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Image loading states */
+.image-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

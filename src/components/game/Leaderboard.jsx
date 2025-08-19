@@ -1,43 +1,53 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+// Configuration object for hardcoded values
+const LEADERBOARD_CONFIG = {
+  limit: 20,
+  loadingText: 'Loading leaderboard...',
+  emptyText: 'No scores yet. Be the first to play!',
+  title: '🏆 Leaderboard',
+  description: 'Top players by total score',
+  // Medal colors and styles
+  medals: {
+    0: { bg: 'bg-yellow-50', border: 'border-yellow-200', badge: 'bg-yellow-400' },
+    1: { bg: 'bg-gray-50', border: 'border-gray-200', badge: 'bg-gray-400' },
+    2: { bg: 'bg-orange-50', border: 'border-orange-200', badge: 'bg-orange-400' },
+    default: { bg: 'bg-white', border: 'border-gray-100', badge: 'bg-blue-100 text-blue-800' }
+  }
+}
 
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // Test database connection first
-    const testConnection = async () => {
-      try {
-        console.log('Testing database connection...')
-        const { data, error } = await supabase
-          .from('game_results')
-          .select('count')
-          .limit(1)
-        
-        if (error) {
-          console.error('Database connection test failed:', error)
-        } else {
-          console.log('Database connection successful')
-          fetchLeaderboard()
-        }
-      } catch (error) {
-        console.error('Connection test error:', error)
+  // Memoized function to test database connection
+  const testConnection = useCallback(async () => {
+    try {
+      console.log('Testing database connection...')
+      const { data, error } = await supabase
+        .from('game_results')
+        .select('count')
+        .limit(1)
+      
+      if (error) {
+        console.error('Database connection test failed:', error)
+      } else {
+        console.log('Database connection successful')
+        fetchLeaderboard()
       }
+    } catch (error) {
+      console.error('Connection test error:', error)
     }
-    
-    testConnection()
   }, [])
 
-  const fetchLeaderboard = async () => {
+  // Memoized function to fetch leaderboard data
+  const fetchLeaderboard = useCallback(async () => {
     try {
       console.log('Fetching leaderboard data...')
-      
-      // Query the new unified game_results table
-      console.log('Attempting to fetch game results...')
       
       const { data, error } = await supabase
         .from('game_results')
@@ -46,7 +56,7 @@ export default function Leaderboard() {
           games!inner (name, key)
         `)
         .order('created_at', { ascending: false })
-        .limit(20)
+        .limit(LEADERBOARD_CONFIG.limit)
 
       if (error) {
         console.error('Supabase query error:', error)
@@ -102,63 +112,82 @@ export default function Leaderboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  // Memoized function to get medal styling
+  const getMedalStyle = useCallback((index) => {
+    const medal = LEADERBOARD_CONFIG.medals[index] || LEADERBOARD_CONFIG.medals.default
+    return {
+      container: `${medal.bg} border ${medal.border}`,
+      badge: medal.badge
+    }
+  }, [])
+
+  // Memoized function to format games played text
+  const formatGamesPlayed = useCallback((count) => {
+    return `${count} game${count !== 1 ? 's' : ''} played`
+  }, [])
+
+  useEffect(() => {
+    testConnection()
+  }, [testConnection])
+
+  // Memoized loading component
+  const LoadingComponent = useMemo(() => (
+    <Card>
+      <CardContent className="p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">{LEADERBOARD_CONFIG.loadingText}</p>
+        </div>
+      </CardContent>
+    </Card>
+  ), [])
+
+  // Memoized empty state component
+  const EmptyStateComponent = useMemo(() => (
+    <p className="text-center text-gray-500">{LEADERBOARD_CONFIG.emptyText}</p>
+  ), [])
 
   if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading leaderboard...</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
+    return LoadingComponent
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>🏆 Leaderboard</CardTitle>
-        <CardDescription>Top players by total score</CardDescription>
+        <CardTitle>{LEADERBOARD_CONFIG.title}</CardTitle>
+        <CardDescription>{LEADERBOARD_CONFIG.description}</CardDescription>
       </CardHeader>
       <CardContent>
         {leaderboard.length === 0 ? (
-          <p className="text-center text-gray-500">No scores yet. Be the first to play!</p>
+          EmptyStateComponent
         ) : (
           <div className="space-y-3">
-            {leaderboard.map((player, index) => (
-              <div
-                key={player.user}
-                className={`flex items-center justify-between p-3 rounded-lg ${
-                  index === 0 ? 'bg-yellow-50 border border-yellow-200' :
-                  index === 1 ? 'bg-gray-50 border border-gray-200' :
-                  index === 2 ? 'bg-orange-50 border border-orange-200' :
-                  'bg-white border border-gray-100'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    index === 0 ? 'bg-yellow-400 text-white' :
-                    index === 1 ? 'bg-gray-400 text-white' :
-                    index === 2 ? 'bg-orange-400 text-white' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
-                    {index + 1}
+            {leaderboard.map((player, index) => {
+              const medalStyle = getMedalStyle(index)
+              return (
+                <div
+                  key={player.user}
+                  className={`flex items-center justify-between p-3 rounded-lg ${medalStyle.container}`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${medalStyle.badge}`}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{player.user}</p>
+                      <p className="text-sm text-gray-500">
+                        {formatGamesPlayed(player.gamesPlayed)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold">{player.user}</p>
-                    <p className="text-sm text-gray-500">
-                      {player.gamesPlayed} game{player.gamesPlayed !== 1 ? 's' : ''} played
-                    </p>
+                  <div className="text-right">
+                    <p className="font-bold text-lg">{player.totalScore} pts</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-lg">{player.totalScore} pts</p>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </CardContent>

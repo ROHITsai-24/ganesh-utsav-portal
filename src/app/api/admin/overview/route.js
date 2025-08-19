@@ -5,6 +5,12 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function GET(request) {
   try {
+    // Add cache busting headers to prevent stale data
+    const response = NextResponse.next()
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
     // Prefer server-only SUPABASE_URL if present, otherwise fall back to NEXT_PUBLIC
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -39,7 +45,7 @@ export async function GET(request) {
     // Read unified game_results with games
     const { data: results, error: resErr } = await adminClient
       .from('game_results')
-      .select('id, user_id, score, duration_seconds, details, created_at, games!inner ( id, key, name )')
+      .select('id, user_id, score, details, created_at, games!inner ( id, key, name )')
     if (resErr) {
       return NextResponse.json({ error: resErr.message }, { status: 500 })
     }
@@ -82,7 +88,7 @@ export async function GET(request) {
       game_key: r.games?.key,
       game_name: r.games?.name,
       moves: r.details?.moves ?? null,
-      time_taken_seconds: r.duration_seconds ?? null,
+      time_taken_seconds: r.details?.time_taken ?? null,
       // Add user details for display
       user_email: flatUsers.find(u => u.id === r.user_id)?.email || null,
       user_username: flatUsers.find(u => u.id === r.user_id)?.username || null,

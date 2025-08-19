@@ -200,7 +200,7 @@ const LeaderboardTable = ({ gameKey, leaderboard }) => {
 
 const GameLeaderboard = ({ gameKey, rawScores }) => {
   const leaderboard = useMemo(() => {
-    return [...rawScores.filter(s => (s.game || 'guess').toLowerCase() === gameKey)]
+    return [...rawScores.filter(s => (s.game_key || 'guess').toLowerCase() === gameKey)]
       .sort((a, b) => b.score - a.score)
       .slice(0, 20)
   }, [rawScores, gameKey])
@@ -290,7 +290,7 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Refresh Button */}
+        {/* Simple Refresh Button */}
         <div className="mt-6 text-right">
           <Button variant="outline" onClick={reload}>
             {DASHBOARD_CONFIG.refresh}
