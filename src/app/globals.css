@@ -169,7 +169,7 @@
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
@@ -178,16 +178,35 @@
     transform: translateX(0);
   }
   100% {
-    transform: translateX(100%);
+    transform: translateX(50%);
   }
 }
 
 .animate-move-left {
-  animation: move-left 30s linear infinite;
+  animation: move-left 25s linear infinite;
+  will-change: transform;
 }
 
 .animate-move-right {
-  animation: move-right 30s linear infinite;
+  animation: move-right 25s linear infinite;
+  will-change: transform;
+}
+
+/* Pause animation on hover */
+.animate-move-left:hover,
+.animate-move-right:hover {
+  animation-play-state: paused;
+}
+
+/* Smooth transitions for carousel items */
+.carousel-item {
+  transition: all 0.3s ease-in-out;
+  will-change: transform, opacity;
+}
+
+.carousel-item:hover {
+  transform: scale(1.05);
+  z-index: 10;
 }
 
 /* Smooth scrolling */
@@ -222,7 +241,15 @@ html {
   
   .animate-move-left,
   .animate-move-right {
-    animation-duration: 20s;
+    animation-duration: 18s;
+  }
+  
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-move-left,
+    .animate-move-right {
+      animation: none;
+    }
   }
 }
 

@@ -38,24 +38,55 @@ const JOURNEY_CONFIG = {
   title: 'Our 5-Year Devotional Journey',
   description: 'A heartfelt collection of photos and stories chronicling a five-year journey of celebrating Ganesh Chaturthi, sharing the spirit and cherished memories of the festival.',
   years: [2020, 2021, 2022, 2023, 2024],
-  defaultYear: 2020
-}
-
-const PHOTO_GRID_CONFIG = {
-  row1: [
-    { width: 'w-96', height: 'h-56', gradient: 'from-orange-100 to-pink-100', border: 'border-orange-200', iconColor: 'text-orange-400', label: 'Festival Memory 1' },
-    { width: 'w-56', height: 'h-56', gradient: 'from-yellow-100 to-orange-100', border: 'border-yellow-200', iconColor: 'text-yellow-400', label: 'Celebration 2' },
-    { width: 'w-96', height: 'h-56', gradient: 'from-pink-100 to-red-100', border: 'border-pink-200', iconColor: 'text-pink-400', label: 'Memory 3' },
-    { width: 'w-56', height: 'h-56', gradient: 'from-green-100 to-blue-100', border: 'border-green-200', iconColor: 'text-green-400', label: 'Joy 4' },
-    { width: 'w-96', height: 'h-56', gradient: 'from-purple-100 to-indigo-100', border: 'border-purple-200', iconColor: 'text-purple-400', label: 'Festival 5' }
-  ],
-  row2: [
-    { width: 'w-56', height: 'h-56', gradient: 'from-blue-100 to-cyan-100', border: 'border-blue-200', iconColor: 'text-blue-400', label: 'Devotion 6' },
-    { width: 'w-96', height: 'h-56', gradient: 'from-indigo-100 to-purple-100', border: 'border-indigo-200', iconColor: 'text-indigo-400', label: 'Spirit 7' },
-    { width: 'w-56', height: 'h-56', gradient: 'from-teal-100 to-green-100', border: 'border-teal-200', iconColor: 'text-teal-400', label: 'Unity 8' },
-    { width: 'w-96', height: 'h-56', gradient: 'from-red-100 to-pink-100', border: 'border-red-200', iconColor: 'text-red-400', label: 'Tradition 9' },
-    { width: 'w-56', height: 'h-56', gradient: 'from-amber-100 to-yellow-100', border: 'border-amber-200', iconColor: 'text-amber-400', label: 'Blessing 10' }
-  ]
+  defaultYear: 2020,
+  // Year-specific content for the carousel
+  yearContent: {
+    2020: {
+      memories: [
+        { id: 1, title: 'First Ganesha Idol', description: 'Our inaugural celebration', image: '/memories/2020-1.jpg', gradient: 'from-orange-100 to-pink-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
+        { id: 2, title: 'Family Gathering', description: 'Loved ones coming together', image: '/memories/2020-2.jpg', gradient: 'from-yellow-100 to-orange-100', border: 'border-yellow-200', iconColor: 'text-yellow-400' },
+        { id: 3, title: 'Prayer Ceremony', description: 'Sacred moments of devotion', image: '/memories/2020-3.jpg', gradient: 'from-pink-100 to-red-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
+        { id: 4, title: 'Festival Decorations', description: 'Beautiful traditional setup', image: '/memories/2020-4.jpg', gradient: 'from-green-100 to-blue-100', border: 'border-green-200', iconColor: 'text-green-400' },
+        { id: 5, title: 'Community Celebration', description: 'Sharing joy with neighbors', image: '/memories/2020-5.jpg', gradient: 'from-purple-100 to-indigo-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
+      ]
+    },
+    2021: {
+      memories: [
+        { id: 1, title: 'Enhanced Decorations', description: 'More elaborate festival setup', image: '/memories/2021-1.jpg', gradient: 'from-blue-100 to-cyan-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
+        { id: 2, title: 'Cultural Programs', description: 'Music and dance performances', image: '/memories/2021-2.jpg', gradient: 'from-indigo-100 to-purple-100', border: 'border-indigo-200', iconColor: 'text-indigo-400' },
+        { id: 3, title: 'Youth Participation', description: 'Younger generation involvement', image: '/memories/2021-3.jpg', gradient: 'from-teal-100 to-green-100', border: 'border-teal-200', iconColor: 'text-teal-400' },
+        { id: 4, title: 'Traditional Recipes', description: 'Festival delicacies preparation', image: '/memories/2021-4.jpg', gradient: 'from-red-100 to-pink-100', border: 'border-red-200', iconColor: 'text-red-400' },
+        { id: 5, title: 'Spiritual Learning', description: 'Understanding festival significance', image: '/memories/2021-5.jpg', gradient: 'from-amber-100 to-yellow-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
+      ]
+    },
+    2022: {
+      memories: [
+        { id: 1, title: 'Virtual Celebrations', description: 'Online festival participation', image: '/memories/2022-1.jpg', gradient: 'from-emerald-100 to-teal-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
+        { id: 2, title: 'Social Media Sharing', description: 'Connecting with global devotees', image: '/memories/2022-2.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
+        { id: 3, title: 'Online Pujas', description: 'Digital prayer ceremonies', image: '/memories/2022-3.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
+        { id: 4, title: 'E-Learning Sessions', description: 'Digital cultural education', image: '/memories/2022-4.jpg', gradient: 'from-sky-100 to-blue-100', border: 'border-sky-200', iconColor: 'text-sky-400' },
+        { id: 5, title: 'Global Community', description: 'International festival connections', image: '/memories/2022-5.jpg', gradient: 'from-lime-100 to-green-100', border: 'border-lime-200', iconColor: 'text-lime-400' }
+      ]
+    },
+    2023: {
+      memories: [
+        { id: 1, title: 'Reunion Celebrations', description: 'Physical gatherings resume', image: '/memories/2023-1.jpg', gradient: 'from-orange-100 to-amber-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
+        { id: 2, title: 'Cultural Revival', description: 'Traditional arts and crafts', image: '/memories/2023-2.jpg', gradient: 'from-pink-100 to-rose-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
+        { id: 3, title: 'Community Bonding', description: 'Strengthening neighborhood ties', image: '/memories/2023-3.jpg', gradient: 'from-blue-100 to-indigo-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
+        { id: 4, title: 'Traditional Games', description: 'Festival entertainment activities', image: '/memories/2023-4.jpg', gradient: 'from-green-100 to-emerald-100', border: 'border-green-200', iconColor: 'text-green-400' },
+        { id: 5, title: 'Spiritual Growth', description: 'Deepening devotional practices', image: '/memories/2023-5.jpg', gradient: 'from-purple-100 to-violet-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
+      ]
+    },
+    2024: {
+      memories: [
+        { id: 1, title: 'Smart Celebrations', description: 'Technology-enhanced festivals', image: '/memories/2024-1.jpg', gradient: 'from-cyan-100 to-blue-100', border: 'border-cyan-200', iconColor: 'text-cyan-400' },
+        { id: 2, title: 'Eco-Friendly Practices', description: 'Sustainable festival approach', image: '/memories/2024-2.jpg', gradient: 'from-emerald-100 to-green-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
+        { id: 3, title: 'Digital Documentation', description: 'Preserving memories digitally', image: '/memories/2024-3.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
+        { id: 4, title: 'Global Outreach', description: 'Connecting with worldwide devotees', image: '/memories/2024-4.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
+        { id: 5, title: 'Future Vision', description: 'Planning next year celebrations', image: '/memories/2024-5.jpg', gradient: 'from-amber-100 to-orange-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
+      ]
+    }
+  }
 }
 
 // Custom hook for Supabase authentication
@@ -138,21 +169,73 @@ const GradientHeading = ({ children, className = '' }) => (
   </span>
 )
 
-const PhotoGridItem = ({ config, className = '' }) => (
-  <div className={`flex-shrink-0 ${config.width} ${config.height} bg-gradient-to-br ${config.gradient} rounded-2xl border ${config.border} flex items-center justify-center shadow-lg ${className}`}>
-    <div className="text-center text-gray-600">
-      <svg className={`w-16 h-16 mx-auto mb-3 ${config.iconColor}`} fill="currentColor" viewBox="0 0 24 24">
-        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-      </svg>
-      <p className="text-sm font-medium">{config.label}</p>
+const PhotoGridItem = ({ config, className = '', onClick, isInteractive = true, index = 0 }) => {
+  const [isHovered, setIsHovered] = useState(false)
+
+  // Handle click if interactive
+  const handleClick = useCallback(() => {
+    if (isInteractive && onClick) {
+      onClick(config)
+    }
+  }, [isInteractive, onClick, config])
+
+  // Handle hover
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true)
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false)
+  }, [])
+
+  // Determine width based on index for alternating pattern
+  const isWide = index % 2 === 0
+  const widthClass = isWide ? 'w-96' : 'w-56'
+
+  return (
+    <div 
+      className={`flex-shrink-0 ${widthClass} h-56 bg-gradient-to-br ${config.gradient} rounded-2xl border ${config.border} flex items-center justify-center shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-xl ${className}`}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      role={isInteractive ? 'button' : 'img'}
+      tabIndex={isInteractive ? 0 : -1}
+      aria-label={config.description}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleClick()
+        }
+      }}
+    >
+      <div className="text-center text-gray-600">
+        <svg className={`w-16 h-16 mx-auto mb-3 ${config.iconColor}`} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+        </svg>
+        
+        {/* Hover overlay with more details */}
+        {isHovered && isInteractive && (
+          <div className="absolute inset-0 bg-black bg-opacity-75 rounded-2xl flex items-center justify-center p-4">
+            <div className="text-center text-white">
+              <h4 className="text-lg font-bold mb-2">{config.title}</h4>
+              <p className="text-sm leading-relaxed">{config.description}</p>
+              <div className="mt-3 text-xs opacity-80">
+                Click to view details
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 export default function Home() {
   const { user, loading } = useSupabaseAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(JOURNEY_CONFIG.defaultYear)
+  const [selectedMemory, setSelectedMemory] = useState(null)
+  const [showMemoryModal, setShowMemoryModal] = useState(false)
 
   // Memoized handlers
   const toggleMobileMenu = useCallback(() => {
@@ -161,6 +244,17 @@ export default function Home() {
 
   const handleYearSelect = useCallback((year) => {
     setSelectedYear(year)
+    setSelectedMemory(null) // Reset selected memory when year changes
+  }, [])
+
+  const handleMemoryClick = useCallback((memory) => {
+    setSelectedMemory(memory)
+    setShowMemoryModal(true)
+  }, [])
+
+  const closeMemoryModal = useCallback(() => {
+    setShowMemoryModal(false)
+    setSelectedMemory(null)
   }, [])
 
   // Memoized computed values
@@ -172,6 +266,21 @@ export default function Home() {
       ? `${baseClasses} bg-black text-white`
       : `${baseClasses} bg-white text-gray-700 border border-gray-200 hover:border-gray-300`
   }, [isYearSelected])
+
+  // Get current year content
+  const currentYearContent = useMemo(() => {
+    return JOURNEY_CONFIG.yearContent[selectedYear] || JOURNEY_CONFIG.yearContent[JOURNEY_CONFIG.defaultYear]
+  }, [selectedYear])
+
+  // Split memories into two rows for alternating animation
+  const { row1Memories, row2Memories } = useMemo(() => {
+    const memories = currentYearContent?.memories || []
+    const midPoint = Math.ceil(memories.length / 2)
+    return {
+      row1Memories: memories.slice(0, midPoint),
+      row2Memories: memories.slice(midPoint)
+    }
+  }, [currentYearContent])
 
   if (loading) {
     return (
@@ -284,26 +393,58 @@ export default function Home() {
             {GAME_CONFIG.description}
           </p>
 
-          {/* Game Card */}
-          <Card className="bg-gradient-to-br from-pink-50 to-orange-50 border-0 shadow-lg">
-            <CardContent className="p-8 text-center">
-              <SectionTag className="mb-6">{GAME_CONFIG.game.tag}</SectionTag>
+          {/* Game Card - Updated Design */}
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-[#CD5C5C] rounded-3xl p-6 md:p-12 shadow-2xl relative overflow-hidden">
+              {/* Game Tag */}
+              <div className="inline-block bg-white text-black px-4 py-2 rounded-full text-sm font-medium mb-4 md:mb-8 border border-black">
+                {GAME_CONFIG.game.tag}
+              </div>
 
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
-                {GAME_CONFIG.game.title}
-              </h3>
+              {/* Desktop Layout: Image Left, Content Right */}
+              <div className="md:flex md:items-center md:gap-12">
+                {/* Left Side - Illustration Section */}
+                <div className="md:w-1/2 relative mb-4 md:mb-0">
+                  {/* Light blob background */}
+                  <div className="w-48 md:w-64 h-32 md:h-40 mx-auto md:mx-0 md:ml-8 bg-white/20 rounded-full blur-sm mb-3 md:mb-4"></div>
+                  
+                  {/* Main illustration with figures */}
+                  <div className="relative z-10">
+                    <img 
+                      src="/object.svg" 
+                      alt="Guess My Ganesha Game Illustration" 
+                      className="w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 object-contain"
+                    />
+                  </div>
 
-              <p className="text-gray-600 mb-8 max-w-lg mx-auto">
-                {GAME_CONFIG.game.description}
-              </p>
+                  {/* Floating question marks */}
+                  <div className="absolute top-0 left-8 md:left-20 text-3xl md:text-4xl text-orange-300 animate-bounce">?</div>
+                  <div className="absolute top-4 right-12 md:right-24 text-2xl md:text-3xl text-orange-200 animate-bounce" style={{animationDelay: '0.5s'}}>?</div>
+                  <div className="absolute bottom-8 left-16 md:left-28 text-xl md:text-2xl text-orange-100 animate-bounce" style={{animationDelay: '1s'}}>?</div>
+                </div>
 
-              <Link href="/games">
-                <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-full text-lg font-semibold">
-                  Play Now
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+                {/* Right Side - Content */}
+                <div className="md:w-1/2 md:text-left text-center">
+                  {/* Game Title */}
+                  <h3 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-6">
+                    {GAME_CONFIG.game.title}
+                  </h3>
+
+                  {/* Game Description */}
+                  <p className="text-white/90 mb-6 md:mb-10 text-sm md:text-base leading-relaxed max-w-sm md:max-w-lg mx-auto md:mx-0">
+                    {GAME_CONFIG.game.description}
+                  </p>
+
+                  {/* Play Now Button */}
+                  <Link href="/games">
+                    <Button className="bg-black hover:bg-gray-800 text-white px-8 md:px-12 py-4 md:py-5 rounded-full text-lg md:text-xl font-semibold w-full md:w-auto transition-all duration-300 hover:scale-105 shadow-lg">
+                      Play Now
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -335,19 +476,55 @@ export default function Home() {
 
           {/* Asymmetric Photo Grid - Full Width Breaking Container */}
           <div className="relative w-screen left-1/2 -ml-[50vw] overflow-hidden mb-12">
-            {/* First Row - Moving Left with Alternating Rectangle/Square */}
-            <div className="flex gap-4 mb-6 animate-move-left">
-              {PHOTO_GRID_CONFIG.row1.map((config, index) => (
-                <PhotoGridItem key={`row1-${index}`} config={config} />
-              ))}
-            </div>
-            
-            {/* Second Row - Moving Right with Alternating Rectangle/Square */}
-            <div className="flex gap-4 justify-end animate-move-right">
-              {PHOTO_GRID_CONFIG.row2.map((config, index) => (
-                <PhotoGridItem key={`row2-${index}`} config={config} />
-              ))}
-            </div>
+            {/* Loading state */}
+            {!currentYearContent && (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B4513] mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading memories...</p>
+                </div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {currentYearContent && (!row1Memories.length && !row2Memories.length) && (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">📸</div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Memories Yet</h3>
+                <p className="text-gray-600">Memories for {selectedYear} will be added soon!</p>
+              </div>
+            )}
+
+            {/* Carousel content */}
+            {currentYearContent && row1Memories.length > 0 && (
+              <>
+                {/* First Row - Moving Left with Duplicated Content */}
+                <div className="flex gap-4 mb-6 animate-move-left">
+                  {/* Original content */}
+                  {row1Memories.map((memory, index) => (
+                    <PhotoGridItem key={`row1-orig-${memory.id}`} config={memory} onClick={handleMemoryClick} index={index} />
+                  ))}
+                  {/* Duplicated content for seamless loop */}
+                  {row1Memories.map((memory, index) => (
+                    <PhotoGridItem key={`row1-dupe-${memory.id}`} config={memory} onClick={handleMemoryClick} index={index} />
+                  ))}
+                </div>
+                
+                {/* Second Row - Moving Right with Duplicated Content */}
+                {row2Memories.length > 0 && (
+                  <div className="flex gap-4 justify-end animate-move-right">
+                    {/* Original content */}
+                    {row2Memories.map((memory, index) => (
+                      <PhotoGridItem key={`row2-orig-${memory.id}`} config={memory} onClick={handleMemoryClick} index={index} />
+                    ))}
+                    {/* Duplicated content for seamless loop */}
+                    {row2Memories.map((memory, index) => (
+                      <PhotoGridItem key={`row2-dupe-${memory.id}`} config={memory} onClick={handleMemoryClick} index={index} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* View All Button */}
@@ -388,6 +565,76 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Memory Detail Modal */}
+      {showMemoryModal && selectedMemory && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={closeMemoryModal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="memory-title"
+          aria-describedby="memory-description"
+        >
+          <div 
+            className="bg-white p-8 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <h3 id="memory-title" className="text-2xl font-bold text-gray-800">
+                {selectedMemory.title}
+              </h3>
+              <button 
+                onClick={closeMemoryModal}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold p-2 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Close modal"
+              >
+                ×
+              </button>
+            </div>
+            
+            <p id="memory-description" className="text-lg text-gray-700 mb-4">
+              {selectedMemory.description}
+            </p>
+            
+            {selectedMemory.image && (
+              <div className="mb-6">
+                <img 
+                  src={selectedMemory.image} 
+                  alt={selectedMemory.title}
+                  className="w-full h-auto rounded-lg shadow-lg"
+                  onError={(e) => {
+                    e.target.style.display = 'none'
+                    e.target.nextSibling.style.display = 'block'
+                  }}
+                />
+                <div className="hidden text-center py-8 bg-gray-100 rounded-lg">
+                  <div className="text-4xl mb-2">📸</div>
+                  <p className="text-gray-600">Image not available</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-end space-x-3">
+              <button 
+                onClick={closeMemoryModal}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
+              >
+                Close
+              </button>
+              <button 
+                onClick={() => {
+                  // Future: Add share functionality
+                  console.log('Share memory:', selectedMemory.title)
+                }}
+                className="bg-[#8B4513] hover:bg-[#A0522D] text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
+              >
+                Share Memory
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
