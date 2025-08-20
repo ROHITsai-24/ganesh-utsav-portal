@@ -36,7 +36,7 @@ const TABLE_CONFIG = {
     emptyMessage: 'No users found'
   },
   leaderboard: {
-    headers: ['#', 'User', 'Score', 'Moves / Time', 'When'],
+    headers: ['#', 'User', 'Score', 'Moves / Time', 'When', 'Actions'],
     emptyMessage: 'No scores yet'
   }
 }
@@ -80,11 +80,69 @@ const useAdminData = () => {
     }
   }, [])
 
+  const deleteGameResult = useCallback(async (gameResultId) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const email = session?.user?.email || ''
+      
+      const res = await fetch(`/api/admin/delete-game-result`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-email': email || ''
+        },
+        body: JSON.stringify({ gameResultId })
+      })
+      
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body?.error || `Delete failed: ${res.status}`)
+      }
+      
+      // Reload data after successful deletion
+      await loadData()
+    } catch (e) {
+      console.error('Delete game result error:', e)
+      setError(e?.message || 'Failed to delete game result')
+    }
+  }, [loadData])
+
+  const deleteAllGameResults = useCallback(async (gameKey) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const email = session?.user?.email || ''
+      
+      const res = await fetch(`/api/admin/delete-all-game-results`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-email': email || ''
+        },
+        body: JSON.stringify({ gameKey })
+      })
+      
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        console.error('Delete all API error:', { status: res.status, body })
+        throw new Error(body?.error || `Delete all failed: ${res.status}`)
+      }
+      
+      const result = await res.json()
+      console.log('Delete all success:', result)
+      
+      // Reload data after successful deletion
+      await loadData()
+    } catch (e) {
+      console.error('Delete all game results error:', e)
+      setError(e?.message || 'Failed to delete all game results')
+    }
+  }, [loadData])
+
   useEffect(() => {
     loadData()
   }, [loadData])
 
-  return { adminEmail, rows, rawScores, loading, error, reload: loadData }
+  return { adminEmail, rows, rawScores, loading, error, reload: loadData, deleteGameResult, deleteAllGameResults }
 }
 
 // Custom hook for authentication
@@ -168,7 +226,13 @@ const UsersTable = ({ rows }) => {
   ))
 }
 
-const LeaderboardTable = ({ gameKey, leaderboard }) => {
+const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime }) => {
+  const handleDelete = (gameResultId, username) => {
+    if (window.confirm(`Are you sure you want to delete this game result for ${username}? This action cannot be undone.`)) {
+      onDelete(gameResultId)
+    }
+  }
+
   if (leaderboard.length === 0) {
     return (
       <tr>
@@ -186,7 +250,7 @@ const LeaderboardTable = ({ gameKey, leaderboard }) => {
         {row.user_username || row.user_email || 'Unknown User'}
       </td>
       <td className="py-2 pr-4">{row.score}</td>
-      {gameKey === 'puzzle' && (
+      {showMovesTime && (
         <td className="py-2 pr-4">
           {row.moves ?? '-'} / {row.time_taken_seconds ?? '-'}s
         </td>
@@ -194,11 +258,21 @@ const LeaderboardTable = ({ gameKey, leaderboard }) => {
       <td className="py-2 pr-4">
         {row.created_at ? new Date(row.created_at).toLocaleString() : '-'}
       </td>
+      <td className="py-2 pr-4">
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => handleDelete(row.id, row.user_username || row.user_email || 'Unknown User')}
+          className="bg-red-600 hover:bg-red-700 text-white"
+        >
+          🗑️ Delete
+        </Button>
+      </td>
     </tr>
   ))
 }
 
-const GameLeaderboard = ({ gameKey, rawScores }) => {
+const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
   const leaderboard = useMemo(() => {
     return [...rawScores.filter(s => (s.game_key || 'guess').toLowerCase() === gameKey)]
       .sort((a, b) => b.score - a.score)
@@ -208,17 +282,42 @@ const GameLeaderboard = ({ gameKey, rawScores }) => {
   const gameConfig = GAME_CONFIG[gameKey]
   const showMovesTime = gameKey === 'puzzle'
 
+  const handleDeleteAll = () => {
+    const gameName = gameConfig.title
+    const resultCount = rawScores.filter(s => (s.game_key || 'guess').toLowerCase() === gameKey).length
+    
+    if (window.confirm(`⚠️ DANGER: Are you sure you want to delete ALL ${resultCount} game results for ${gameName}?\n\nThis will permanently remove ALL scores, moves, and time data for this game. This action CANNOT be undone!\n\nType "delete" to confirm.`)) {
+      const confirmation = prompt(`Type "delete" to confirm deletion of all ${gameName} results:`)
+      if (confirmation === "delete") {
+        onDeleteAll(gameKey)
+      }
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{gameConfig.title}</CardTitle>
-        <CardDescription>{gameConfig.description}</CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>{gameConfig.title}</CardTitle>
+            <CardDescription>{gameConfig.description}</CardDescription>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteAll}
+            className="bg-red-700 hover:bg-red-800 text-white border-red-800"
+            title={`Delete all ${gameKey} game results`}
+          >
+            🗑️ Delete All
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <DataTable 
           headers={showMovesTime ? TABLE_CONFIG.leaderboard.headers : TABLE_CONFIG.leaderboard.headers.filter(h => h !== 'Moves / Time')}
         >
-          <LeaderboardTable gameKey={gameKey} leaderboard={leaderboard} />
+          <LeaderboardTable gameKey={gameKey} leaderboard={leaderboard} onDelete={onDelete} showMovesTime={showMovesTime} />
         </DataTable>
       </CardContent>
     </Card>
@@ -226,7 +325,7 @@ const GameLeaderboard = ({ gameKey, rawScores }) => {
 }
 
 export default function AdminDashboard() {
-  const { adminEmail, rows, rawScores, loading, error, reload } = useAdminData()
+  const { adminEmail, rows, rawScores, loading, error, reload, deleteGameResult, deleteAllGameResults } = useAdminData()
   const { signOut } = useAuth()
 
   if (loading) {
@@ -286,6 +385,8 @@ export default function AdminDashboard() {
               key={gameConfig.key} 
               gameKey={gameConfig.key} 
               rawScores={rawScores} 
+              onDelete={deleteGameResult}
+              onDeleteAll={deleteAllGameResults}
             />
           ))}
         </div>

@@ -117,6 +117,9 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
   
   // Store exact start time for precise timing
   const gameStartTimeRef = useRef(null)
+  
+  // Store exact moves count to bypass React state timing issues
+  const exactMovesRef = useRef(0)
 
   // Memoized function to start new game
   const startNewGame = useCallback(() => {
@@ -127,6 +130,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     setElapsedTime(0)
     setGameState(PUZZLE_CONFIG.states.ready)
     setSelectedTile(null)
+    exactMovesRef.current = 0  // Reset exact moves counter
   }, [])
 
   // Memoized function to start playing
@@ -160,6 +164,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
       
       setTiles(newTiles)
       setMoves(prev => prev + 1)
+      exactMovesRef.current += 1  // Increment exact moves counter
       setSelectedTile(null) // Deselect after move
 
       // Check if puzzle is solved
@@ -174,10 +179,13 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         const exactEndTime = Date.now()
         const exactElapsedSeconds = Math.floor((exactEndTime - gameStartTimeRef.current) / 1000)
         
+        // Use the exact moves counter that we've been tracking
+        const exactMoves = exactMovesRef.current
+        
         // Stop the timer immediately to prevent race condition
         setGameState(PUZZLE_CONFIG.states.solved)
         // Use the exact calculated values, not React state
-        const finalMoves = moves + 1
+        const finalMoves = exactMoves
         const finalTime = exactElapsedSeconds
         // Pass the actual values that will be saved, not the stale state
         saveScoreWithValues(finalMoves, finalTime)
@@ -376,7 +384,8 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     // Calculate EXACT same values for display as used in saveScoreWithValues
     const exactEndTime = Date.now()
     const exactElapsedSeconds = Math.floor((exactEndTime - gameStartTimeRef.current) / 1000)
-    const finalMoves = moves + 1
+    const exactMoves = exactMovesRef.current  // Use the same counter as saveScoreWithValues
+    const finalMoves = exactMoves
     const finalTime = exactElapsedSeconds
     const score = calculateScore(finalMoves, finalTime)
     
