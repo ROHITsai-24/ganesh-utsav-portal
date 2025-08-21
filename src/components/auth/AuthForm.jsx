@@ -79,6 +79,7 @@ const useAuthForm = (onAuthSuccess) => {
           throw error
         }
         if (data.user) {
+          console.log('Login successful, calling onAuthSuccess')
           onAuthSuccess(data.user)
         }
       } else {
@@ -96,6 +97,7 @@ const useAuthForm = (onAuthSuccess) => {
           throw error
         }
         if (data.user) {
+          console.log('Signup successful, calling onAuthSuccess')
           onAuthSuccess(data.user)
         }
       }
@@ -178,56 +180,54 @@ export default function AuthForm({ onAuthSuccess }) {
   const currentConfig = isLogin ? AUTH_CONFIG.login : AUTH_CONFIG.signup
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-md bg-white/95 backdrop-blur-sm shadow-xl border-0">
-        <CardHeader className="text-center pb-6">
-          <CardTitle className="text-2xl font-bold text-gray-800">
-            {currentConfig.title}
-          </CardTitle>
-          <CardDescription className="text-gray-600">
-            {currentConfig.description}
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Username field - only show for signup */}
-            {!isLogin && (
-              <FormField
-                field="username"
-                config={FORM_FIELDS.username}
-                value={formData.username}
-                onChange={updateField}
-              />
-            )}
-            
-            {/* Email field */}
+    <Card className="w-full bg-white/95 backdrop-blur-sm shadow-xl border-0">
+      <CardHeader className="text-center pb-6">
+        <CardTitle className="text-2xl font-bold text-gray-800">
+          {currentConfig.title}
+        </CardTitle>
+        <CardDescription className="text-gray-600">
+          {currentConfig.description}
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Username field - only show for signup */}
+          {!isLogin && (
             <FormField
-              field="email"
-              config={FORM_FIELDS.email}
-              value={formData.email}
+              field="username"
+              config={FORM_FIELDS.username}
+              value={formData.username}
               onChange={updateField}
             />
-            
-            {/* Password field */}
-            <FormField
-              field="password"
-              config={FORM_FIELDS.password}
-              value={formData.password}
-              onChange={updateField}
-            />
-            
-            {/* Error display */}
-            <ErrorDisplay message={error} />
-            
-            {/* Submit button */}
-            <SubmitButton loading={loading} isLogin={isLogin} />
-          </form>
+          )}
           
-          {/* Mode toggle */}
-          <ModeToggle isLogin={isLogin} onToggle={toggleMode} />
-        </CardContent>
-      </Card>
-    </div>
+          {/* Email field */}
+          <FormField
+            field="email"
+            config={FORM_FIELDS.email}
+            value={formData.email}
+            onChange={updateField}
+          />
+          
+          {/* Password field */}
+          <FormField
+            field="password"
+            config={FORM_FIELDS.password}
+            value={formData.password}
+            onChange={updateField}
+          />
+          
+          {/* Error display */}
+          <ErrorDisplay message={error} />
+          
+          {/* Submit button */}
+          <SubmitButton loading={loading} isLogin={isLogin} />
+        </form>
+        
+        {/* Mode toggle */}
+        <ModeToggle isLogin={isLogin} onToggle={toggleMode} />
+      </CardContent>
+    </Card>
   )
 } 

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import UpdatesManager from './UpdatesManager'
 
 // Configuration objects for dynamic content
 const DASHBOARD_CONFIG = {
@@ -390,6 +391,17 @@ export default function AdminDashboard() {
             />
           ))}
         </div>
+
+        {/* Updates Manager */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Daily Updates Management</CardTitle>
+            <CardDescription>Send and manage devotional messages for all users</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <UpdatesManager adminEmail={adminEmail} />
+          </CardContent>
+        </Card>
 
         {/* Simple Refresh Button */}
         <div className="mt-6 text-right">

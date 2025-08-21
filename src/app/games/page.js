@@ -101,6 +101,24 @@ const useAuth = () => {
 
   useEffect(() => {
     checkUser()
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change event:', event, 'session:', session?.user?.email)
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('User signed in, setting user state')
+          setUser(session.user)
+          setLoading(false)
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out, clearing user state')
+          setUser(null)
+          setLoading(false)
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
   }, [checkUser])
 
   const signOut = useCallback(async () => {
@@ -112,7 +130,7 @@ const useAuth = () => {
     }
   }, [])
 
-  return { user, loading, signOut }
+  return { user, loading, signOut, setUser }
 }
 
 // Custom hook for mobile menu
@@ -633,33 +651,39 @@ const GamesSection = ({ user, onSignOut, onToggleMobileMenu, onCloseMobileMenu, 
 }
 
 const AuthSection = ({ onAuthSuccess }) => (
-  <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-    <div className="px-4 py-6 md:px-8 lg:px-16">
-      <div className="flex items-center justify-between">
-        <BackButton href="/">
-          {NAVIGATION_CONFIG.backToHome}
-        </BackButton>
-      </div>
+  <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative">
+    {/* Back button - positioned absolutely to not take up space */}
+    <div className="absolute top-6 left-4 md:left-8 lg:left-16 z-10">
+      <BackButton href="/">
+        {NAVIGATION_CONFIG.backToHome}
+      </BackButton>
     </div>
     
-    <div className="max-w-md mx-auto px-4 py-16">
-      <div className="text-center mb-8">
+    {/* Centered auth content */}
+    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+      <div className="text-center mb-8 max-w-md">
         <h1 className="text-3xl font-bold text-white mb-2">{NAVIGATION_CONFIG.welcome.title}</h1>
         <p className="text-white/80">{NAVIGATION_CONFIG.welcome.subtitle}</p>
       </div>
-      <AuthForm onAuthSuccess={onAuthSuccess} />
+      <div className="w-full max-w-md">
+        <AuthForm onAuthSuccess={onAuthSuccess} />
+      </div>
     </div>
   </div>
 )
 
 export default function GamesPage() {
-  const { user, loading, signOut } = useAuth()
+  const { user, loading, signOut, setUser } = useAuth()
   const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useMobileMenu()
   const { showGames, goToGames, goToHomepage } = useHomepageState()
 
   const handleAuthSuccess = useCallback((user) => {
-    // This will be handled by the useAuth hook
-  }, [])
+    console.log('Auth success callback triggered with user:', user)
+    // Set user immediately
+    setUser(user)
+    // Also trigger the games view
+    goToGames()
+  }, [setUser, goToGames])
 
   if (loading) {
     return <LoadingSpinner 

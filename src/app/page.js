@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import UpdatesSection from '@/components/updates/UpdatesSection'
 
 // Configuration objects for dynamic content
 const SITE_CONFIG = {
@@ -577,6 +578,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Updates Section */}
+      <UpdatesSection />
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white px-4 py-12 md:px-8 lg:px-16">
