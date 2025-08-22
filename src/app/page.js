@@ -170,62 +170,19 @@ const GradientHeading = ({ children, className = '' }) => (
   </span>
 )
 
-const PhotoGridItem = ({ config, className = '', onClick, isInteractive = true, index = 0 }) => {
-  const [isHovered, setIsHovered] = useState(false)
-
-  // Handle click if interactive
-  const handleClick = useCallback(() => {
-    if (isInteractive && onClick) {
-      onClick(config)
-    }
-  }, [isInteractive, onClick, config])
-
-  // Handle hover
-  const handleMouseEnter = useCallback(() => {
-    setIsHovered(true)
-  }, [])
-
-  const handleMouseLeave = useCallback(() => {
-    setIsHovered(false)
-  }, [])
-
+const PhotoGridItem = ({ config, className = '', index = 0 }) => {
   // Determine width based on index for alternating pattern
   const isWide = index % 2 === 0
   const widthClass = isWide ? 'w-96' : 'w-56'
 
   return (
     <div 
-      className={`flex-shrink-0 ${widthClass} h-56 bg-gradient-to-br ${config.gradient} rounded-2xl border ${config.border} flex items-center justify-center shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-xl ${className}`}
-      onClick={handleClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      role={isInteractive ? 'button' : 'img'}
-      tabIndex={isInteractive ? 0 : -1}
-      aria-label={config.description}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          handleClick()
-        }
-      }}
+      className={`flex-shrink-0 ${widthClass} h-56 bg-gradient-to-br ${config.gradient} rounded-2xl border ${config.border} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl ${className}`}
     >
       <div className="text-center text-gray-600">
         <svg className={`w-16 h-16 mx-auto mb-3 ${config.iconColor}`} fill="currentColor" viewBox="0 0 24 24">
           <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
         </svg>
-        
-        {/* Hover overlay with more details */}
-        {isHovered && isInteractive && (
-          <div className="absolute inset-0 bg-black bg-opacity-75 rounded-2xl flex items-center justify-center p-4">
-            <div className="text-center text-white">
-              <h4 className="text-lg font-bold mb-2">{config.title}</h4>
-              <p className="text-sm leading-relaxed">{config.description}</p>
-              <div className="mt-3 text-xs opacity-80">
-                Click to view details
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
@@ -316,8 +273,6 @@ export default function Home() {
   const { user, loading } = useSupabaseAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(JOURNEY_CONFIG.defaultYear)
-  const [selectedMemory, setSelectedMemory] = useState(null)
-  const [showMemoryModal, setShowMemoryModal] = useState(false)
 
   // Memoized handlers
   const toggleMobileMenu = useCallback(() => {
@@ -326,17 +281,6 @@ export default function Home() {
 
   const handleYearSelect = useCallback((year) => {
     setSelectedYear(year)
-    setSelectedMemory(null) // Reset selected memory when year changes
-  }, [])
-
-  const handleMemoryClick = useCallback((memory) => {
-    setSelectedMemory(memory)
-    setShowMemoryModal(true)
-  }, [])
-
-  const closeMemoryModal = useCallback(() => {
-    setShowMemoryModal(false)
-    setSelectedMemory(null)
   }, [])
 
   // Memoized computed values
@@ -545,11 +489,11 @@ export default function Home() {
                 <div className="flex gap-4 mb-6 animate-move-left">
                   {/* Original content */}
                   {row1Memories.map((memory, index) => (
-                    <PhotoGridItem key={`row1-orig-${memory.id}`} config={memory} onClick={handleMemoryClick} index={index} />
+                    <PhotoGridItem key={`row1-orig-${memory.id}`} config={memory} index={index} />
                   ))}
                   {/* Duplicated content for seamless loop */}
                   {row1Memories.map((memory, index) => (
-                    <PhotoGridItem key={`row1-dupe-${memory.id}`} config={memory} onClick={handleMemoryClick} index={index} />
+                    <PhotoGridItem key={`row1-dupe-${memory.id}`} config={memory} index={index} />
                   ))}
                 </div>
                 
@@ -558,11 +502,11 @@ export default function Home() {
                   <div className="flex gap-4 justify-end animate-move-right">
                     {/* Original content */}
                     {row2Memories.map((memory, index) => (
-                      <PhotoGridItem key={`row2-orig-${memory.id}`} config={memory} onClick={handleMemoryClick} index={index} />
+                      <PhotoGridItem key={`row2-orig-${memory.id}`} config={memory} index={index} />
                     ))}
                     {/* Duplicated content for seamless loop */}
                     {row2Memories.map((memory, index) => (
-                      <PhotoGridItem key={`row2-dupe-${memory.id}`} config={memory} onClick={handleMemoryClick} index={index} />
+                      <PhotoGridItem key={`row2-dupe-${memory.id}`} config={memory} index={index} />
                     ))}
                   </div>
                 )}
@@ -583,16 +527,30 @@ export default function Home() {
       <UpdatesSection />
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white px-4 py-12 md:px-8 lg:px-16">
-        <div className="max-w-7xl mx-auto">
+      <footer className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-gray-800 px-4 py-12 md:px-8 lg:px-16 overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-amber-200 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-orange-200 rounded-full blur-3xl"></div>
+        </div>
+        
+        {/* Subtle dot pattern overlay */}
+        <div className="absolute inset-0 opacity-8">
+          <div className="w-full h-full" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(245, 101, 101, 0.08) 1px, transparent 0)`,
+            backgroundSize: '30px 30px'
+          }}></div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             {/* Left - Logo and Copyright */}
             <div className="space-y-4">
-              <div className="text-2xl font-bold text-[#DE4E1C]">
+              <div className="text-2xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 bg-clip-text text-transparent">
                 {SITE_CONFIG.title}
               </div>
-              <p className="text-gray-400">
-                @2025 {SITE_CONFIG.title} - All Rights Reserved.
+              <p className="text-gray-600">
+                © 2025 {SITE_CONFIG.title} - All Rights Reserved.
               </p>
             </div>
 
@@ -602,7 +560,7 @@ export default function Home() {
                 <a 
                   key={item.href} 
                   href={item.href} 
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
                 >
                   {item.label}
                 </a>
@@ -612,75 +570,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Memory Detail Modal */}
-      {showMemoryModal && selectedMemory && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={closeMemoryModal}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="memory-title"
-          aria-describedby="memory-description"
-        >
-          <div 
-            className="bg-white p-8 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h3 id="memory-title" className="text-2xl font-bold text-gray-800">
-                {selectedMemory.title}
-              </h3>
-              <button 
-                onClick={closeMemoryModal}
-                className="text-gray-500 hover:text-gray-700 text-2xl font-bold p-2 hover:bg-gray-100 rounded-full transition-colors"
-                aria-label="Close modal"
-              >
-                ×
-              </button>
-            </div>
-            
-            <p id="memory-description" className="text-lg text-gray-700 mb-4">
-              {selectedMemory.description}
-            </p>
-            
-            {selectedMemory.image && (
-              <div className="mb-6">
-                <img 
-                  src={selectedMemory.image} 
-                  alt={selectedMemory.title}
-                  className="w-full h-auto rounded-lg shadow-lg"
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                    e.target.nextSibling.style.display = 'block'
-                  }}
-                />
-                <div className="hidden text-center py-8 bg-gray-100 rounded-lg">
-                  <div className="text-4xl mb-2">📸</div>
-                  <p className="text-gray-600">Image not available</p>
-                </div>
-              </div>
-            )}
-            
-            <div className="flex justify-end space-x-3">
-              <button 
-                onClick={closeMemoryModal}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
-              >
-                Close
-              </button>
-              <button 
-                onClick={() => {
-                  // Future: Add share functionality
-                  console.log('Share memory:', selectedMemory.title)
-                }}
-                className="bg-[#8B4513] hover:bg-[#A0522D] text-white px-6 py-3 rounded-full text-lg font-semibold transition-colors"
-              >
-                Share Memory
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   )
 }
