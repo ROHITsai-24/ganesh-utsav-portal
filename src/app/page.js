@@ -336,7 +336,9 @@ export default function Home() {
             ))}
             
             <LanguageSelector />
-            <CTAButton>{SITE_CONFIG.ctaText}</CTAButton>
+            <Link href="/games">
+              <CTAButton>{SITE_CONFIG.ctaText}</CTAButton>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -359,10 +361,12 @@ export default function Home() {
                 <NavigationItem key={item.href} {...item} className="block py-2" />
               ))}
               
-              <div className="pt-4 border-t border-gray-100">
-                <LanguageSelector className="mb-4" />
-                <CTAButton className="w-full">{SITE_CONFIG.ctaText}</CTAButton>
-              </div>
+                              <div className="pt-4 border-t border-gray-100">
+                  <LanguageSelector className="mb-4" />
+                  <Link href="/games">
+                    <CTAButton className="w-full">{SITE_CONFIG.ctaText}</CTAButton>
+                  </Link>
+                </div>
             </div>
           </div>
         )}
@@ -395,9 +399,11 @@ export default function Home() {
                 {SITE_CONFIG.description}
               </p>
 
-              <CTAButton className="px-8 py-4 text-lg font-semibold">
-                {SITE_CONFIG.ctaText}
-              </CTAButton>
+              <Link href="/games">
+                <CTAButton className="px-8 py-4 text-lg font-semibold">
+                  {SITE_CONFIG.ctaText}
+                </CTAButton>
+              </Link>
             </div>
 
             {/* Desktop: Right Image */}
