@@ -22,7 +22,7 @@ export async function GET(request) {
     // Get all game settings
     const { data: settings, error } = await adminClient
       .from('game_settings')
-      .select('*')
+      .select('id, game_key, is_enabled, play_limit')
       .order('game_key')
 
     if (error) {
@@ -51,21 +51,28 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { gameKey, isEnabled } = await request.json()
+    const { gameKey, isEnabled, playLimit } = await request.json()
 
     if (!gameKey || typeof isEnabled !== 'boolean') {
       return NextResponse.json({ error: 'Invalid request data' }, { status: 400 })
     }
 
+    // Validate play limit
+    if (playLimit !== undefined && (typeof playLimit !== 'number' || playLimit < 1)) {
+      return NextResponse.json({ error: 'Play limit must be a number >= 1' }, { status: 400 })
+    }
+
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
     // Update game setting
+    const updateData = { is_enabled: isEnabled }
+    if (playLimit !== undefined) {
+      updateData.play_limit = playLimit
+    }
+
     const { data, error } = await adminClient
       .from('game_settings')
-      .update({ 
-        is_enabled: isEnabled,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('game_key', gameKey)
       .select()
 

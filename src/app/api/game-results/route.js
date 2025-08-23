@@ -19,7 +19,61 @@ export async function POST(request) {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Check if user already has a result for this game
+    // SAFETY CHECK 1: Get game key from game_id
+    const { data: game, error: gameError } = await supabase
+      .from('games')
+      .select('key')
+      .eq('id', game_id)
+      .single()
+
+    if (gameError || !game) {
+      return NextResponse.json({ error: 'Game not found' }, { status: 404 })
+    }
+
+    const gameKey = game.key
+
+    // SAFETY CHECK 2: Verify game is enabled
+    const { data: gameSetting, error: settingError } = await supabase
+      .from('game_settings')
+      .select('is_enabled, play_limit')
+      .eq('game_key', gameKey)
+      .single()
+
+    if (settingError || !gameSetting) {
+      return NextResponse.json({ error: 'Game settings not found' }, { status: 404 })
+    }
+
+    if (!gameSetting.is_enabled) {
+      return NextResponse.json({ 
+        error: 'Game is currently disabled',
+        action: 'rejected_disabled'
+      }, { status: 403 })
+    }
+
+    // SAFETY CHECK 3: Check user's play count against limit
+    const { count: playCount, error: countError } = await supabase
+      .from('game_results')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user_id)
+      .eq('game_id', game_id)
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 })
+    }
+
+    const currentPlayCount = playCount || 0
+    const playLimit = gameSetting.play_limit || 1
+
+    if (currentPlayCount >= playLimit) {
+      return NextResponse.json({ 
+        error: 'Play limit reached',
+        action: 'rejected_limit',
+        playCount: currentPlayCount,
+        playLimit: playLimit
+      }, { status: 403 })
+    }
+
+    // SAFETY CHECK 4: Check if user already has a result for this game
     const { data: existingResult, error: fetchError } = await supabase
       .from('game_results')
       .select('id, score, details')
@@ -31,17 +85,43 @@ export async function POST(request) {
       return NextResponse.json({ error: fetchError.message }, { status: 500 })
     }
 
-    // Optimized score comparison logic
-    const shouldUpdate = existingResult && (
-      score > existingResult.score || 
-      (score === existingResult.score && (details.time_taken || 0) < (existingResult.details?.time_taken || 0))
-    )
-    
-    const shouldInsert = !existingResult
+    // SAFETY CHECK 5: Best score comparison logic with additional validation
+    let shouldUpdate = false
+    let shouldInsert = false
+    let action = 'no_change'
+    let result = existingResult
 
-    let result
-    let action
+    if (existingResult) {
+      // User has existing result - check if new score is better
+      const currentScore = existingResult.score || 0
+      const currentTime = existingResult.details?.time_taken || 0
+      const newScore = score || 0
+      const newTime = details?.time_taken || 0
 
+      // Only update if new score is higher, or same score but faster time
+      shouldUpdate = newScore > currentScore || 
+                    (newScore === currentScore && newTime < currentTime)
+      
+      if (shouldUpdate) {
+        action = 'updated'
+      } else {
+        // New score is not better - reject the save
+        return NextResponse.json({ 
+          error: 'Score not better than existing result',
+          action: 'rejected_score',
+          existingScore: currentScore,
+          existingTime: currentTime,
+          newScore: newScore,
+          newTime: newTime
+        }, { status: 409 })
+      }
+    } else {
+      // User has no existing result - safe to insert
+      shouldInsert = true
+      action = 'inserted'
+    }
+
+    // SAFETY CHECK 6: Final save operation
     if (shouldUpdate) {
       // Update existing result with better score
       const { data, error } = await supabase
@@ -54,7 +134,6 @@ export async function POST(request) {
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
       result = data[0]
-      action = 'updated'
     } else if (shouldInsert) {
       // Insert new result
       const { data, error } = await supabase
@@ -66,17 +145,18 @@ export async function POST(request) {
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
       result = data[0]
-      action = 'inserted'
-    } else {
-      // No update needed - return existing result
-      result = existingResult
-      action = 'no_change'
     }
      
     return NextResponse.json({ 
       success: true, 
       result,
-      action
+      action,
+      safetyChecks: {
+        gameEnabled: gameSetting.is_enabled,
+        playLimit: playLimit,
+        currentPlayCount: currentPlayCount,
+        canPlay: currentPlayCount < playLimit
+      }
     })
 
   } catch (error) {

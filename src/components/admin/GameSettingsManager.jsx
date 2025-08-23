@@ -51,12 +51,12 @@ const useGameSettingsManager = () => {
     }
   }, [])
 
-  const updateSetting = useCallback(async (gameKey, isEnabled) => {
+  const updateSetting = useCallback(async (gameKey, isEnabled, playLimit) => {
     // Optimistic update for better UX
     setSettings(prev => 
       prev.map(setting => 
         setting.game_key === gameKey 
-          ? { ...setting, is_enabled: isEnabled }
+          ? { ...setting, is_enabled: isEnabled, play_limit: playLimit || setting.play_limit }
           : setting
       )
     )
@@ -74,7 +74,7 @@ const useGameSettingsManager = () => {
           'Content-Type': 'application/json',
           'x-admin-email': email
         },
-        body: JSON.stringify({ gameKey, isEnabled })
+        body: JSON.stringify({ gameKey, isEnabled, playLimit })
       })
 
       if (!response.ok) {
@@ -162,7 +162,7 @@ const GameSettingsManager = () => {
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">{setting.gameConfig?.title || setting.game_key}</h3>
                 <p className="text-gray-600 text-sm">{setting.gameConfig?.description}</p>
-                <div className="mt-2">
+                <div className="mt-2 flex items-center space-x-2">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     setting.is_enabled 
                       ? 'bg-green-100 text-green-800' 
@@ -170,15 +170,39 @@ const GameSettingsManager = () => {
                   }`}>
                     {setting.is_enabled ? 'Enabled' : 'Disabled'}
                   </span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Play Limit: {setting.play_limit || 1}
+                  </span>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-4">
+                {/* Play Limit Input */}
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor={`play-limit-${setting.game_key}`} className="text-sm font-medium">
+                    Play Limit:
+                  </Label>
+                  <input
+                    id={`play-limit-${setting.game_key}`}
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={setting.play_limit || 1}
+                    onChange={(e) => {
+                      const newLimit = parseInt(e.target.value) || 1
+                      updateSetting(setting.game_key, setting.is_enabled, newLimit)
+                    }}
+                    disabled={setting.isUpdating}
+                    className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                {/* Enable/Disable Switch */}
                 <div className="flex items-center space-x-2">
                   <Switch
                     id={`switch-${setting.game_key}`}
                     checked={setting.is_enabled}
-                    onCheckedChange={(checked) => updateSetting(setting.game_key, checked)}
+                    onCheckedChange={(checked) => updateSetting(setting.game_key, checked, setting.play_limit)}
                     disabled={setting.isUpdating}
                   />
                   <Label htmlFor={`switch-${setting.game_key}`}>

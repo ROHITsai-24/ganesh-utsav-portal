@@ -16,7 +16,6 @@ export const GameSettingsProvider = ({ children }) => {
   const [gameSettings, setGameSettings] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [pollingInterval, setPollingInterval] = useState(null)
 
   const loadGameSettings = useCallback(async () => {
     try {
@@ -24,7 +23,7 @@ export const GameSettingsProvider = ({ children }) => {
       setError(null)
       
       const response = await fetch('/api/game-settings', {
-        cache: 'no-store' // Force fresh data every time
+        cache: 'no-store'
       })
       if (!response.ok) {
         throw new Error('Failed to load game settings')
@@ -34,43 +33,25 @@ export const GameSettingsProvider = ({ children }) => {
       const newSettings = data.gameSettings || {}
       setGameSettings(newSettings)
       
-      // Smart polling: only poll if any game is disabled
-      const hasDisabledGames = Object.values(newSettings).some(enabled => !enabled)
-      
-      if (hasDisabledGames && !pollingInterval) {
-        // Start polling if any game is disabled
-        const interval = setInterval(() => {
-          loadGameSettings()
-        }, 5000) // Check every 5 seconds when disabled
-        setPollingInterval(interval)
-      } else if (!hasDisabledGames && pollingInterval) {
-        // Stop polling if all games are enabled
-        clearInterval(pollingInterval)
-        setPollingInterval(null)
-      }
-      
     } catch (err) {
       setError(err.message)
       // Default to all games enabled if loading fails
-      setGameSettings({ puzzle: true, guess: true })
+      setGameSettings({ puzzle: { is_enabled: true, play_limit: 1 }, guess: { is_enabled: true, play_limit: 1 } })
     } finally {
       setLoading(false)
     }
-  }, [pollingInterval])
+  }, [])
 
   const isGameEnabled = useCallback((gameKey) => {
-    return gameSettings[gameKey] === true
+    return gameSettings[gameKey]?.is_enabled === true
+  }, [gameSettings])
+
+  const getGamePlayLimit = useCallback((gameKey) => {
+    return gameSettings[gameKey]?.play_limit || 1
   }, [gameSettings])
 
   useEffect(() => {
-    loadGameSettings()
-    
-    // Cleanup polling on unmount
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval)
-      }
-    }
+    loadGameSettings() // Only load once on mount
   }, [loadGameSettings])
 
   const value = {
@@ -78,8 +59,12 @@ export const GameSettingsProvider = ({ children }) => {
     loading,
     error,
     isGameEnabled,
+    getGamePlayLimit,
     reloadSettings: loadGameSettings,
-    isPolling: !!pollingInterval
+    // Simple refresh function that can be called when needed
+    refreshSettings: () => {
+      loadGameSettings()
+    }
   }
 
   return (

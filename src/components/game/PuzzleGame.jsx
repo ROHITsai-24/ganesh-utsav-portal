@@ -104,7 +104,7 @@ function areAdjacent(index1, index2, gridSize) {
          (Math.abs(col1 - col2) === 1 && row1 === row2)
 }
 
-export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage }) {
+export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage, onScoreSaved = () => {} }) {
   const [tiles, setTiles] = useState([])
   const [moves, setMoves] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
@@ -188,7 +188,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         const finalMoves = exactMoves
         const finalTime = exactElapsedSeconds
         // Pass the actual values that will be saved, not the stale state
-        saveScoreWithValues(finalMoves, finalTime)
+        saveScoreWithValues(finalMoves, finalTime, onScoreSaved)
       }
     } else {
       // Tiles are not adjacent, select the new tile instead
@@ -209,7 +209,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
   }, [])
 
   // Memoized function to save score with actual values
-  const saveScoreWithValues = useCallback(async (actualMoves, actualTime) => {
+  const saveScoreWithValues = useCallback(async (actualMoves, actualTime, onScoreSaved) => {
     try {
       const gameId = await getGameIdByKey('puzzle')
       if (gameId) {
@@ -230,12 +230,27 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
           }),
         })
 
-        if (!response.ok) {
-          const errorData = await response.json()
-          console.error('Error saving score:', errorData.error)
+        const result = await response.json()
+        
+        if (result.success) {
+          console.log('Score saved:', result.action)
+          // Trigger play limit refresh
+          if (onScoreSaved) {
+            onScoreSaved()
+          }
         } else {
-          const result = await response.json()
-          // Score saved successfully
+          // Handle safety check rejections
+          if (response.status === 403) {
+            if (result.action === 'rejected_disabled') {
+              console.warn('Game is disabled - score not saved')
+            } else if (result.action === 'rejected_limit') {
+              console.warn('Play limit reached - score not saved')
+            }
+          } else if (response.status === 409) {
+            console.warn('Score not better than existing - not saved')
+          } else {
+            console.error('Failed to save score:', result.error)
+          }
         }
       }
     } catch (error) {
@@ -244,8 +259,8 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
   }, [user.id, calculateScore])
 
   // Keep the old function for backward compatibility
-  const saveScore = useCallback(async () => {
-    saveScoreWithValues(moves, elapsedTime)
+  const saveScore = useCallback(async (onScoreSaved) => {
+    saveScoreWithValues(moves, elapsedTime, onScoreSaved)
   }, [moves, elapsedTime, saveScoreWithValues])
 
   // Memoized function to render tile

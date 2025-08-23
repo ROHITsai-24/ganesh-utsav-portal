@@ -239,7 +239,7 @@ const useTimer = (timeLeft, gameState, onTimeUp) => {
 }
 
 // Custom hook for score saving (optimized like puzzle game)
-const useScoreSaver = (user, score, currentQuestion, totalTimeRef) => {
+const useScoreSaver = (user, score, currentQuestion, totalTimeRef, onScoreSaved) => {
   const saveScore = useCallback(async () => {
     try {
       const gameId = await getGameIdByKey('guess')
@@ -264,19 +264,34 @@ const useScoreSaver = (user, score, currentQuestion, totalTimeRef) => {
           }),
         })
 
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Failed to save score')
-        }
-
         const result = await response.json()
-        // Score saved successfully
+        
+        if (result.success) {
+          console.log('Score saved:', result.action)
+          // Trigger play limit refresh
+          if (onScoreSaved) {
+            onScoreSaved()
+          }
+        } else {
+          // Handle safety check rejections
+          if (response.status === 403) {
+            if (result.action === 'rejected_disabled') {
+              console.warn('Game is disabled - score not saved')
+            } else if (result.action === 'rejected_limit') {
+              console.warn('Play limit reached - score not saved')
+            }
+          } else if (response.status === 409) {
+            console.warn('Score not better than existing - not saved')
+          } else {
+            console.error('Failed to save score:', result.error)
+          }
+        }
       }
     } catch (error) {
       console.error('Error saving score:', error)
       throw error
     }
-  }, [user, score, currentQuestion, totalTimeRef])
+  }, [user, score, currentQuestion, totalTimeRef, onScoreSaved])
 
   return { saveScore }
 }
@@ -474,7 +489,7 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-export default function GuessGame({ user }) {
+export default function GuessGame({ user, onScoreSaved = () => {} }) {
   const {
     currentQuestion,
     selectedImage,
@@ -500,7 +515,7 @@ export default function GuessGame({ user }) {
     handleContinue
   } = useGameState()
 
-  const { saveScore } = useScoreSaver(user, score, currentQuestion, totalTimeRef)
+  const { saveScore } = useScoreSaver(user, score, currentQuestion, totalTimeRef, onScoreSaved)
 
   // Timer effect
   useTimer(timeLeft, gameState, setTimeLeft)

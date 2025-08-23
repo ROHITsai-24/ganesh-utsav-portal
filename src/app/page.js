@@ -295,9 +295,9 @@ const GameCard = ({ game, className = '' }) => {
 function HomeContent() {
   const { user, loading } = useSupabaseAuth()
   const { hasUpdates } = useUpdates()
+  const { translations } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(JOURNEY_CONFIG.defaultYear)
-  const { translations } = useLanguage()
 
   // Memoized handlers
   const toggleMobileMenu = useCallback(() => {
@@ -599,25 +599,22 @@ function HomeContent() {
 
             {/* Right - Navigation */}
             <div className="flex flex-wrap gap-6 md:justify-end">
-              {(() => {
-                const { hasUpdates } = useUpdates()
-                return NAVIGATION_ITEMS.map((item) => {
-                  // Skip conditional items if they shouldn't be shown
-                  if (item.conditional && item.labelKey === 'dailyUpdates' && !hasUpdates) {
-                    return null
-                  }
-                  
-                  return (
-                    <a 
-                      key={item.href} 
-                      href={item.href} 
-                      className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
-                    >
-                      {translations[item.labelKey]}
-                    </a>
-                  )
-                })
-              })()}
+              {NAVIGATION_ITEMS.map((item) => {
+                // Skip conditional items if they shouldn't be shown
+                if (item.conditional && item.labelKey === 'dailyUpdates' && !hasUpdates) {
+                  return null
+                }
+                
+                return (
+                  <a 
+                    key={item.href} 
+                    href={item.href} 
+                    className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
+                  >
+                    {translations[item.labelKey]}
+                  </a>
+                )
+              })}
             </div>
           </div>
         </div>

@@ -15,7 +15,7 @@ export async function GET() {
     // Get all game settings (public read access)
     const { data: settings, error } = await supabase
       .from('game_settings')
-      .select('game_key, is_enabled')
+      .select('game_key, is_enabled, play_limit')
       .order('game_key')
 
     if (error) {
@@ -25,7 +25,10 @@ export async function GET() {
     // Convert to key-value object for easier consumption
     const gameSettings = {}
     settings.forEach(setting => {
-      gameSettings[setting.game_key] = setting.is_enabled
+      gameSettings[setting.game_key] = {
+        is_enabled: setting.is_enabled,
+        play_limit: setting.play_limit || 1
+      }
     })
 
     return NextResponse.json({ gameSettings })

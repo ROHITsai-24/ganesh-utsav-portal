@@ -7,7 +7,9 @@ import AuthForm from '@/components/auth/AuthForm'
 import GuessGame from '@/components/game/GuessGame'
 import PuzzleGame from '@/components/game/PuzzleGame'
 import DisabledGameCard from '@/components/game/DisabledGameCard'
+import PlayLimitCard from '@/components/game/PlayLimitCard'
 import { useGameSettings } from '@/contexts/GameSettingsContext'
+import { usePlayLimit } from '@/hooks/usePlayLimit'
 import Link from 'next/link'
 
 // Configuration objects for dynamic content
@@ -90,9 +92,13 @@ const useAuth = () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         setUser(session.user)
-        // Check if user is admin and redirect
+        // Check if user is admin and redirect (only if not already on admin page)
         if (session.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-          router.push('/admin')
+          // Only redirect if we're not already on the admin page
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/admin')) {
+            router.push('/admin')
+            return // Exit early for admin users
+          }
         }
       }
     } catch (error) {
@@ -112,15 +118,22 @@ const useAuth = () => {
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in, setting user state')
           setUser(session.user)
-          // Check if user is admin and redirect
+          // Check if user is admin and redirect (only if not already on admin page)
           if (session.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-            router.push('/admin')
-            return
+            // Only redirect if we're not already on the admin page
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/admin')) {
+              router.push('/admin')
+              return
+            }
           }
           setLoading(false)
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out, clearing user state')
           setUser(null)
+          setLoading(false)
+        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          // Handle token refresh without redirecting
+          setUser(session.user)
           setLoading(false)
         }
       }
@@ -158,10 +171,20 @@ const useMobileMenu = () => {
 
 // Custom hook for game tabs
 const useGameTabs = () => {
-  const [activeTab, setActiveTab] = useState('guess')
+  const [activeTab, setActiveTab] = useState(() => {
+    // Try to get the active tab from localStorage on initial load
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('activeGameTab') || 'guess'
+    }
+    return 'guess'
+  })
 
   const switchTab = useCallback((tabId) => {
     setActiveTab(tabId)
+    // Save to localStorage for persistence across refreshes
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activeGameTab', tabId)
+    }
   }, [])
 
   const activeTabConfig = useMemo(() => {
@@ -171,31 +194,44 @@ const useGameTabs = () => {
   return { activeTab, switchTab, activeTabConfig }
 }
 
-// Custom hook for homepage state
-const useHomepageState = () => {
-  const [showGames, setShowGames] = useState(false)
-
-  // Check URL query parameter on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      const shouldShowGames = urlParams.get('showGames') === 'true'
-      if (shouldShowGames) {
-        setShowGames(true)
+  // Custom hook for homepage state
+  const useHomepageState = () => {
+    const [showGames, setShowGames] = useState(() => {
+      // Check if we should show games on initial load
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search)
+        const shouldShowGames = urlParams.get('showGames') === 'true'
+        // If we're on the games page directly, show games by default
+        if (window.location.pathname === '/games') {
+          return true
+        }
+        return shouldShowGames
       }
-    }
-  }, [])
-
-  const goToGames = useCallback(() => {
-    setShowGames(true)
-  }, [])
-
-  const goToHomepage = useCallback(() => {
-    setShowGames(false)
-  }, [])
-
-  return { showGames, goToGames, goToHomepage }
-}
+      return false
+    })
+  
+    const goToGames = useCallback(() => {
+      setShowGames(true)
+      // Update URL to reflect the games state
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location)
+        url.searchParams.set('showGames', 'true')
+        window.history.replaceState({}, '', url)
+      }
+    }, [])
+  
+    const goToHomepage = useCallback(() => {
+      setShowGames(false)
+      // Update URL to reflect the homepage state
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location)
+        url.searchParams.delete('showGames')
+        window.history.replaceState({}, '', url)
+      }
+    }, [])
+  
+    return { showGames, goToGames, goToHomepage }
+  }
 
 // Reusable components
 const LoadingSpinner = ({ size = 'h-32 w-32', color = 'border-purple-600' }) => (
@@ -650,19 +686,33 @@ const GameTabs = ({ activeTab, onTabChange }) => {
 }
 
 const GameContent = ({ activeTabConfig, user }) => {
-  const { isGameEnabled, loading } = useGameSettings()
+  const { isGameEnabled, loading: gameSettingsLoading, refreshSettings } = useGameSettings()
+  const { canPlay, playCount, playLimit, loading: playLimitLoading, checkPlayLimit } = usePlayLimit(user, activeTabConfig?.id)
+  
+  // Refresh settings when page becomes visible (user comes back to tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshSettings()
+        checkPlayLimit()
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [refreshSettings, checkPlayLimit])
   
   // Memoize game config to prevent recreation on every render
-  // This must be called before any conditional returns
   const gameConfig = useMemo(() => ({
     puzzle: { title: 'Puzzle Game', description: 'Sliding puzzle game with Ganesha idols' },
     guess: { title: 'Guess Game', description: 'Guess the correct Ganesha idol details' }
   }), [])
   
+  // Early returns
   if (!activeTabConfig) return null
 
-  // Show loading spinner while game settings are being loaded
-  if (loading) {
+  // Show loading spinner while settings are being loaded
+  if (gameSettingsLoading || playLimitLoading) {
     return (
       <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden">
         <div className="flex items-center justify-center py-16">
@@ -684,14 +734,28 @@ const GameContent = ({ activeTabConfig, user }) => {
     )
   }
 
+  // Check if user has reached play limit
+  if (!canPlay) {
+    return (
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden">
+        <PlayLimitCard 
+          gameTitle={gameConfig[activeTabConfig.id]?.title || 'Game'}
+          gameDescription={gameConfig[activeTabConfig.id]?.description || 'This game is currently unavailable.'}
+          playCount={playCount}
+          playLimit={playLimit}
+        />
+      </div>
+    )
+  }
+
   const GameComponent = activeTabConfig.component
 
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden">
       {activeTabConfig.id === 'puzzle' ? (
-        <GameComponent user={user} imageSrc="/puzzle.jpg" />
+        <GameComponent user={user} imageSrc="/puzzle.jpg" onScoreSaved={checkPlayLimit} />
       ) : (
-        <GameComponent user={user} />
+        <GameComponent user={user} onScoreSaved={checkPlayLimit} />
       )}
     </div>
   )
