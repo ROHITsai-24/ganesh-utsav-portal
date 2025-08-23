@@ -213,8 +213,12 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     try {
       const gameId = await getGameIdByKey('puzzle')
       if (gameId) {
-        const { error } = await supabase.from('game_results').insert([
-          {
+        const response = await fetch('/api/game-results', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             user_id: user.id,
             game_id: gameId,
             score: calculateScore(actualMoves, actualTime),
@@ -223,9 +227,16 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
               time_taken: actualTime,
               solved: true
             },
-          },
-        ])
-        if (error) console.error('Error saving score:', error)
+          }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.error('Error saving score:', errorData.error)
+        } else {
+          const result = await response.json()
+          // Score saved successfully
+        }
       }
     } catch (error) {
       console.error('Error saving score:', error)

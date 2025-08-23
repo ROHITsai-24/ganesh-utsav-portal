@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 import AuthForm from '@/components/auth/AuthForm'
 import GuessGame from '@/components/game/GuessGame'
 import PuzzleGame from '@/components/game/PuzzleGame'
+import DisabledGameCard from '@/components/game/DisabledGameCard'
+import { useGameSettings } from '@/contexts/GameSettingsContext'
 import Link from 'next/link'
 
 // Configuration objects for dynamic content
@@ -611,31 +613,76 @@ const GamesMobileMenu = ({ isOpen, onClose, onBackToHomepage, onSignOut }) => {
 }
 
 const GameTabs = ({ activeTab, onTabChange }) => {
+  const { isGameEnabled, loading } = useGameSettings()
+  
   if (!GAME_TABS || GAME_TABS.length === 0) {
     return null
   }
   
   return (
     <div className="flex gap-2 justify-center p-3 mb-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-      {GAME_TABS.map((tab) => (
-        <button
-          key={tab.id}
-          className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all ${
-            activeTab === tab.id 
-              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
-              : 'bg-white/20 text-white/80 hover:bg-white/30'
-          }`}
-          onClick={() => onTabChange(tab.id)}
-        >
-          {tab.label}
-        </button>
-      ))}
+      {GAME_TABS.map((tab) => {
+        const isEnabled = isGameEnabled(tab.id)
+        const isActive = activeTab === tab.id
+        
+        return (
+          <button
+            key={tab.id}
+            className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all relative ${
+              isActive 
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
+                : isEnabled
+                  ? 'bg-white/20 text-white/80 hover:bg-white/30'
+                  : 'bg-gray-500/30 text-gray-400 cursor-not-allowed'
+            }`}
+            onClick={() => onTabChange(tab.id)}
+            disabled={!isEnabled}
+          >
+            {tab.label}
+            {!isEnabled && (
+              <span className="absolute -top-1 -right-1 text-xs">🚫</span>
+            )}
+          </button>
+        )
+      })}
     </div>
   )
 }
 
 const GameContent = ({ activeTabConfig, user }) => {
+  const { isGameEnabled, loading } = useGameSettings()
+  
+  // Memoize game config to prevent recreation on every render
+  // This must be called before any conditional returns
+  const gameConfig = useMemo(() => ({
+    puzzle: { title: 'Puzzle Game', description: 'Sliding puzzle game with Ganesha idols' },
+    guess: { title: 'Guess Game', description: 'Guess the correct Ganesha idol details' }
+  }), [])
+  
   if (!activeTabConfig) return null
+
+  // Show loading spinner while game settings are being loaded
+  if (loading) {
+    return (
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden">
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // Check if the active game is enabled
+  if (!isGameEnabled(activeTabConfig.id)) {
+    return (
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden">
+        <DisabledGameCard 
+          gameTitle={gameConfig[activeTabConfig.id]?.title || 'Game'}
+          gameDescription={gameConfig[activeTabConfig.id]?.description || 'This game is currently unavailable.'}
+        />
+      </div>
+    )
+  }
 
   const GameComponent = activeTabConfig.component
 

@@ -80,19 +80,23 @@ export async function GET(request) {
     records.sort((a, b) => (b.totalScore - a.totalScore) || (b.gamesPlayed - a.gamesPlayed))
 
     // Flatten result rows for per-game dashboards
-    const flatScores = (results || []).map(r => ({
-      id: r.id,
-      user_id: r.user_id,
-      score: r.score,
-      created_at: r.created_at,
-      game_key: r.games?.key,
-      game_name: r.games?.name,
-      moves: r.details?.moves ?? null,
-      time_taken_seconds: r.details?.time_taken ?? null,
-      // Add user details for display
-      user_email: flatUsers.find(u => u.id === r.user_id)?.email || null,
-      user_username: flatUsers.find(u => u.id === r.user_id)?.username || null,
-    }))
+    const flatScores = (results || []).map(r => {
+      const timeTaken = r.details?.time_taken ?? null
+      
+      return {
+        id: r.id,
+        user_id: r.user_id,
+        score: r.score,
+        created_at: r.created_at,
+        game_key: r.games?.key,
+        game_name: r.games?.name,
+        moves: r.details?.moves ?? null,
+        time_taken_seconds: timeTaken,
+        // Add user details for display
+        user_email: flatUsers.find(u => u.id === r.user_id)?.email || null,
+        user_username: flatUsers.find(u => u.id === r.user_id)?.username || null,
+      }
+    })
 
     return NextResponse.json({ users: records, scores: flatScores })
   } catch (e) {

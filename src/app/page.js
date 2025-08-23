@@ -157,12 +157,15 @@ const LanguageSelector = ({ className = '' }) => {
   return (
     <button 
       onClick={toggleLanguage}
-      className={`flex items-center space-x-2 text-gray-700 hover:text-[#8B4513] transition-colors cursor-pointer ${className}`}
+      className={`flex items-center space-x-2 font-bold cursor-pointer ${className}`}
     >
-      <span>{translations.language}</span>
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
+      <span className={language === 'en' ? 'text-[#8B4513]' : 'text-[#8B4513]/50'}>
+        English
+      </span>
+      <span className="text-gray-700">|</span>
+      <span className={language === 'te' ? 'text-[#8B4513]' : 'text-[#8B4513]/50'}>
+        తెలుగు
+      </span>
     </button>
   )
 }
@@ -596,15 +599,25 @@ function HomeContent() {
 
             {/* Right - Navigation */}
             <div className="flex flex-wrap gap-6 md:justify-end">
-              {NAVIGATION_ITEMS.map((item) => (
-                <a 
-                  key={item.href} 
-                  href={item.href} 
-                  className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
-                >
-                  {translations[item.labelKey]}
-                </a>
-              ))}
+              {(() => {
+                const { hasUpdates } = useUpdates()
+                return NAVIGATION_ITEMS.map((item) => {
+                  // Skip conditional items if they shouldn't be shown
+                  if (item.conditional && item.labelKey === 'dailyUpdates' && !hasUpdates) {
+                    return null
+                  }
+                  
+                  return (
+                    <a 
+                      key={item.href} 
+                      href={item.href} 
+                      className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
+                    >
+                      {translations[item.labelKey]}
+                    </a>
+                  )
+                })
+              })()}
             </div>
           </div>
         </div>

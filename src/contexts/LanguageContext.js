@@ -232,13 +232,13 @@ export const LanguageProvider = ({ children }) => {
   const toggleLanguage = useCallback(() => {
     setLanguage(prev => prev === 'en' ? 'te' : 'en')
   }, [])
-  
+
   const value = useMemo(() => ({
     language,
     toggleLanguage,
     translations: TRANSLATIONS[language]
   }), [language, toggleLanguage])
-  
+
   return (
     <LanguageContext.Provider value={value}>
       {children}

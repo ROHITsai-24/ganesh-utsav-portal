@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { getGameIdByKey } from '@/lib/games'
 import { Button } from '@/components/ui/button'
@@ -99,6 +99,14 @@ const useGameState = () => {
   const [gameState, setGameState] = useState('ready')
   const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.timeLimit)
   const [shuffledImages, setShuffledImages] = useState([])
+  const [hasSaved, setHasSaved] = useState(false)
+  
+  // Store time taken for each question
+  const questionTimesRef = useRef([])
+  // Store total time taken for saving
+  const totalTimeRef = useRef(0)
+  // Store when current question started
+  const questionStartTimeRef = useRef(null)
 
   const resetGame = useCallback(() => {
     setCurrentQuestion(1)
@@ -108,6 +116,10 @@ const useGameState = () => {
     setScore(0)
     setGameState('ready')
     setTimeLeft(GAME_CONFIG.timeLimit)
+    setHasSaved(false)
+    questionTimesRef.current = []
+    totalTimeRef.current = 0
+    questionStartTimeRef.current = null
     
     // Shuffle images for the first question
     const shuffled = [...GAME_OPTIONS.images].sort(() => Math.random() - 0.5)
@@ -116,6 +128,7 @@ const useGameState = () => {
 
   const startGame = useCallback(() => {
     setGameState('playing')
+    questionStartTimeRef.current = Date.now() // Start timing first question
   }, [])
 
   const nextQuestion = useCallback(() => {
@@ -123,12 +136,23 @@ const useGameState = () => {
       setCurrentQuestion(prev => prev + 1)
       setGameState('playing')
       setTimeLeft(GAME_CONFIG.timeLimit)
+      questionStartTimeRef.current = Date.now() // Start timing next question
     } else {
+      // Game completed - calculate total time from all questions
+      const totalTime = questionTimesRef.current.reduce((sum, time) => sum + time, 0)
       setGameState('completed')
+      totalTimeRef.current = totalTime
     }
   }, [currentQuestion])
 
   const checkAnswer = useCallback(() => {
+    // Calculate time taken for this question when answer is submitted
+    if (questionStartTimeRef.current) {
+      const questionEndTime = Date.now()
+      const timeTakenForQuestion = Math.floor((questionEndTime - questionStartTimeRef.current) / 1000)
+      questionTimesRef.current.push(timeTakenForQuestion)
+    }
+
     const questionConfig = QUESTION_CONFIG[currentQuestion]
     let isCorrect = false
 
@@ -164,6 +188,17 @@ const useGameState = () => {
     }
   }, [currentQuestion, selectedImage, selectedHeight, selectedPrice])
 
+  const handleContinue = useCallback(() => {
+    if (currentQuestion < GAME_CONFIG.totalQuestions) {
+      nextQuestion()
+    } else {
+      // Game completed - calculate total time from all questions
+      const totalTime = questionTimesRef.current.reduce((sum, time) => sum + time, 0)
+      totalTimeRef.current = totalTime
+      setGameState('completed')
+    }
+  }, [currentQuestion, nextQuestion, setGameState])
+
   return {
     currentQuestion,
     selectedImage,
@@ -173,16 +208,20 @@ const useGameState = () => {
     gameState,
     timeLeft,
     shuffledImages,
+    hasSaved,
+    totalTimeRef,
     canProceed,
     setSelectedImage,
     setSelectedHeight,
     setSelectedPrice,
     setGameState,
     setTimeLeft,
+    setHasSaved,
     resetGame,
     startGame,
     nextQuestion,
-    checkAnswer
+    checkAnswer,
+    handleContinue
   }
 }
 
@@ -199,34 +238,45 @@ const useTimer = (timeLeft, gameState, onTimeUp) => {
   }, [timeLeft, gameState, onTimeUp])
 }
 
-// Custom hook for score saving
-const useScoreSaver = (user, score, currentQuestion, timeLeft) => {
+// Custom hook for score saving (optimized like puzzle game)
+const useScoreSaver = (user, score, currentQuestion, totalTimeRef) => {
   const saveScore = useCallback(async () => {
     try {
       const gameId = await getGameIdByKey('guess')
       if (gameId) {
-        const { error } = await supabase.from('game_results').insert([
-          {
+        // Use the total time calculated from all questions
+        const exactTimeTaken = totalTimeRef.current || 0
+        
+        const response = await fetch('/api/game-results', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             user_id: user.id,
             game_id: gameId,
             score: score,
             details: { 
               final_score: score,
               questions_answered: currentQuestion,
-              time_taken: GAME_CONFIG.timeLimit - timeLeft
+              time_taken: exactTimeTaken
             },
-          },
-        ])
-        if (error) {
-          console.error('Error saving score:', error)
-          throw error
+          }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to save score')
         }
+
+        const result = await response.json()
+        // Score saved successfully
       }
     } catch (error) {
       console.error('Error saving score:', error)
       throw error
     }
-  }, [user, score, currentQuestion, timeLeft])
+  }, [user, score, currentQuestion, totalTimeRef])
 
   return { saveScore }
 }
@@ -434,19 +484,23 @@ export default function GuessGame({ user }) {
     gameState,
     timeLeft,
     shuffledImages,
+    hasSaved,
+    totalTimeRef,
     canProceed,
     setSelectedImage,
     setSelectedHeight,
     setSelectedPrice,
     setGameState,
     setTimeLeft,
+    setHasSaved,
     resetGame,
     startGame,
     nextQuestion,
-    checkAnswer
+    checkAnswer,
+    handleContinue
   } = useGameState()
 
-  const { saveScore } = useScoreSaver(user, score, currentQuestion, timeLeft)
+  const { saveScore } = useScoreSaver(user, score, currentQuestion, totalTimeRef)
 
   // Timer effect
   useTimer(timeLeft, gameState, setTimeLeft)
@@ -456,27 +510,36 @@ export default function GuessGame({ user }) {
     resetGame()
   }, [resetGame])
 
-  // Handle time up
+  // Handle time up - automatically move to next question instead of ending game
   useEffect(() => {
     if (timeLeft === 0 && gameState === 'playing') {
-      setGameState('timeup')
+      // Calculate time taken for this question when time runs out
+      if (questionStartTimeRef.current) {
+        const questionEndTime = Date.now()
+        const timeTakenForQuestion = Math.floor((questionEndTime - questionStartTimeRef.current) / 1000)
+        questionTimesRef.current.push(timeTakenForQuestion)
+      }
+      
+      // Auto-advance to next question when time runs out
+      if (currentQuestion < GAME_CONFIG.totalQuestions) {
+        nextQuestion()
+      } else {
+        // Only end game if this was the last question
+        // Calculate total time from all questions
+        const totalTime = questionTimesRef.current.reduce((sum, time) => sum + time, 0)
+        totalTimeRef.current = totalTime
+        setGameState('completed')
+      }
     }
-  }, [timeLeft, gameState, setGameState])
+  }, [timeLeft, gameState, setGameState, currentQuestion, nextQuestion])
 
-  // Save score when game is completed
+  // Save score when game is completed (prevent multiple saves)
   useEffect(() => {
-    if (gameState === 'completed') {
+    if (gameState === 'completed' && !hasSaved) {
+      setHasSaved(true)
       saveScore().catch(console.error)
     }
-  }, [gameState, saveScore])
-
-  const handleContinue = useCallback(() => {
-    if (currentQuestion < GAME_CONFIG.totalQuestions) {
-      nextQuestion()
-    } else {
-      setGameState('completed')
-    }
-  }, [currentQuestion, nextQuestion, setGameState])
+  }, [gameState, saveScore, hasSaved, setHasSaved])
 
   // Start screen
   if (gameState === 'ready') {
@@ -497,18 +560,7 @@ export default function GuessGame({ user }) {
     )
   }
 
-  if (gameState === 'timeup') {
-    return (
-      <GameOverScreen
-        title={GAME_CONFIG.timeUp.title}
-        subtitle={GAME_CONFIG.timeUp.subtitle}
-        score={score}
-        buttonText={GAME_CONFIG.timeUp.buttonText}
-        onButtonClick={resetGame}
-        bgColor="red"
-      />
-    )
-  }
+
 
   const questionConfig = QUESTION_CONFIG[currentQuestion]
 

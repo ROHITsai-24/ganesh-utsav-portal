@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import UpdatesManager from './UpdatesManager'
+import GameSettingsManager from './GameSettingsManager'
 
 // Configuration objects for dynamic content
 const DASHBOARD_CONFIG = {
@@ -22,7 +23,7 @@ const GAME_CONFIG = {
   guess: {
     key: 'guess',
     title: 'Guess Game Leaderboard',
-    description: 'Top 20 by score'
+    description: 'Top 20 by score, then by time (faster is better)'
   },
   puzzle: {
     key: 'puzzle',
@@ -227,7 +228,7 @@ const UsersTable = ({ rows }) => {
   ))
 }
 
-const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime }) => {
+const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showTime }) => {
   const handleDelete = (gameResultId, username) => {
     if (window.confirm(`Are you sure you want to delete this game result for ${username}? This action cannot be undone.`)) {
       onDelete(gameResultId)
@@ -256,6 +257,11 @@ const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime }) => 
           {row.moves ?? '-'} / {row.time_taken_seconds ?? '-'}s
         </td>
       )}
+      {showTime && (
+        <td className="py-2 pr-4">
+          {row.time_taken_seconds ? `${row.time_taken_seconds}s` : '-'}
+        </td>
+      )}
       <td className="py-2 pr-4">
         {row.created_at ? new Date(row.created_at).toLocaleString() : '-'}
       </td>
@@ -275,17 +281,37 @@ const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime }) => 
 
 const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
   const leaderboard = useMemo(() => {
-    return [...rawScores.filter(s => (s.game_key || 'guess').toLowerCase() === gameKey)]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 20)
+    const filteredScores = rawScores.filter(s => s.game_key === gameKey)
+    
+    // Sort based on game type
+    if (gameKey === 'guess') {
+      // For guess game: sort by score first, then by time taken (faster is better)
+      return filteredScores
+        .sort((a, b) => {
+          if (b.score !== a.score) {
+            return b.score - a.score // Higher score first
+          }
+          // If scores are equal, sort by time taken (faster time first)
+          const timeA = a.time_taken_seconds || 0
+          const timeB = b.time_taken_seconds || 0
+          return timeA - timeB
+        })
+        .slice(0, 20)
+    } else {
+      // For puzzle game: sort by score only
+      return filteredScores
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20)
+    }
   }, [rawScores, gameKey])
 
   const gameConfig = GAME_CONFIG[gameKey]
   const showMovesTime = gameKey === 'puzzle'
+  const showTime = gameKey === 'guess'
 
   const handleDeleteAll = () => {
     const gameName = gameConfig.title
-    const resultCount = rawScores.filter(s => (s.game_key || 'guess').toLowerCase() === gameKey).length
+    const resultCount = rawScores.filter(s => s.game_key === gameKey).length
     
     if (window.confirm(`⚠️ DANGER: Are you sure you want to delete ALL ${resultCount} game results for ${gameName}?\n\nThis will permanently remove ALL scores, moves, and time data for this game. This action CANNOT be undone!\n\nType "delete" to confirm.`)) {
       const confirmation = prompt(`Type "delete" to confirm deletion of all ${gameName} results:`)
@@ -316,9 +342,15 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
       </CardHeader>
       <CardContent>
         <DataTable 
-          headers={showMovesTime ? TABLE_CONFIG.leaderboard.headers : TABLE_CONFIG.leaderboard.headers.filter(h => h !== 'Moves / Time')}
+          headers={
+            showMovesTime 
+              ? TABLE_CONFIG.leaderboard.headers 
+              : showTime 
+                ? ['#', 'User', 'Score', 'Time', 'When', 'Actions']
+                : TABLE_CONFIG.leaderboard.headers.filter(h => h !== 'Moves / Time')
+          }
         >
-          <LeaderboardTable gameKey={gameKey} leaderboard={leaderboard} onDelete={onDelete} showMovesTime={showMovesTime} />
+          <LeaderboardTable gameKey={gameKey} leaderboard={leaderboard} onDelete={onDelete} showMovesTime={showMovesTime} showTime={showTime} />
         </DataTable>
       </CardContent>
     </Card>
@@ -378,6 +410,11 @@ export default function AdminDashboard() {
             </DataTable>
           </CardContent>
         </Card>
+
+        {/* Game Settings */}
+        <div className="mt-8">
+          <GameSettingsManager />
+        </div>
 
         {/* Per-game leaderboards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
