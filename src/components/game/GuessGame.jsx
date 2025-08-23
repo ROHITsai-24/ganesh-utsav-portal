@@ -96,7 +96,7 @@ const useGameState = () => {
   const [selectedHeight, setSelectedHeight] = useState('')
   const [selectedPrice, setSelectedPrice] = useState('')
   const [score, setScore] = useState(0)
-  const [gameState, setGameState] = useState('playing')
+  const [gameState, setGameState] = useState('ready')
   const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.timeLimit)
   const [shuffledImages, setShuffledImages] = useState([])
 
@@ -106,12 +106,16 @@ const useGameState = () => {
     setSelectedHeight('')
     setSelectedPrice('')
     setScore(0)
-    setGameState('playing')
+    setGameState('ready')
     setTimeLeft(GAME_CONFIG.timeLimit)
     
     // Shuffle images for the first question
     const shuffled = [...GAME_OPTIONS.images].sort(() => Math.random() - 0.5)
     setShuffledImages(shuffled)
+  }, [])
+
+  const startGame = useCallback(() => {
+    setGameState('playing')
   }, [])
 
   const nextQuestion = useCallback(() => {
@@ -176,6 +180,7 @@ const useGameState = () => {
     setGameState,
     setTimeLeft,
     resetGame,
+    startGame,
     nextQuestion,
     checkAnswer
   }
@@ -232,20 +237,20 @@ const GameHeader = ({ user, timeLeft, score, currentQuestion }) => (
     <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
       {GAME_CONFIG.title}
     </h1>
-    <p className="text-gray-600 mb-2">
+    <p className="text-gray-600 mb-4">
       {GAME_CONFIG.welcomeMessage.replace('{username}', user?.user_metadata?.username || user?.email)}
     </p>
     
-    {/* Timer and Score */}
-    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4">
-      <div className="bg-red-100 text-red-800 px-4 py-2 rounded-full font-semibold">
+    {/* Timer, Score, and Question - Horizontal Layout */}
+    <div className="flex flex-wrap gap-2 md:gap-4 justify-center items-center mb-4">
+      <div className="bg-red-100 text-red-800 px-3 py-1 md:px-4 md:py-2 rounded-full font-semibold text-sm md:text-base">
         ⏰ {formatTime(timeLeft)}
       </div>
-      <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold">
+      <div className="bg-blue-100 text-blue-800 px-3 py-1 md:px-4 md:py-2 rounded-full font-semibold text-sm md:text-base">
         Score: {score}
       </div>
-      <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold">
-        Question {currentQuestion}/{GAME_CONFIG.totalQuestions}
+      <div className="bg-green-100 text-green-800 px-3 py-1 md:px-4 md:py-2 rounded-full font-semibold text-sm md:text-base">
+        Q {currentQuestion}/{GAME_CONFIG.totalQuestions}
       </div>
     </div>
   </div>
@@ -336,7 +341,7 @@ const ResultDisplay = ({ gameState, currentQuestion, onContinue }) => {
 }
 
 const GameOverScreen = ({ title, subtitle, score, buttonText, onButtonClick, bgColor = 'blue' }) => (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+  <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4">
     <div className="max-w-4xl mx-auto">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-800 mb-4">{title}</h1>
@@ -346,6 +351,31 @@ const GameOverScreen = ({ title, subtitle, score, buttonText, onButtonClick, bgC
         </div>
         <Button onClick={onButtonClick} className="text-lg px-8 py-3">
           {buttonText}
+        </Button>
+      </div>
+    </div>
+  </div>
+)
+
+const StartScreen = ({ user, onStart }) => (
+  <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+    <div className="max-w-4xl mx-auto">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">{GAME_CONFIG.title}</h1>
+        <p className="text-gray-600 mb-6">
+          {GAME_CONFIG.welcomeMessage.replace('{username}', user?.user_metadata?.username || user?.email)}
+        </p>
+        <div className="bg-white p-6 rounded-lg mb-6 shadow-lg">
+          <h2 className="text-xl font-bold mb-4">How to Play:</h2>
+          <ul className="text-left space-y-2 text-gray-700">
+            <li>• Answer {GAME_CONFIG.totalQuestions} questions about Ganesha idols</li>
+            <li>• Each question has {GAME_CONFIG.timeLimit} seconds time limit</li>
+            <li>• Earn {GAME_CONFIG.pointsPerQuestion} points for each correct answer</li>
+            <li>• Try to get the highest score!</li>
+          </ul>
+        </div>
+        <Button onClick={onStart} className="text-lg px-8 py-3 bg-green-600 hover:bg-green-700">
+          Start Game
         </Button>
       </div>
     </div>
@@ -411,6 +441,7 @@ export default function GuessGame({ user }) {
     setGameState,
     setTimeLeft,
     resetGame,
+    startGame,
     nextQuestion,
     checkAnswer
   } = useGameState()
@@ -447,6 +478,11 @@ export default function GuessGame({ user }) {
     }
   }, [currentQuestion, nextQuestion, setGameState])
 
+  // Start screen
+  if (gameState === 'ready') {
+    return <StartScreen user={user} onStart={startGame} />
+  }
+
   // Game over states
   if (gameState === 'completed') {
     return (
@@ -477,7 +513,7 @@ export default function GuessGame({ user }) {
   const questionConfig = QUESTION_CONFIG[currentQuestion]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+    <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4">
       <div className="max-w-6xl mx-auto">
         <GameHeader 
           user={user} 
@@ -532,8 +568,8 @@ export default function GuessGame({ user }) {
           </Card>
         </div>
 
-        {/* Game completed message */}
-        <div className="text-center mt-8">
+        {/* Game info */}
+        <div className="text-center mt-4">
           <p className="text-gray-600">Complete all questions to see your final score!</p>
         </div>
       </div>

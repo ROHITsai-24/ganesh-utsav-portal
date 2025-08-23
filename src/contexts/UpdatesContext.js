@@ -1,13 +1,31 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+
+// Configuration object for updates context
+const UPDATES_CONTEXT_CONFIG = {
+  // API endpoints
+  api: {
+    updates: '/api/updates'
+  },
+  // Polling configuration
+  polling: {
+    interval: 5000, // 5 seconds
+    enabled: true
+  },
+  // Error messages
+  errors: {
+    contextError: 'useUpdates must be used within UpdatesProvider',
+    fetchError: 'Failed to fetch updates'
+  }
+}
 
 const UpdatesContext = createContext()
 
 export const useUpdates = () => {
   const context = useContext(UpdatesContext)
   if (!context) {
-    throw new Error('useUpdates must be used within UpdatesProvider')
+    throw new Error(UPDATES_CONTEXT_CONFIG.errors.contextError)
   }
   return context
 }
@@ -16,81 +34,124 @@ export const UpdatesProvider = ({ children }) => {
   const [updates, setUpdates] = useState([])
   const [loading, setLoading] = useState(true)
   const [hasUpdates, setHasUpdates] = useState(false)
+  const [error, setError] = useState(null)
 
-  const fetchUpdates = async () => {
+  // Memoized function to fetch updates
+  const fetchUpdates = useCallback(async () => {
     try {
-      const response = await fetch('/api/updates')
+      setError(null)
+      const response = await fetch(UPDATES_CONTEXT_CONFIG.api.updates)
+      
       if (response.ok) {
         const data = await response.json()
-        const updatesArray = data.updates || data
-        setUpdates(updatesArray || [])
-        setHasUpdates(updatesArray && Array.isArray(updatesArray) && updatesArray.length > 0)
+        const updatesArray = data.updates || data || []
+        setUpdates(updatesArray)
+        setHasUpdates(updatesArray.length > 0)
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
     } catch (error) {
       console.error('Error fetching updates:', error)
+      setError(UPDATES_CONTEXT_CONFIG.errors.fetchError)
       setUpdates([])
       setHasUpdates(false)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  // Smart polling: only when updates exist
-  useEffect(() => {
-    let interval
-
-    const startPolling = () => {
-      interval = setInterval(async () => {
-        const response = await fetch('/api/updates')
-        if (response.ok) {
-          const data = await response.json()
-          const updatesArray = data.updates || data
-          const newHasUpdates = updatesArray && Array.isArray(updatesArray) && updatesArray.length > 0
-          
-          if (newHasUpdates !== hasUpdates) {
-            setUpdates(updatesArray || [])
-            setHasUpdates(newHasUpdates)
-          }
-          
-          // 🎯 SMART: Stop polling if no updates exist
-          if (!newHasUpdates) {
-            clearInterval(interval)
-            console.log('No updates, stopped polling')
-          }
+  // Memoized function to check for updates
+  const checkForUpdates = useCallback(async () => {
+    try {
+      const response = await fetch(UPDATES_CONTEXT_CONFIG.api.updates)
+      if (response.ok) {
+        const data = await response.json()
+        const updatesArray = data.updates || data || []
+        const newHasUpdates = updatesArray.length > 0
+        
+        if (newHasUpdates !== hasUpdates) {
+          setUpdates(updatesArray)
+          setHasUpdates(newHasUpdates)
         }
-      }, 5000)
+        
+        return newHasUpdates
+      }
+      return false
+    } catch (error) {
+      console.error('Error checking for updates:', error)
+      return false
     }
+  }, [hasUpdates])
+
+  // Memoized function to start polling
+  const startPolling = useCallback(() => {
+    if (!UPDATES_CONTEXT_CONFIG.polling.enabled) return null
+    
+    return setInterval(async () => {
+      const hasUpdatesResult = await checkForUpdates()
+      
+      // Stop polling if no updates exist
+      if (!hasUpdatesResult) {
+        console.log('No updates, stopped polling')
+        return null
+      }
+    }, UPDATES_CONTEXT_CONFIG.polling.interval)
+  }, [checkForUpdates])
+
+  // Memoized function to restart polling
+  const restartPolling = useCallback(() => {
+    fetchUpdates()
+  }, [fetchUpdates])
+
+  // Memoized function to clear interval
+  const clearPollingInterval = useCallback((interval) => {
+    if (interval) {
+      clearInterval(interval)
+    }
+  }, [])
+
+  // Effect for initial fetch and polling setup
+  useEffect(() => {
+    let interval = null
 
     // Initial fetch
     fetchUpdates()
 
-    // Start polling only if updates exist
-    if (hasUpdates) {
-      startPolling()
+    // Start polling only if updates exist and polling is enabled
+    if (hasUpdates && UPDATES_CONTEXT_CONFIG.polling.enabled) {
+      interval = startPolling()
     }
 
     return () => {
-      if (interval) {
-        clearInterval(interval)
-      }
+      clearPollingInterval(interval)
     }
-  }, [hasUpdates])
+  }, [hasUpdates, fetchUpdates, startPolling, clearPollingInterval])
 
-  // Restart polling when updates are added (e.g., after admin adds update)
-  const restartPolling = () => {
-    fetchUpdates()
-  }
+  // Effect to handle polling when hasUpdates changes
+  useEffect(() => {
+    let interval = null
 
-  const value = {
+    if (hasUpdates && UPDATES_CONTEXT_CONFIG.polling.enabled) {
+      interval = startPolling()
+    }
+
+    return () => {
+      clearPollingInterval(interval)
+    }
+  }, [hasUpdates, startPolling, clearPollingInterval])
+
+  // Memoized context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
     updates,
     hasUpdates,
     loading,
+    error,
     fetchUpdates,
     restartPolling
-  }
+  }), [updates, hasUpdates, loading, error, fetchUpdates, restartPolling])
 
   return (
-    <UpdatesContext.Provider value={value}>
+    <UpdatesContext.Provider value={contextValue}>
       {children}
     </UpdatesContext.Provider>
   )

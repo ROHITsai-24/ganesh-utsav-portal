@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import UpdatesSection from '@/components/updates/UpdatesSection'
 import { UpdatesProvider, useUpdates } from '@/contexts/UpdatesContext'
+import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext'
+import LanguageToggle from '@/components/ui/LanguageToggle'
 
 // Configuration objects for dynamic content
 const SITE_CONFIG = {
@@ -19,26 +21,26 @@ const SITE_CONFIG = {
 }
 
 const NAVIGATION_ITEMS = [
-  { href: '#about', label: 'About' },
-  { href: '#games', label: 'Games' },
-  { href: '#donation', label: 'Donation' },
-  { href: '#daily-updates', label: 'Daily Updates', conditional: true }
+  { href: '#about', labelKey: 'nav.about' },
+  { href: '#games', labelKey: 'nav.games' },
+  { href: '#donation', labelKey: 'nav.donation' },
+  { href: '#daily-updates', labelKey: 'nav.dailyUpdates', conditional: true }
 ]
 
 const GAME_CONFIG = {
-  title: 'Ganpati Games',
-  subtitle: 'Play, Learn, and Win Rewards',
-  description: 'Get ready for some divine fun! Our Ganpati Games section is packed with challenges designed to entertain and enlighten.',
+  titleKey: 'games.title',
+  subtitleKey: 'games.subtitle',
+  descriptionKey: 'games.description',
   game: {
     tag: 'Game 01',
-    title: 'Guess My Ganesha',
-    description: 'A fun festive quiz to test your eye for Bappa\'s idol, price, and height. Play, guess and see who knows Ganesha best!'
+    titleKey: 'games.guessGame',
+    descriptionKey: 'games.guessDescription'
   }
 }
 
 const JOURNEY_CONFIG = {
-  title: 'Our 5-Year Devotional Journey',
-  description: 'A heartfelt collection of photos and stories chronicling a five-year journey of celebrating Ganesh Chaturthi, sharing the spirit and cherished memories of the festival.',
+  titleKey: 'journey.title',
+  descriptionKey: 'journey.description',
   years: [2020, 2021, 2022, 2023, 2024],
   defaultYear: 2020,
   // Year-specific content for the carousel
@@ -134,7 +136,9 @@ const useSupabaseAuth = () => {
 }
 
 // Reusable components
-const NavigationItem = ({ href, label, className = '' }) => {
+const NavigationItem = ({ href, labelKey, className = '' }) => {
+  const { t } = useLanguage()
+  
   const handleClick = (e) => {
     if (href.startsWith('#')) {
       e.preventDefault()
@@ -151,19 +155,12 @@ const NavigationItem = ({ href, label, className = '' }) => {
       className={`text-gray-700 hover:text-[#8B4513] transition-colors cursor-pointer ${className}`}
       onClick={handleClick}
     >
-      {label}
+      {t(labelKey)}
     </a>
   )
 }
 
-const LanguageSelector = ({ className = '' }) => (
-  <div className={`flex items-center space-x-2 text-gray-700 ${className}`}>
-    <span>English</span>
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  </div>
-)
+// LanguageSelector removed - replaced with LanguageToggle component
 
 const CTAButton = ({ children, className = '', ...props }) => (
   <Button 
@@ -208,6 +205,7 @@ const PhotoGridItem = ({ config, className = '', index = 0 }) => {
 
 // Optimized game card component
 const GameCard = ({ game, className = '' }) => {
+  const { t } = useLanguage()
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
 
@@ -264,18 +262,18 @@ const GameCard = ({ game, className = '' }) => {
           <div className="md:w-1/2 md:text-left text-center">
             {/* Game Title */}
             <h3 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-6">
-              {game.title}
+              {t(game.titleKey)}
             </h3>
 
             {/* Game Description */}
             <p className="text-white/90 mb-6 md:mb-10 text-sm md:text-base leading-relaxed max-w-sm md:max-w-lg mx-auto md:mx-0">
-              {game.description}
+              {t(game.descriptionKey)}
             </p>
 
             {/* Play Now Button */}
             <Link href="/games?showGames=true">
               <Button className="bg-black hover:bg-gray-800 text-white px-8 md:px-12 py-4 md:py-5 rounded-full text-lg md:text-xl font-semibold w-full md:w-auto transition-all duration-300 hover:scale-105 shadow-lg">
-                Play Now
+                {t('games.playNowButton')}
               </Button>
             </Link>
           </div>
@@ -288,6 +286,7 @@ const GameCard = ({ game, className = '' }) => {
 function HomeContent() {
   const { user, loading } = useSupabaseAuth()
   const { hasUpdates } = useUpdates()
+  const { t } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(JOURNEY_CONFIG.defaultYear)
 
@@ -340,7 +339,7 @@ function HomeContent() {
       <div className="min-h-screen bg-[#FDFCFA] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B4513] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -362,9 +361,9 @@ function HomeContent() {
               <NavigationItem key={item.href} {...item} />
             ))}
             
-            <LanguageSelector />
+            <LanguageToggle />
             <Link href="/games">
-              <CTAButton>{SITE_CONFIG.ctaText}</CTAButton>
+              <CTAButton>{t('games.guessGame')}</CTAButton>
             </Link>
           </div>
 
@@ -389,9 +388,11 @@ function HomeContent() {
               ))}
               
                               <div className="pt-4 border-t border-gray-100">
-                  <LanguageSelector className="mb-4" />
+                  <div className="mb-4">
+                    <LanguageToggle />
+                  </div>
                   <Link href="/games">
-                    <CTAButton className="w-full">{SITE_CONFIG.ctaText}</CTAButton>
+                    <CTAButton className="w-full">{t('games.guessGame')}</CTAButton>
                   </Link>
                 </div>
             </div>
@@ -408,7 +409,7 @@ function HomeContent() {
               <SectionTag>Ganesh Chaturthi 2025</SectionTag>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight max-w-2xl md:max-w-3xl lg:max-w-4xl">
-                <GradientHeading>{SITE_CONFIG.tagline}</GradientHeading>
+                <GradientHeading>{t('hero.celebrate')} {t('hero.ganeshChaturthi')} {t('hero.remaining')}</GradientHeading>
               </h1>
 
               {/* Mobile: Ganesh Image below heading */}
@@ -423,12 +424,12 @@ function HomeContent() {
               </div>
 
               <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
-                {SITE_CONFIG.description}
+                {t('hero.subtitle')}
               </p>
 
               <Link href="/games">
                 <CTAButton className="px-8 py-4 text-lg font-semibold">
-                  {SITE_CONFIG.ctaText}
+                  {t('hero.playNow')}
                 </CTAButton>
               </Link>
             </div>
@@ -450,17 +451,17 @@ function HomeContent() {
       {/* Ganpati Games Section */}
       <section id="games" className="px-4 py-16 md:py-24 md:px-8 lg:px-16 bg-gray-50">
         <div className="max-w-4xl mx-auto text-center">
-          <SectionTag className="mb-6">{GAME_CONFIG.title}</SectionTag>
+          <SectionTag className="mb-6">{t('games.title')}</SectionTag>
 
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <GradientHeading>{GAME_CONFIG.title}</GradientHeading>
+            <GradientHeading>{t('games.title')}</GradientHeading>
           </h2>
           <p className="text-3xl md:text-4xl font-bold mb-8">
-            <GradientHeading>{GAME_CONFIG.subtitle}</GradientHeading>
+            <GradientHeading>{t('games.subtitle')}</GradientHeading>
           </p>
 
           <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
-            {GAME_CONFIG.description}
+            {t('games.description')}
           </p>
 
           {/* Game Card - Updated Design */}
@@ -471,14 +472,14 @@ function HomeContent() {
       {/* 5-Year Journey Section */}
       <section id="about" className="px-4 py-16 md:py-24 md:px-8 lg:px-16 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <SectionTag className="mb-6">Our Story</SectionTag>
+          <SectionTag className="mb-6">{t('journey.ourStory')}</SectionTag>
 
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <GradientHeading>{JOURNEY_CONFIG.title}</GradientHeading>
+            <GradientHeading>{t('journey.title')}</GradientHeading>
           </h2>
           
           <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto">
-            {JOURNEY_CONFIG.description}
+            {t('journey.description')}
           </p>
 
           {/* Year Navigation */}
@@ -501,7 +502,7 @@ function HomeContent() {
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B4513] mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading memories...</p>
+                  <p className="text-gray-600">{t('common.loadingMemories')}</p>
                 </div>
               </div>
             )}
@@ -510,8 +511,8 @@ function HomeContent() {
             {currentYearContent && (!row1Memories.length && !row2Memories.length) && (
               <div className="text-center py-16">
                 <div className="text-6xl mb-4">📸</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Memories Yet</h3>
-                <p className="text-gray-600">Memories for {selectedYear} will be added soon!</p>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('common.noMemoriesYet')}</h3>
+                <p className="text-gray-600">{t('common.memoriesForYear').replace('{year}', selectedYear)}</p>
               </div>
             )}
 
@@ -549,8 +550,8 @@ function HomeContent() {
 
           {/* View All Button */}
           <div className="text-center">
-            <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-300">
-              View All
+            <Button className="bg-black hover:bg-gray-800 text-white px-8 py-4 text-lg font-semibold transition-colors duration-300">
+              {t('footer.viewAll')}
             </Button>
           </div>
         </div>
@@ -585,7 +586,7 @@ function HomeContent() {
                 {SITE_CONFIG.title}
               </div>
               <p className="text-gray-600">
-                © 2025 {SITE_CONFIG.title} - All Rights Reserved.
+                {t('footer.copyright')}
               </p>
             </div>
 
@@ -597,7 +598,7 @@ function HomeContent() {
                   href={item.href} 
                   className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </a>
               ))}
             </div>
@@ -612,8 +613,10 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <UpdatesProvider>
-      <HomeContent />
-    </UpdatesProvider>
+    <LanguageProvider>
+      <UpdatesProvider>
+        <HomeContent />
+      </UpdatesProvider>
+    </LanguageProvider>
   )
 }

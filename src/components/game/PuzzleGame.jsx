@@ -313,14 +313,14 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
 
   // Memoized game stats component
   const GameStats = useMemo(() => (
-    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-      <div className="bg-red-100 text-red-800 px-4 py-2 rounded-full font-semibold">
+    <div className="flex flex-wrap gap-2 md:gap-4 justify-center items-center mb-6">
+      <div className="bg-red-100 text-red-800 px-3 py-1 md:px-4 md:py-2 rounded-full font-semibold text-sm md:text-base">
         ⏰ {formatTime(elapsedTime)}
       </div>
-      <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold">
+      <div className="bg-blue-100 text-blue-800 px-3 py-1 md:px-4 md:py-2 rounded-full font-semibold text-sm md:text-base">
         Moves: {moves}
       </div>
-      <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold">
+      <div className="bg-green-100 text-green-800 px-3 py-1 md:px-4 md:py-2 rounded-full font-semibold text-sm md:text-base">
         Player: {user?.user_metadata?.username || user?.email}
       </div>
     </div>
@@ -390,7 +390,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     const score = calculateScore(finalMoves, finalTime)
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-pink-50 p-4">
+      <div className="bg-gradient-to-br from-indigo-50 to-pink-50 p-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-800 mb-4">{PUZZLE_CONFIG.messages.solved.title}</h1>
@@ -422,7 +422,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-pink-50 p-4">
+    <div className="bg-gradient-to-br from-indigo-50 to-pink-50 p-4">
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
