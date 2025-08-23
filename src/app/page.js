@@ -8,86 +8,77 @@ import { Card, CardContent } from '@/components/ui/card'
 import UpdatesSection from '@/components/updates/UpdatesSection'
 import { UpdatesProvider, useUpdates } from '@/contexts/UpdatesContext'
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext'
-import LanguageToggle from '@/components/ui/LanguageToggle'
 
-// Configuration objects for dynamic content
+
+
+// Configuration objects for dynamic content - Now using translations
 const SITE_CONFIG = {
-  title: 'Unprofessional Players',
-  tagline: 'Celebrate Ganesh Chaturthi with Joy and Devotion!',
-  description: "We've created this space to honor Lord Ganesha and bring the vibrant energy of the festival right to your screen. Join us in celebrating with a joyful heart and a blessed spirit!",
-  ctaText: 'Guess the Ganesha Idol',
-  heroImage: '/ganesha.png',
-  heroImageAlt: 'Lord Ganesha - Watercolor illustration with mandala backdrop'
+  heroImage: '/ganesha.png'
 }
 
 const NAVIGATION_ITEMS = [
-  { href: '#about', labelKey: 'nav.about' },
-  { href: '#games', labelKey: 'nav.games' },
-  { href: '#donation', labelKey: 'nav.donation' },
-  { href: '#daily-updates', labelKey: 'nav.dailyUpdates', conditional: true }
+  { href: '#about', labelKey: 'about' },
+  { href: '#games', labelKey: 'games' },
+  { href: '#donation', labelKey: 'donation' },
+  { href: '#daily-updates', labelKey: 'dailyUpdates', conditional: true }
 ]
 
 const GAME_CONFIG = {
-  titleKey: 'games.title',
-  subtitleKey: 'games.subtitle',
-  descriptionKey: 'games.description',
   game: {
-    tag: 'Game 01',
-    titleKey: 'games.guessGame',
-    descriptionKey: 'games.guessDescription'
+    tag: 'gameTag',
+    title: 'gameCardTitle',
+    description: 'gameCardDescription'
   }
 }
 
 const JOURNEY_CONFIG = {
-  titleKey: 'journey.title',
-  descriptionKey: 'journey.description',
   years: [2020, 2021, 2022, 2023, 2024],
   defaultYear: 2020,
   // Year-specific content for the carousel
   yearContent: {
     2020: {
       memories: [
-        { id: 1, title: 'First Ganesha Idol', description: 'Our inaugural celebration', image: '/memories/2020-1.jpg', gradient: 'from-orange-100 to-pink-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
-        { id: 2, title: 'Family Gathering', description: 'Loved ones coming together', image: '/memories/2020-2.jpg', gradient: 'from-yellow-100 to-orange-100', border: 'border-yellow-200', iconColor: 'text-yellow-400' },
-        { id: 3, title: 'Prayer Ceremony', description: 'Sacred moments of devotion', image: '/memories/2020-3.jpg', gradient: 'from-pink-100 to-red-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
-        { id: 4, title: 'Festival Decorations', description: 'Beautiful traditional setup', image: '/memories/2020-4.jpg', gradient: 'from-green-100 to-blue-100', border: 'border-green-200', iconColor: 'text-green-400' },
-        { id: 5, title: 'Community Celebration', description: 'Sharing joy with neighbors', image: '/memories/2020-5.jpg', gradient: 'from-purple-100 to-indigo-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
+        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2020-1.jpg', gradient: 'from-orange-100 to-pink-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
+        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2020-2.jpg', gradient: 'from-yellow-100 to-orange-100', border: 'border-yellow-200', iconColor: 'text-yellow-400' },
+        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2020-3.jpg', gradient: 'from-pink-100 to-red-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
+        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2020-4.jpg', gradient: 'from-green-100 to-blue-100', border: 'border-green-200', iconColor: 'text-green-400' },
+        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2020-5.jpg', gradient: 'from-purple-100 to-indigo-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
       ]
     },
     2021: {
       memories: [
-        { id: 1, title: 'Enhanced Decorations', description: 'More elaborate festival setup', image: '/memories/2021-1.jpg', gradient: 'from-blue-100 to-cyan-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
-        { id: 2, title: 'Cultural Programs', description: 'Music and dance performances', image: '/memories/2021-2.jpg', gradient: 'from-indigo-100 to-purple-100', border: 'border-indigo-200', iconColor: 'text-indigo-400' },
-        { id: 3, title: 'Youth Participation', description: 'Younger generation involvement', image: '/memories/2021-3.jpg', gradient: 'from-teal-100 to-green-100', border: 'border-teal-200', iconColor: 'text-teal-400' },
-        { id: 4, title: 'Traditional Recipes', description: 'Festival delicacies preparation', image: '/memories/2021-4.jpg', gradient: 'from-red-100 to-pink-100', border: 'border-red-200', iconColor: 'text-red-400' },
-        { id: 5, title: 'Spiritual Learning', description: 'Understanding festival significance', image: '/memories/2021-5.jpg', gradient: 'from-amber-100 to-yellow-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
+        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2021-1.jpg', gradient: 'from-blue-100 to-cyan-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
+        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2021-2.jpg', gradient: 'from-indigo-100 to-purple-100', border: 'border-indigo-200', iconColor: 'text-indigo-400' },
+        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2021-3.jpg', gradient: 'from-teal-100 to-green-100', border: 'border-teal-200', iconColor: 'text-teal-400' },
+        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2021-4.jpg', gradient: 'from-red-100 to-pink-100', border: 'border-red-200', iconColor: 'text-red-400' },
+        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2021-5.jpg', gradient: 'from-amber-100 to-yellow-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
       ]
     },
     2022: {
       memories: [
-        { id: 1, title: 'Virtual Celebrations', description: 'Online festival participation', image: '/memories/2022-1.jpg', gradient: 'from-emerald-100 to-teal-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
-        { id: 2, title: 'Social Media Sharing', description: 'Connecting with global devotees', image: '/memories/2022-2.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
-        { id: 3, title: 'Online Pujas', description: 'Digital prayer ceremonies', image: '/memories/2022-3.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
-        { id: 4, title: 'E-Learning Sessions', description: 'Digital cultural education', image: '/memories/2022-4.jpg', gradient: 'from-sky-100 to-blue-100', border: 'border-sky-200', iconColor: 'text-sky-400' },
-        { id: 5, title: 'Global Community', description: 'International festival connections', image: '/memories/2022-5.jpg', gradient: 'from-lime-100 to-green-100', border: 'border-lime-200', iconColor: 'text-lime-400' }
+        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2022-1.jpg', gradient: 'from-emerald-100 to-teal-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
+        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2022-2.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
+        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2022-3.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
+        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2022-4.jpg', gradient: 'from-sky-100 to-blue-100', border: 'border-sky-200', iconColor: 'text-sky-400' },
+        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2022-5.jpg', gradient: 'from-lime-100 to-green-100', border: 'border-lime-200', iconColor: 'text-lime-400' }
       ]
     },
     2023: {
       memories: [
-        { id: 1, title: 'Reunion Celebrations', description: 'Physical gatherings resume', image: '/memories/2023-1.jpg', gradient: 'from-orange-100 to-amber-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
-        { id: 2, title: 'Cultural Revival', description: 'Traditional arts and crafts', image: '/memories/2023-2.jpg', gradient: 'from-pink-100 to-rose-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
-        { id: 3, title: 'Community Bonding', description: 'Strengthening neighborhood ties', image: '/memories/2023-3.jpg', gradient: 'from-blue-100 to-indigo-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
-        { id: 4, title: 'Traditional Games', description: 'Festival entertainment activities', image: '/memories/2023-4.jpg', gradient: 'from-green-100 to-emerald-100', border: 'border-green-200', iconColor: 'text-green-400' },
-        { id: 5, title: 'Spiritual Growth', description: 'Deepening devotional practices', image: '/memories/2023-5.jpg', gradient: 'from-purple-100 to-violet-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
+        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2023-1.jpg', gradient: 'from-orange-100 to-amber-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
+        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2023-2.jpg', gradient: 'from-pink-100 to-rose-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
+        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2023-3.jpg', gradient: 'from-blue-100 to-indigo-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
+        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2023-4.jpg', gradient: 'from-green-100 to-emerald-100', border: 'border-green-200', iconColor: 'text-green-400' },
+        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2023-5.jpg', gradient: 'from-purple-100 to-violet-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
       ]
     },
     2024: {
       memories: [
-        { id: 1, title: 'Smart Celebrations', description: 'Technology-enhanced festivals', image: '/memories/2024-1.jpg', gradient: 'from-cyan-100 to-blue-100', border: 'border-cyan-200', iconColor: 'text-cyan-400' },
-        { id: 2, title: 'Eco-Friendly Practices', description: 'Sustainable festival approach', image: '/memories/2024-2.jpg', gradient: 'from-emerald-100 to-green-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
-        { id: 3, title: 'Digital Documentation', description: 'Preserving memories digitally', image: '/memories/2024-3.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
-        { id: 4, title: 'Global Outreach', description: 'Connecting with worldwide devotees', image: '/memories/2024-4.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
-        { id: 5, title: 'Future Vision', description: 'Planning next year celebrations', image: '/memories/2024-5.jpg', gradient: 'from-amber-100 to-orange-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
+        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2024-1.jpg', gradient: 'from-cyan-100 to-blue-100', border: 'border-cyan-200', iconColor: 'text-cyan-400' },
+        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2024-2.jpg', gradient: 'from-emerald-100 to-green-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
+        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2024-3.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
+        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2024-4.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
+        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2024-5.jpg', gradient: 'from-amber-100 to-orange-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
       ]
     }
   }
@@ -137,7 +128,7 @@ const useSupabaseAuth = () => {
 
 // Reusable components
 const NavigationItem = ({ href, labelKey, className = '' }) => {
-  const { t } = useLanguage()
+  const { translations } = useLanguage()
   
   const handleClick = (e) => {
     if (href.startsWith('#')) {
@@ -155,12 +146,26 @@ const NavigationItem = ({ href, labelKey, className = '' }) => {
       className={`text-gray-700 hover:text-[#8B4513] transition-colors cursor-pointer ${className}`}
       onClick={handleClick}
     >
-      {t(labelKey)}
+      {translations[labelKey]}
     </a>
   )
 }
 
-// LanguageSelector removed - replaced with LanguageToggle component
+const LanguageSelector = ({ className = '' }) => {
+  const { language, toggleLanguage, translations } = useLanguage()
+  
+  return (
+    <button 
+      onClick={toggleLanguage}
+      className={`flex items-center space-x-2 text-gray-700 hover:text-[#8B4513] transition-colors cursor-pointer ${className}`}
+    >
+      <span>{translations.language}</span>
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+  )
+}
 
 const CTAButton = ({ children, className = '', ...props }) => (
   <Button 
@@ -184,6 +189,7 @@ const GradientHeading = ({ children, className = '' }) => (
 )
 
 const PhotoGridItem = ({ config, className = '', index = 0 }) => {
+  const { translations } = useLanguage()
   // Determine width based on index for alternating pattern
   const isWide = index % 2 === 0
   const widthClass = isWide ? 'w-96' : 'w-56'
@@ -205,16 +211,16 @@ const PhotoGridItem = ({ config, className = '', index = 0 }) => {
 
 // Optimized game card component
 const GameCard = ({ game, className = '' }) => {
-  const { t } = useLanguage()
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const { translations } = useLanguage()
 
   return (
     <div className={`max-w-4xl mx-auto ${className}`}>
       <div className="bg-[#CD5C5C] rounded-3xl p-6 md:p-12 shadow-2xl relative overflow-hidden">
         {/* Game Tag */}
         <div className="inline-block bg-white text-black px-4 py-2 rounded-full text-sm font-medium mb-4 md:mb-8 border border-black">
-          {game.tag}
+          {translations[game.tag]}
         </div>
 
         {/* Desktop Layout: Image Left, Content Right */}
@@ -262,18 +268,18 @@ const GameCard = ({ game, className = '' }) => {
           <div className="md:w-1/2 md:text-left text-center">
             {/* Game Title */}
             <h3 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-6">
-              {t(game.titleKey)}
+              {translations[game.title]}
             </h3>
 
             {/* Game Description */}
             <p className="text-white/90 mb-6 md:mb-10 text-sm md:text-base leading-relaxed max-w-sm md:max-w-lg mx-auto md:mx-0">
-              {t(game.descriptionKey)}
+              {translations[game.description]}
             </p>
 
             {/* Play Now Button */}
             <Link href="/games?showGames=true">
               <Button className="bg-black hover:bg-gray-800 text-white px-8 md:px-12 py-4 md:py-5 rounded-full text-lg md:text-xl font-semibold w-full md:w-auto transition-all duration-300 hover:scale-105 shadow-lg">
-                {t('games.playNowButton')}
+                {translations.playNow}
               </Button>
             </Link>
           </div>
@@ -286,9 +292,9 @@ const GameCard = ({ game, className = '' }) => {
 function HomeContent() {
   const { user, loading } = useSupabaseAuth()
   const { hasUpdates } = useUpdates()
-  const { t } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(JOURNEY_CONFIG.defaultYear)
+  const { translations } = useLanguage()
 
   // Memoized handlers
   const toggleMobileMenu = useCallback(() => {
@@ -339,7 +345,7 @@ function HomeContent() {
       <div className="min-h-screen bg-[#FDFCFA] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B4513] mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('common.loading')}</p>
+          <p className="text-gray-600">{translations.loading}</p>
         </div>
       </div>
     )
@@ -352,7 +358,7 @@ function HomeContent() {
         <nav className="max-w-[85rem] mx-auto flex items-center justify-between">
           {/* Logo */}
           <div className="text-2xl font-bold text-[#8B4513]">
-            {SITE_CONFIG.title}
+            {translations.title}
           </div>
 
           {/* Desktop Navigation */}
@@ -361,9 +367,9 @@ function HomeContent() {
               <NavigationItem key={item.href} {...item} />
             ))}
             
-            <LanguageToggle />
+            <LanguageSelector />
             <Link href="/games">
-              <CTAButton>{t('games.guessGame')}</CTAButton>
+              <CTAButton>{translations.ctaText}</CTAButton>
             </Link>
           </div>
 
@@ -388,11 +394,9 @@ function HomeContent() {
               ))}
               
                               <div className="pt-4 border-t border-gray-100">
-                  <div className="mb-4">
-                    <LanguageToggle />
-                  </div>
+                  <LanguageSelector className="mb-4" />
                   <Link href="/games">
-                    <CTAButton className="w-full">{t('games.guessGame')}</CTAButton>
+                    <CTAButton className="w-full">{translations.ctaText}</CTAButton>
                   </Link>
                 </div>
             </div>
@@ -406,10 +410,10 @@ function HomeContent() {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Content */}
             <div className="space-y-8">
-              <SectionTag>Ganesh Chaturthi 2025</SectionTag>
+              <SectionTag>{translations.ganeshChaturthi}</SectionTag>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight max-w-2xl md:max-w-3xl lg:max-w-4xl">
-                <GradientHeading>{t('hero.celebrate')} {t('hero.ganeshChaturthi')} {t('hero.remaining')}</GradientHeading>
+                <GradientHeading>{translations.tagline}</GradientHeading>
               </h1>
 
               {/* Mobile: Ganesh Image below heading */}
@@ -417,19 +421,19 @@ function HomeContent() {
                 <div className="relative">
                   <img 
                     src={SITE_CONFIG.heroImage} 
-                    alt={SITE_CONFIG.heroImageAlt} 
+                    alt={translations.heroImageAlt} 
                     className="w-80 h-80 object-contain"
                   />
                 </div>
               </div>
 
               <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
-                {t('hero.subtitle')}
+                {translations.description}
               </p>
 
               <Link href="/games">
                 <CTAButton className="px-8 py-4 text-lg font-semibold">
-                  {t('hero.playNow')}
+                  {translations.ctaText}
                 </CTAButton>
               </Link>
             </div>
@@ -439,7 +443,7 @@ function HomeContent() {
               <div className="relative">
                 <img 
                   src={SITE_CONFIG.heroImage} 
-                  alt={SITE_CONFIG.heroImageAlt} 
+                  alt={translations.heroImageAlt} 
                   className="w-[500px] h-[500px] object-contain"
                 />
               </div>
@@ -451,17 +455,17 @@ function HomeContent() {
       {/* Ganpati Games Section */}
       <section id="games" className="px-4 py-16 md:py-24 md:px-8 lg:px-16 bg-gray-50">
         <div className="max-w-4xl mx-auto text-center">
-          <SectionTag className="mb-6">{t('games.title')}</SectionTag>
+          <SectionTag className="mb-6">{translations.gameTitle}</SectionTag>
 
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <GradientHeading>{t('games.title')}</GradientHeading>
+            <GradientHeading>{translations.gameTitle}</GradientHeading>
           </h2>
           <p className="text-3xl md:text-4xl font-bold mb-8">
-            <GradientHeading>{t('games.subtitle')}</GradientHeading>
+            <GradientHeading>{translations.gameSubtitle}</GradientHeading>
           </p>
 
           <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
-            {t('games.description')}
+            {translations.gameDescription}
           </p>
 
           {/* Game Card - Updated Design */}
@@ -472,14 +476,14 @@ function HomeContent() {
       {/* 5-Year Journey Section */}
       <section id="about" className="px-4 py-16 md:py-24 md:px-8 lg:px-16 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <SectionTag className="mb-6">{t('journey.ourStory')}</SectionTag>
+          <SectionTag className="mb-6">{translations.ourStory}</SectionTag>
 
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <GradientHeading>{t('journey.title')}</GradientHeading>
+            <GradientHeading>{translations.journeyTitle}</GradientHeading>
           </h2>
           
           <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto">
-            {t('journey.description')}
+            {translations.journeyDescription}
           </p>
 
           {/* Year Navigation */}
@@ -502,7 +506,7 @@ function HomeContent() {
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B4513] mx-auto mb-4"></div>
-                  <p className="text-gray-600">{t('common.loadingMemories')}</p>
+                  <p className="text-gray-600">{translations.loadingMemories}</p>
                 </div>
               </div>
             )}
@@ -511,8 +515,8 @@ function HomeContent() {
             {currentYearContent && (!row1Memories.length && !row2Memories.length) && (
               <div className="text-center py-16">
                 <div className="text-6xl mb-4">📸</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('common.noMemoriesYet')}</h3>
-                <p className="text-gray-600">{t('common.memoriesForYear').replace('{year}', selectedYear)}</p>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">{translations.noMemoriesYet}</h3>
+                <p className="text-gray-600">{translations.memoriesForYear.replace('{year}', selectedYear)}</p>
               </div>
             )}
 
@@ -550,8 +554,8 @@ function HomeContent() {
 
           {/* View All Button */}
           <div className="text-center">
-            <Button className="bg-black hover:bg-gray-800 text-white px-8 py-4 text-lg font-semibold transition-colors duration-300">
-              {t('footer.viewAll')}
+            <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-300">
+              {translations.viewAll}
             </Button>
           </div>
         </div>
@@ -583,10 +587,10 @@ function HomeContent() {
             {/* Left - Logo and Copyright */}
             <div className="space-y-4">
               <div className="text-2xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 bg-clip-text text-transparent">
-                {SITE_CONFIG.title}
+                {translations.title}
               </div>
               <p className="text-gray-600">
-                {t('footer.copyright')}
+                © 2025 {translations.title} - {translations.allRightsReserved}
               </p>
             </div>
 
@@ -598,7 +602,7 @@ function HomeContent() {
                   href={item.href} 
                   className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
                 >
-                  {t(item.labelKey)}
+                  {translations[item.labelKey]}
                 </a>
               ))}
             </div>
@@ -611,12 +615,14 @@ function HomeContent() {
   )
 }
 
+
+
 export default function Home() {
   return (
-    <LanguageProvider>
-      <UpdatesProvider>
+    <UpdatesProvider>
+      <LanguageProvider>
         <HomeContent />
-      </UpdatesProvider>
-    </LanguageProvider>
+      </LanguageProvider>
+    </UpdatesProvider>
   )
 }

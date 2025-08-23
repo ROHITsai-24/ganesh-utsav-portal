@@ -4,15 +4,14 @@ import { useCallback, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useUpdates } from '@/contexts/UpdatesContext'
-import { useLanguage } from '@/contexts/LanguageContext'
 
 // Configuration for the updates section
 const UPDATES_CONFIG = {
-  titleKey: 'updates.title',
-  subtitleKey: 'updates.subtitle',
-  emptyMessageKey: 'updates.noUpdates',
-  loadingTextKey: 'updates.loading',
-  refreshButtonKey: 'updates.refresh',
+  title: 'Daily Updates',
+  subtitle: 'Stay connected with our latest announcements and devotional messages',
+  emptyMessage: 'No updates available at the moment. Check back soon for new messages!',
+  loadingText: 'Loading updates...',
+  refreshButton: '🔄 Refresh Updates',
   // Date formatting options
   dateFormat: {
     year: 'numeric',
@@ -83,7 +82,6 @@ const UpdateCard = ({ update }) => {
 // Main updates section component
 export default function UpdatesSection() {
   const { updates, loading, hasUpdates, restartPolling, error } = useUpdates()
-  const { t } = useLanguage()
 
   // Memoized loading component
   const LoadingComponent = useMemo(() => (
@@ -91,25 +89,25 @@ export default function UpdatesSection() {
       <div className={UPDATES_CONFIG.styles.container}>
         <div className="text-center">
           <div className={UPDATES_CONFIG.styles.loading}></div>
-          <p className={UPDATES_CONFIG.styles.loadingText}>{t(UPDATES_CONFIG.loadingTextKey)}</p>
+          <p className={UPDATES_CONFIG.styles.loadingText}>{UPDATES_CONFIG.loadingText}</p>
         </div>
       </div>
     </section>
-  ), [t])
+  ), [])
 
   // Memoized section header
   const SectionHeader = useMemo(() => (
     <div className={UPDATES_CONFIG.styles.header}>
       <h2 className={UPDATES_CONFIG.styles.title}>
         <span className={UPDATES_CONFIG.styles.titleGradient}>
-          {t(UPDATES_CONFIG.titleKey)}
+          {UPDATES_CONFIG.title}
         </span>
       </h2>
       <p className={UPDATES_CONFIG.styles.subtitle}>
-        {t(UPDATES_CONFIG.subtitleKey)}
+        {UPDATES_CONFIG.subtitle}
       </p>
     </div>
-  ), [t])
+  ), [])
 
   // Memoized updates grid
   const UpdatesGrid = useMemo(() => (
@@ -128,10 +126,10 @@ export default function UpdatesSection() {
         variant="outline"
         className="bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
       >
-        {t(UPDATES_CONFIG.refreshButtonKey)}
+        {UPDATES_CONFIG.refreshButton}
       </Button>
     </div>
-  ), [restartPolling, t])
+  ), [restartPolling])
 
   // Don't render if no updates (AFTER all hooks are called)
   if (!hasUpdates) {
