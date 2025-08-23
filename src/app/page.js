@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import UpdatesSection from '@/components/updates/UpdatesSection'
+import { UpdatesProvider, useUpdates } from '@/contexts/UpdatesContext'
 
 // Configuration objects for dynamic content
 const SITE_CONFIG = {
@@ -21,7 +22,7 @@ const NAVIGATION_ITEMS = [
   { href: '#about', label: 'About' },
   { href: '#games', label: 'Games' },
   { href: '#donation', label: 'Donation' },
-  { href: '#lucky-draw', label: 'Lucky-draw' }
+  { href: '#daily-updates', label: 'Daily Updates', conditional: true }
 ]
 
 const GAME_CONFIG = {
@@ -90,6 +91,8 @@ const JOURNEY_CONFIG = {
   }
 }
 
+
+
 // Custom hook for Supabase authentication
 const useSupabaseAuth = () => {
   const [user, setUser] = useState(null)
@@ -131,14 +134,27 @@ const useSupabaseAuth = () => {
 }
 
 // Reusable components
-const NavigationItem = ({ href, label, className = '' }) => (
-  <a 
-    href={href} 
-    className={`text-gray-700 hover:text-[#8B4513] transition-colors ${className}`}
-  >
-    {label}
-  </a>
-)
+const NavigationItem = ({ href, label, className = '' }) => {
+  const handleClick = (e) => {
+    if (href.startsWith('#')) {
+      e.preventDefault()
+      const element = document.querySelector(href)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+  }
+
+  return (
+    <a 
+      href={href} 
+      className={`text-gray-700 hover:text-[#8B4513] transition-colors cursor-pointer ${className}`}
+      onClick={handleClick}
+    >
+      {label}
+    </a>
+  )
+}
 
 const LanguageSelector = ({ className = '' }) => (
   <div className={`flex items-center space-x-2 text-gray-700 ${className}`}>
@@ -257,7 +273,7 @@ const GameCard = ({ game, className = '' }) => {
             </p>
 
             {/* Play Now Button */}
-            <Link href="/games">
+            <Link href="/games?showGames=true">
               <Button className="bg-black hover:bg-gray-800 text-white px-8 md:px-12 py-4 md:py-5 rounded-full text-lg md:text-xl font-semibold w-full md:w-auto transition-all duration-300 hover:scale-105 shadow-lg">
                 Play Now
               </Button>
@@ -269,8 +285,9 @@ const GameCard = ({ game, className = '' }) => {
   )
 }
 
-export default function Home() {
+function HomeContent() {
   const { user, loading } = useSupabaseAuth()
+  const { hasUpdates } = useUpdates()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(JOURNEY_CONFIG.defaultYear)
 
@@ -297,6 +314,16 @@ export default function Home() {
   const currentYearContent = useMemo(() => {
     return JOURNEY_CONFIG.yearContent[selectedYear] || JOURNEY_CONFIG.yearContent[JOURNEY_CONFIG.defaultYear]
   }, [selectedYear])
+
+  // Filter navigation items based on conditions (e.g., updates availability)
+  const filteredNavigationItems = useMemo(() => {
+    return NAVIGATION_ITEMS.filter(item => {
+      if (item.conditional) {
+        return hasUpdates
+      }
+      return true
+    })
+  }, [hasUpdates])
 
   // Split memories into two rows for alternating animation
   const { row1Memories, row2Memories } = useMemo(() => {
@@ -331,7 +358,7 @@ export default function Home() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {NAVIGATION_ITEMS.map((item) => (
+            {filteredNavigationItems.map((item) => (
               <NavigationItem key={item.href} {...item} />
             ))}
             
@@ -357,7 +384,7 @@ export default function Home() {
         {mobileMenuOpen && (
           <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 shadow-lg">
             <div className="px-4 py-6 space-y-4">
-              {NAVIGATION_ITEMS.map((item) => (
+              {filteredNavigationItems.map((item) => (
                 <NavigationItem key={item.href} {...item} className="block py-2" />
               ))}
               
@@ -442,7 +469,7 @@ export default function Home() {
       </section>
 
       {/* 5-Year Journey Section */}
-      <section className="px-4 py-16 md:py-24 md:px-8 lg:px-16 bg-white">
+      <section id="about" className="px-4 py-16 md:py-24 md:px-8 lg:px-16 bg-white">
         <div className="max-w-4xl mx-auto text-center">
           <SectionTag className="mb-6">Our Story</SectionTag>
 
@@ -530,7 +557,9 @@ export default function Home() {
       </section>
 
       {/* Updates Section */}
-      <UpdatesSection />
+      <section id="daily-updates">
+        <UpdatesSection />
+      </section>
 
       {/* Footer */}
       <footer className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-gray-800 px-4 py-12 md:px-8 lg:px-16 overflow-hidden">
@@ -578,5 +607,13 @@ export default function Home() {
 
 
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <UpdatesProvider>
+      <HomeContent />
+    </UpdatesProvider>
   )
 }

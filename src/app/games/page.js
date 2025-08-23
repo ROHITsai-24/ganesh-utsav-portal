@@ -35,11 +35,8 @@ const HOMEPAGE_CONFIG = {
     companyName: 'Unprofessional Players'
   },
   navigation: [
-    { href: '#home', label: 'Home' },
-    { href: '#about', label: 'About' },
-    { href: '#games', label: 'Games' },
-    { href: '#festivals', label: 'Festivals' },
-    { href: '#contact', label: 'Contact' }
+    { href: '/', label: 'Home' },
+    { href: '#games', label: 'Games' }
   ],
   hero: {
     title: 'Welcome to',
@@ -91,13 +88,17 @@ const useAuth = () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         setUser(session.user)
+        // Check if user is admin and redirect
+        if (session.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+          router.push('/admin')
+        }
       }
     } catch (error) {
       console.error('Error checking user session:', error)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     checkUser()
@@ -109,6 +110,11 @@ const useAuth = () => {
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in, setting user state')
           setUser(session.user)
+          // Check if user is admin and redirect
+          if (session.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+            router.push('/admin')
+            return
+          }
           setLoading(false)
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out, clearing user state')
@@ -119,7 +125,7 @@ const useAuth = () => {
     )
 
     return () => subscription.unsubscribe()
-  }, [checkUser])
+  }, [checkUser, router])
 
   const signOut = useCallback(async () => {
     try {
@@ -166,6 +172,17 @@ const useGameTabs = () => {
 // Custom hook for homepage state
 const useHomepageState = () => {
   const [showGames, setShowGames] = useState(false)
+
+  // Check URL query parameter on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const shouldShowGames = urlParams.get('showGames') === 'true'
+      if (shouldShowGames) {
+        setShowGames(true)
+      }
+    }
+  }, [])
 
   const goToGames = useCallback(() => {
     setShowGames(true)
@@ -215,13 +232,40 @@ const NavigationLinks = ({ links = [], className = '' }) => {
     return null
   }
   
+  const handleLinkClick = (href, e) => {
+    if (href.startsWith('#')) {
+      e.preventDefault()
+      const element = document.querySelector(href)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+  }
+  
   return (
     <div className={`hidden md:flex items-center space-x-8 ${className}`}>
-      {links.map((link) => (
-        <a key={link.href} href={link.href} className="text-white/80 hover:text-white transition-colors">
-          {link.label}
-        </a>
-      ))}
+      {links.map((link) => {
+        if (link.href.startsWith('/')) {
+          // External link - use Next.js Link
+          return (
+            <Link key={link.href} href={link.href} className="text-white/80 hover:text-white transition-colors">
+              {link.label}
+            </Link>
+          )
+        } else {
+          // Anchor link - scroll to section
+          return (
+            <a 
+              key={link.href} 
+              href={link.href} 
+              className="text-white/80 hover:text-white transition-colors cursor-pointer"
+              onClick={(e) => handleLinkClick(link.href, e)}
+            >
+              {link.label}
+            </a>
+          )
+        }
+      })}
     </div>
   )
 }
@@ -371,7 +415,7 @@ const FeaturedGamesSection = ({ config = {}, onStartPlaying }) => {
   }
   
   return (
-    <section className="px-4 py-16 md:px-8 lg:px-16 w-full">
+    <section id="games" className="px-4 py-16 md:px-8 lg:px-16 w-full">
       <div className="max-w-7xl mx-auto w-full">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -453,16 +497,39 @@ const HomepageMobileMenu = ({ isOpen, onClose, onStartPlaying, onSignOut }) => {
         </div>
         <nav className="px-6 py-8">
           <div className="space-y-6">
-            {HOMEPAGE_CONFIG?.navigation?.map((link) => (
-              <a 
-                key={link.href} 
-                href={link.href} 
-                className="block text-white/80 hover:text-white transition-colors text-lg py-2" 
-                onClick={onClose}
-              >
-                {link.label}
-              </a>
-            ))}
+            {HOMEPAGE_CONFIG?.navigation?.map((link) => {
+              if (link.href.startsWith('/')) {
+                // External link - use Next.js Link
+                return (
+                  <Link 
+                    key={link.href} 
+                    href={link.href} 
+                    className="block text-white/80 hover:text-white transition-colors text-lg py-2" 
+                    onClick={onClose}
+                  >
+                    {link.label}
+                  </Link>
+                )
+              } else {
+                // Anchor link - scroll to section
+                const handleMobileLinkClick = (href) => {
+                  onClose()
+                  const element = document.querySelector(href)
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' })
+                  }
+                }
+                return (
+                  <button 
+                    key={link.href} 
+                    className="block w-full text-left text-white/80 hover:text-white transition-colors text-lg py-2" 
+                    onClick={() => handleMobileLinkClick(link.href)}
+                  >
+                    {link.label}
+                  </button>
+                )
+              }
+            })}
 
             {/* Mobile-specific action buttons */}
             <div className="pt-6 border-t border-white/20">
@@ -496,12 +563,6 @@ const GamesHeader = ({ onBackToHomepage, onSignOut, onToggleMobileMenu }) => (
       </BackButton>
 
       <div className="hidden md:flex items-center space-x-4">
-        <Link
-          href="/admin"
-          className="bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-all border border-white/20"
-        >
-          {NAVIGATION_CONFIG.adminDashboard}
-        </Link>
         <CTAButton onClick={onSignOut} variant="danger">
           {NAVIGATION_CONFIG.signOut}
         </CTAButton>
@@ -536,13 +597,6 @@ const GamesMobileMenu = ({ isOpen, onClose, onBackToHomepage, onSignOut }) => {
             >
               {NAVIGATION_CONFIG.backToGamesHome}
             </button>
-            <Link 
-              href="/admin" 
-              className="block text-white/80 hover:text-white transition-colors text-lg py-2" 
-              onClick={onClose}
-            >
-              {NAVIGATION_CONFIG.adminDashboard}
-            </Link>
             <button
               onClick={() => { onSignOut(); onClose(); }}
               className="block w-full text-left text-red-400 hover:text-red-300 transition-colors text-lg py-2"
@@ -681,8 +735,14 @@ export default function GamesPage() {
     console.log('Auth success callback triggered with user:', user)
     // Set user immediately
     setUser(user)
-    // Also trigger the games view
-    goToGames()
+    // Check if we should show games directly (from URL parameter)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const shouldShowGames = urlParams.get('showGames') === 'true'
+      if (shouldShowGames) {
+        goToGames()
+      }
+    }
   }, [setUser, goToGames])
 
   if (loading) {
@@ -696,6 +756,7 @@ export default function GamesPage() {
     return <AuthSection onAuthSuccess={handleAuthSuccess} />
   }
 
+  // For logged-in users, respect the showGames parameter
   if (!showGames) {
     return (
       <Homepage 

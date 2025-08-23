@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useUpdates } from '@/contexts/UpdatesContext'
 
 // Configuration for the updates section
 const UPDATES_CONFIG = {
@@ -82,62 +83,11 @@ const UpdateCard = ({ update }) => {
   )
 }
 
-// Custom hook for updates data management
-const useUpdatesData = () => {
-  const [updates, setUpdates] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
-  // Memoized function to fetch updates
-  const fetchUpdates = useCallback(async () => {
-    try {
-      setLoading(true)
-      const response = await fetch(UPDATES_CONFIG.api.updates)
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch updates')
-      }
-      
-      const data = await response.json()
-      
-      if (data.message && data.message.includes('table not created')) {
-        console.log('Updates table not created yet:', data.message)
-        setUpdates([])
-        // Don't show error for table not existing, just return empty array
-      } else {
-        setUpdates(data.updates || [])
-        setError(null)
-      }
-    } catch (err) {
-      console.error('Error fetching updates:', err)
-      setError('Failed to load updates')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  // Memoized function to handle refresh
-  const handleRefresh = useCallback(() => {
-    fetchUpdates()
-  }, [fetchUpdates])
-
-  return {
-    updates,
-    loading,
-    error,
-    fetchUpdates,
-    handleRefresh
-  }
-}
 
 // Main updates section component
 export default function UpdatesSection() {
-  const { updates, loading, error, handleRefresh } = useUpdatesData()
-
-  // Fetch updates on component mount
-  useEffect(() => {
-    handleRefresh()
-  }, [handleRefresh])
+  const { updates, loading, hasUpdates, restartPolling } = useUpdates()
 
   // Memoized loading component
   const LoadingComponent = useMemo(() => (
@@ -178,23 +128,23 @@ export default function UpdatesSection() {
   const RefreshButton = useMemo(() => (
     <div className={UPDATES_CONFIG.styles.refreshButton}>
       <Button
-        onClick={handleRefresh}
+        onClick={restartPolling}
         variant="outline"
         className="bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
       >
         {UPDATES_CONFIG.refreshButton}
       </Button>
     </div>
-  ), [handleRefresh])
+  ), [restartPolling])
+
+  // Don't render if no updates (AFTER all hooks are called)
+  if (!hasUpdates) {
+    return null
+  }
 
   // Don't render the section if there are no updates
   if (loading) {
     return LoadingComponent
-  }
-
-  // Don't render if no updates
-  if (!updates || updates.length === 0) {
-    return null
   }
 
   return (

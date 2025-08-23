@@ -60,15 +60,15 @@ const QUESTION_CONFIG = {
 
 const GAME_OPTIONS = {
   images: [
-    { id: 1, src: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400', alt: 'Random Person 1' },
-    { id: 2, src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400', alt: 'Random Person 2' },
-    { id: 3, src: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400', alt: 'Random Person 3' },
-    { id: 4, src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400', alt: 'Random Person 4' },
-    { id: 5, src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400', alt: 'Random Person 5' },
-    { id: 6, src: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400', alt: 'Random Person 6' },
-    { id: 7, src: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400', alt: 'Random Person 7' },
-    { id: 8, src: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400', alt: 'Random Person 8' },
-    { id: 9, src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400', alt: 'Random Person 9' },
+    { id: 1, src: '/ganeshIdols/download (1).jpg', alt: 'Ganesha Idol 1' },
+    { id: 2, src: '/ganeshIdols/download (2).jpg', alt: 'Ganesha Idol 2' },
+    { id: 3, src: '/ganeshIdols/download (3).jpg', alt: 'Ganesha Idol 3' },
+    { id: 4, src: '/ganeshIdols/download (4).jpg', alt: 'Ganesha Idol 4' },
+    { id: 5, src: '/ganeshIdols/download (5).jpg', alt: 'Ganesha Idol 5' },
+    { id: 6, src: '/ganeshIdols/download.jpg', alt: 'Ganesha Idol 6' },
+    { id: 7, src: '/ganeshIdols/buntymokal_5551.jpg', alt: 'Ganesha Idol 7' },
+    { id: 8, src: '/ganeshIdols/Chinese Dragon Art.jpg', alt: 'Ganesha Idol 8' },
+    { id: 9, src: '/ganeshIdols/7 SEPTEMBER 2024 HAPPY GANESH CHATURTHI.jpg', alt: 'Ganesha Idol 9' },
     { id: 10, src: '/puzzle.jpg', alt: 'Correct Idol Image' }
   ],
   heights: [
