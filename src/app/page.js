@@ -735,13 +735,14 @@ const GameCard = ({ game, className = '' }) => {
               
               {!imageError ? (
                 <img 
-                  src="/object.svg" 
+                  src="/OBJECT.svg" 
                   alt="Guess My Ganesha Game Illustration" 
                   className={`w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 object-contain transition-opacity duration-300 ${
                     imageLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
                   onLoad={() => setImageLoaded(true)}
                   onError={() => setImageError(true)}
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 bg-white/20 rounded-2xl flex items-center justify-center">
@@ -885,7 +886,7 @@ function HomeContent() {
   return (
     <div className="min-h-screen bg-[#FDFCFA]">
       {/* Header/Navigation */}
-      <header className="relative z-50 px-4 py-6 md:px-8 lg:px-16 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+      <header className="relative z-50 px-4 py-3 md:py-6 md:px-8 lg:px-16 bg-white/80 backdrop-blur-sm border-b border-gray-100">
         <nav className="max-w-[85rem] mx-auto flex items-center justify-between">
           {/* Logo */}
           <div className="text-2xl font-bold text-[#8B4513]">
@@ -1097,7 +1098,7 @@ function HomeContent() {
       </section>
 
       {/* Footer */}
-      <footer className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-gray-800 px-4 py-12 md:px-8 lg:px-16 overflow-hidden">
+              <footer className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-gray-800 px-4 py-6 md:py-12 md:px-8 lg:px-16 overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-0 left-0 w-32 h-32 bg-amber-200 rounded-full blur-3xl"></div>

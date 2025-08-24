@@ -419,13 +419,13 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
   // Memoized game stats component
   const GameStats = useMemo(() => (
     <div className="flex flex-wrap gap-2 md:gap-4 justify-center items-center mb-6">
-      <div className="bg-red-100 text-red-800 px-3 py-1 md:px-4 md:py-2 rounded-full font-semibold text-sm md:text-base">
+      <div className="bg-red-100 text-red-800 px-2 md:px-4 py-1 md:py-2 rounded-full font-semibold text-sm md:text-base">
         ⏰ {formatTime(elapsedTime)}
       </div>
-      <div className="bg-blue-100 text-blue-800 px-3 py-1 md:px-4 md:py-2 rounded-full font-semibold text-sm md:text-base">
+      <div className="bg-blue-100 text-blue-800 px-2 md:px-4 py-1 md:py-2 rounded-full font-semibold text-sm md:text-base">
         Moves: {moves}
       </div>
-      <div className="bg-green-100 text-green-800 px-3 py-1 md:px-4 md:py-2 rounded-full font-semibold text-sm md:text-base">
+      <div className="bg-green-100 text-green-800 px-2 md:px-4 py-1 md:py-2 rounded-full font-semibold text-sm md:text-base">
         Player: {user?.user_metadata?.username || user?.email}
       </div>
     </div>
@@ -453,9 +453,9 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
 
   // Memoized puzzle grid component
   const PuzzleGrid = useMemo(() => (
-    <div className="w-full max-w-sm mx-auto mb-6">
+    <div className="w-full max-w-md mx-auto mb-6 -mx-2 md:mx-auto">
       <div
-        className="grid gap-2"
+        className="grid gap-1 md:gap-2"
         style={{ gridTemplateColumns: `repeat(${PUZZLE_CONFIG.gridSize}, minmax(0, 1fr))` }}
       >
         {tiles.map((tileValue, index) => renderTile(tileValue, index))}
@@ -537,8 +537,9 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         </p>
       </div>
 
-      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
-        <div className="space-y-6">
+      {/* Game Section - Mobile optimized */}
+      <div className="md:bg-white/10 md:backdrop-blur-sm md:rounded-2xl md:border md:border-white/20 md:p-6">
+        <div className="space-y-6 px-1 md:px-0">
           {/* Game Stats */}
           {GameStats}
 
