@@ -90,7 +90,7 @@ const GAME_OPTIONS = {
 }
 
 // Custom hook for game state management
-const useGameState = () => {
+const useGameState = (user) => {
   const [currentQuestion, setCurrentQuestion] = useState(1)
   const [selectedImage, setSelectedImage] = useState(null)
   const [selectedHeight, setSelectedHeight] = useState('')
@@ -100,6 +100,7 @@ const useGameState = () => {
   const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.timeLimit)
   const [shuffledImages, setShuffledImages] = useState([])
   const [hasSaved, setHasSaved] = useState(false)
+  const [playLimitExceeded, setPlayLimitExceeded] = useState(false)
   
   // Store time taken for each question
   const questionTimesRef = useRef([])
@@ -117,6 +118,7 @@ const useGameState = () => {
     setGameState('ready')
     setTimeLeft(GAME_CONFIG.timeLimit)
     setHasSaved(false)
+    setPlayLimitExceeded(false)
     questionTimesRef.current = []
     totalTimeRef.current = 0
     questionStartTimeRef.current = null
@@ -126,10 +128,49 @@ const useGameState = () => {
     setShuffledImages(shuffled)
   }, [])
 
-  const startGame = useCallback(() => {
-    setGameState('playing')
-    questionStartTimeRef.current = Date.now() // Start timing first question
-  }, [])
+  const startGame = useCallback(async () => {
+    // Pre-game validation: Check if user can still play
+    try {
+      const response = await fetch('/api/check-play-limit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          gameKey: 'guess'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (response.status === 403) {
+          if (errorData.action === 'rejected_limit') {
+            setPlayLimitExceeded(true)
+            setGameState('limit_exceeded')
+            return
+          }
+        }
+        throw new Error('Failed to validate play limit')
+      }
+
+      const data = await response.json()
+      if (!data.canPlay) {
+        setPlayLimitExceeded(true)
+        setGameState('limit_exceeded')
+        return
+      }
+
+      // If validation passes, start the game
+      setGameState('playing')
+      questionStartTimeRef.current = Date.now() // Start timing first question
+    } catch (error) {
+      console.error('Play limit validation failed:', error)
+      // BLOCK the game if validation fails - don't allow fallback
+      setPlayLimitExceeded(true)
+      setGameState('limit_exceeded')
+    }
+  }, [user?.id])
 
   const nextQuestion = useCallback(() => {
     if (currentQuestion < GAME_CONFIG.totalQuestions) {
@@ -211,6 +252,7 @@ const useGameState = () => {
     hasSaved,
     totalTimeRef,
     canProceed,
+    playLimitExceeded,
     setSelectedImage,
     setSelectedHeight,
     setSelectedPrice,
@@ -533,6 +575,7 @@ export default function GuessGame({ user, onScoreSaved = () => {} }) {
     hasSaved,
     totalTimeRef,
     canProceed,
+    playLimitExceeded,
     setSelectedImage,
     setSelectedHeight,
     setSelectedPrice,
@@ -544,7 +587,7 @@ export default function GuessGame({ user, onScoreSaved = () => {} }) {
     nextQuestion,
     checkAnswer,
     handleContinue
-  } = useGameState()
+  } = useGameState(user)
 
   const { saveScore } = useScoreSaver(user, score, currentQuestion, totalTimeRef, onScoreSaved)
 
@@ -606,6 +649,19 @@ export default function GuessGame({ user, onScoreSaved = () => {} }) {
     )
   }
 
+  // Play limit exceeded state
+  if (playLimitExceeded) {
+    return (
+      <GameOverScreen
+        title="Play Limit Exceeded!"
+        subtitle="You have reached your maximum allowed games for this game."
+        score={score}
+        buttonText="Play Again Tomorrow"
+        onButtonClick={resetGame}
+        bgColor="red"
+      />
+    )
+  }
 
 
   const questionConfig = QUESTION_CONFIG[currentQuestion]

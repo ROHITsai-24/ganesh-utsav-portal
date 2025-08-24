@@ -1,6 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const PlayLimitCard = ({ gameTitle, gameDescription, playCount, playLimit }) => {
+  // Fix the count display - show actual attempts played, not including current attempt
+  const actualPlayCount = Math.min(playCount, playLimit)
+  
   return (
     <Card>
       <CardHeader>
@@ -17,7 +20,7 @@ const PlayLimitCard = ({ gameTitle, gameDescription, playCount, playLimit }) => 
               Play Limit Reached
             </h3>
             <p className="text-red-600">
-              You have played this game {playCount} time{playCount !== 1 ? 's' : ''} out of {playLimit} allowed.
+              You have played this game {actualPlayCount} time{actualPlayCount !== 1 ? 's' : ''} out of {playLimit} allowed.
             </p>
           </div>
           

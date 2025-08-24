@@ -121,8 +121,8 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
   // Store exact moves count to bypass React state timing issues
   const exactMovesRef = useRef(0)
 
-  // Memoized function to start new game
-  const startNewGame = useCallback(() => {
+  // Memoized function to reset game
+  const resetGame = useCallback(() => {
     const solvedTiles = createSolvedTiles(PUZZLE_CONFIG.gridSize)
     const shuffledTiles = shuffleTiles(solvedTiles)
     setTiles(shuffledTiles)
@@ -134,11 +134,93 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
   }, [])
 
   // Memoized function to start playing
-  const startPlaying = useCallback(() => {
-    setGameState(PUZZLE_CONFIG.states.playing)
-    setElapsedTime(0) // Reset timer when starting
-    gameStartTimeRef.current = Date.now() // Store exact start time
-  }, [])
+  const startPlaying = useCallback(async () => {
+    // Pre-game validation: Check if user can still play
+    try {
+      const response = await fetch('/api/check-play-limit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          gameKey: 'puzzle'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (response.status === 403) {
+          if (errorData.action === 'rejected_limit') {
+            // Show limit exceeded message
+            alert('Play limit exceeded! You have reached your maximum allowed games.')
+            return
+          }
+        }
+        throw new Error('Failed to validate play limit')
+      }
+
+      const data = await response.json()
+      if (!data.canPlay) {
+        // Show limit exceeded message
+        alert('Play limit exceeded! You have reached your maximum allowed games.')
+        return
+      }
+
+      // If validation passes, start the game
+      setGameState(PUZZLE_CONFIG.states.playing)
+      setElapsedTime(0) // Reset timer when starting
+      gameStartTimeRef.current = Date.now() // Store exact start time
+    } catch (error) {
+      console.error('Play limit validation failed:', error)
+      // BLOCK the game if validation fails - don't allow fallback
+      alert('Unable to validate play limit. Please try again later.')
+      return
+    }
+  }, [user?.id])
+
+  // Memoized function to start new game (with limit check)
+  const startNewGame = useCallback(async () => {
+    // Check play limit before starting new game
+    try {
+      const response = await fetch('/api/check-play-limit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          gameKey: 'puzzle'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (response.status === 403) {
+          if (errorData.action === 'rejected_limit') {
+            // Show limit exceeded message
+            alert('Play limit exceeded! You have reached your maximum allowed games.')
+            return
+          }
+        }
+        throw new Error('Failed to validate play limit')
+      }
+
+      const data = await response.json()
+      if (!data.canPlay) {
+        // Show limit exceeded message
+        alert('Play limit exceeded! You have reached your maximum allowed games.')
+        return
+      }
+
+      // If validation passes, start new game
+      resetGame()
+    } catch (error) {
+      console.error('Play limit validation failed:', error)
+      alert('Unable to validate play limit. Please try again later.')
+      return
+    }
+  }, [user?.id, resetGame])
 
   // Memoized function to handle tile click
   const handleTileClick = useCallback((tileIndex) => {

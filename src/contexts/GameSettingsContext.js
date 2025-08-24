@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 
 const GameSettingsContext = createContext()
 
@@ -50,9 +50,27 @@ export const GameSettingsProvider = ({ children }) => {
     return gameSettings[gameKey]?.play_limit || 1
   }, [gameSettings])
 
+  const hasEnabledGames = useMemo(() => {
+    return Object.values(gameSettings).some(game => game.is_enabled);
+  }, [gameSettings]);
+
   useEffect(() => {
     loadGameSettings() // Only load once on mount
   }, [loadGameSettings])
+
+  // Smart polling - only when enabled games exist
+  useEffect(() => {
+    if (!hasEnabledGames) return
+
+    const interval = setInterval(() => {
+      // Only refresh if user is on the page
+      if (!document.hidden) {
+        loadGameSettings()
+      }
+    }, 120000) // 2 minutes instead of 30 seconds
+
+    return () => clearInterval(interval)
+  }, [hasEnabledGames, loadGameSettings])
 
   const value = {
     gameSettings,
@@ -60,11 +78,7 @@ export const GameSettingsProvider = ({ children }) => {
     error,
     isGameEnabled,
     getGamePlayLimit,
-    reloadSettings: loadGameSettings,
-    // Simple refresh function that can be called when needed
-    refreshSettings: () => {
-      loadGameSettings()
-    }
+    refreshSettings: loadGameSettings
   }
 
   return (
