@@ -34,51 +34,202 @@ const GAME_CONFIG = {
 const JOURNEY_CONFIG = {
   years: [2020, 2021, 2022, 2023, 2024],
   defaultYear: 2020,
-  // Year-specific content for the carousel
+  // Year-specific content with carousel and gallery images
   yearContent: {
     2020: {
+      // Carousel images (5 selected from year photos)
       memories: [
-        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2020-1.jpg', gradient: 'from-orange-100 to-pink-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
-        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2020-2.jpg', gradient: 'from-yellow-100 to-orange-100', border: 'border-yellow-200', iconColor: 'text-yellow-400' },
-        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2020-3.jpg', gradient: 'from-pink-100 to-red-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
-        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2020-4.jpg', gradient: 'from-green-100 to-blue-100', border: 'border-green-200', iconColor: 'text-green-400' },
-        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2020-5.jpg', gradient: 'from-purple-100 to-indigo-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
+        { id: 1, titleKey: 'ganeshChaturthi2020', descriptionKey: 'desc1', image: '/2020/IMG_20200822_205348.jpg', gradient: 'from-orange-100 to-pink-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
+        { id: 2, titleKey: 'celebration2020', descriptionKey: 'desc2', image: '/2020/IMG_20200822_165021.jpg', gradient: 'from-yellow-100 to-orange-100', border: 'border-yellow-200', iconColor: 'text-yellow-400' },
+        { id: 3, titleKey: 'devotion2020', descriptionKey: 'desc3', image: '/2020/IMG-20220823-WA0010.jpg', gradient: 'from-pink-100 to-red-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
+        { id: 4, titleKey: 'festival2020', descriptionKey: 'desc4', image: '/2020/IMG-20200823-WA0182.jpg', gradient: 'from-green-100 to-blue-100', border: 'border-green-200', iconColor: 'text-green-400' },
+        { id: 5, titleKey: 'memories2020', descriptionKey: 'desc5', image: '/2020/IMG-20200823-WA0174.jpg', gradient: 'from-purple-100 to-indigo-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
+      ],
+      // All gallery images for the year (from your year folders)
+      gallery: [
+        { id: 1, titleKey: 'ganeshChaturthi2020', image: '/2020/IMG_20200822_205348.jpg' },
+        { id: 2, titleKey: 'celebration2020', image: '/2020/IMG_20200822_165021.jpg' },
+        { id: 3, titleKey: 'devotion2020', image: '/2020/IMG-20220823-WA0010.jpg' },
+        { id: 4, titleKey: 'festival2020', image: '/2020/IMG-20200823-WA0182.jpg' },
+        { id: 5, titleKey: 'memories2020', image: '/2020/IMG-20200823-WA0174.jpg' },
+        { id: 6, titleKey: 'memories2020', image: '/2020/IMG-20200823-WA0145.jpg' },
+        { id: 7, titleKey: 'memories2020', image: '/2020/IMG-20200823-WA0101.jpg' },
+        { id: 8, titleKey: 'memories2020', image: '/2020/IMG-20200823-WA0073.jpg' },
+        { id: 9, titleKey: 'memories2020', image: '/2020/IMG-20200823-WA0024.jpg' },
+        { id: 10, titleKey: 'memories2020', image: '/2020/IMG-20200823-WA0019.jpg' },
+        { id: 11, titleKey: 'memories2020', image: '/2020/IMG-20200823-WA0001.jpg' },
+        { id: 12, titleKey: 'memories2020', image: '/2020/IMG-20200822-WA0133.jpg' },
+        { id: 13, titleKey: 'memories2020', image: '/2020/IMG-20200822-WA0120.jpg' },
+        { id: 14, titleKey: 'memories2020', image: '/2020/IMG-20200822-WA0100.jpg' },
+        { id: 15, titleKey: 'memories2020', image: '/2020/IMG-20200822-WA0074.jpg' },
+        { id: 16, titleKey: 'memories2020', image: '/2020/IMG-20200822-WA0073.jpg' },
+        { id: 17, titleKey: 'memories2020', image: '/2020/IMG-20200822-WA0045.jpg' },
+        { id: 18, titleKey: 'memories2020', image: '/2020/IMG-20200822-WA0033.jpg' },
+        { id: 19, titleKey: 'memories2020', image: '/2020/IMG-20200822-WA0026.jpg' }
       ]
     },
     2021: {
+      // Carousel images (5 selected from year photos)
       memories: [
-        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2021-1.jpg', gradient: 'from-blue-100 to-cyan-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
-        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2021-2.jpg', gradient: 'from-indigo-100 to-purple-100', border: 'border-indigo-200', iconColor: 'text-indigo-400' },
-        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2021-3.jpg', gradient: 'from-teal-100 to-green-100', border: 'border-teal-200', iconColor: 'text-teal-400' },
-        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2021-4.jpg', gradient: 'from-red-100 to-pink-100', border: 'border-red-200', iconColor: 'text-red-400' },
-        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2021-5.jpg', gradient: 'from-amber-100 to-yellow-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
+        { id: 1, titleKey: 'ganeshChaturthi2021', descriptionKey: 'desc1', image: '/2021/IMG_1422.jpg', gradient: 'from-blue-100 to-cyan-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
+        { id: 2, titleKey: 'celebration2021', descriptionKey: 'desc2', image: '/2021/IMG_1389.jpg', gradient: 'from-indigo-100 to-purple-100', border: 'border-indigo-200', iconColor: 'text-indigo-400' },
+        { id: 3, titleKey: 'devotion2021', descriptionKey: 'desc3', image: '/2021/IMG_1386.jpg', gradient: 'from-teal-100 to-green-100', border: 'border-teal-200', iconColor: 'text-teal-400' },
+        { id: 4, titleKey: 'festival2021', descriptionKey: 'desc4', image: '/2021/IMG_1379.jpg', gradient: 'from-red-100 to-pink-100', border: 'border-red-200', iconColor: 'text-red-400' },
+        { id: 5, titleKey: 'memories2021', descriptionKey: 'desc5', image: '/2021/IMG_1375.jpg', gradient: 'from-amber-100 to-yellow-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
+      ],
+      // All gallery images for the year (from your year folders)
+      gallery: [
+        { id: 1, titleKey: 'ganeshChaturthi2021', image: '/2021/IMG_1422.jpg' },
+        { id: 2, titleKey: 'celebration2021', image: '/2021/IMG_1389.jpg' },
+        { id: 3, titleKey: 'devotion2021', image: '/2021/IMG_1386.jpg' },
+        { id: 4, titleKey: 'festival2021', image: '/2021/IMG_1379.jpg' },
+        { id: 5, titleKey: 'memories2021', image: '/2021/IMG_1375.jpg' },
+        { id: 6, titleKey: 'memories2021', image: '/2021/IMG_1362.jpg' },
+        { id: 7, titleKey: 'memories2021', image: '/2021/IMG_1334.jpg' },
+        { id: 8, titleKey: 'memories2021', image: '/2021/IMG_1303.jpg' },
+        { id: 9, titleKey: 'memories2021', image: '/2021/IMG_1248.jpg' },
+        { id: 10, titleKey: 'memories2021', image: '/2021/1631500195748-01.jpeg' },
+        { id: 11, titleKey: 'memories2021', image: '/2021/IMG20210910093324.jpg' },
+        { id: 12, titleKey: 'memories2021', image: '/2021/IMG_20210912_202041.jpg' },
+        { id: 13, titleKey: 'memories2021', image: '/2021/IMG_20210912_201202.jpg' },
+        { id: 14, titleKey: 'memories2021', image: '/2021/IMG_20210912_174000.jpg' },
+        { id: 15, titleKey: 'memories2021', image: '/2021/IMG_20210911_202135.jpg' },
+        { id: 16, titleKey: 'memories2021', image: '/2021/IMG_20210911_200703.jpg' },
+        { id: 17, titleKey: 'memories2021', image: '/2021/IMG_20210911_200611.jpg' },
+        { id: 18, titleKey: 'memories2021', image: '/2021/IMG_20210910_123641.jpg' },
+        { id: 19, titleKey: 'memories2021', image: '/2021/IMG_20210910_112657.jpg' },
+        { id: 20, titleKey: 'memories2021', image: '/2021/IMG_1565.jpg' },
+        { id: 21, titleKey: 'memories2021', image: '/2021/IMG_1542.jpg' },
+        { id: 22, titleKey: 'memories2021', image: '/2021/IMG_1518.jpg' },
+        { id: 23, titleKey: 'memories2021', image: '/2021/IMG_1512.jpg' },
+        { id: 24, titleKey: 'memories2021', image: '/2021/IMG_1509.jpg' },
+        { id: 25, titleKey: 'memories2021', image: '/2021/IMG_1498.jpg' },
+        { id: 26, titleKey: 'memories2021', image: '/2021/IMG_1482.jpg' }
       ]
     },
     2022: {
+      // Carousel images (5 selected from year photos)
       memories: [
-        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2022-1.jpg', gradient: 'from-emerald-100 to-teal-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
-        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2022-2.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
-        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2022-3.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
-        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2022-4.jpg', gradient: 'from-sky-100 to-blue-100', border: 'border-sky-200', iconColor: 'text-sky-400' },
-        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2022-5.jpg', gradient: 'from-lime-100 to-green-100', border: 'border-lime-200', iconColor: 'text-lime-400' }
+        { id: 1, titleKey: 'ganeshChaturthi2022', descriptionKey: 'desc1', image: '/2022/IMG20220904220638.jpg', gradient: 'from-emerald-100 to-teal-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
+        { id: 2, titleKey: 'celebration2022', descriptionKey: 'desc2', image: '/2022/IMG20220904181723.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
+        { id: 3, titleKey: 'devotion2022', descriptionKey: 'desc3', image: '/2022/IMG20220904181657.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
+        { id: 4, titleKey: 'festival2022', descriptionKey: 'desc4', image: '/2022/IMG20220903225511.jpg', gradient: 'from-sky-100 to-blue-100', border: 'border-sky-200', iconColor: 'text-sky-400' },
+        { id: 5, titleKey: 'memories2022', descriptionKey: 'desc5', image: '/2022/IMG20220903225241.jpg', gradient: 'from-lime-100 to-green-100', border: 'border-lime-200', iconColor: 'text-lime-400' }
+      ],
+      // All gallery images for the year (from your year folders)
+      gallery: [
+        { id: 1, titleKey: 'ganeshChaturthi2022', image: '/2022/IMG20220904220638.jpg' },
+        { id: 2, titleKey: 'celebration2022', image: '/2022/IMG20220904181723.jpg' },
+        { id: 3, titleKey: 'devotion2022', image: '/2022/IMG20220904181657.jpg' },
+        { id: 4, titleKey: 'festival2022', image: '/2022/IMG20220903225511.jpg' },
+        { id: 5, titleKey: 'memories2022', image: '/2022/IMG20220903225241.jpg' },
+        { id: 6, titleKey: 'memories2022', image: '/2022/IMG20220901192119.jpg' },
+        { id: 7, titleKey: 'memories2022', image: '/2022/IMG20220901183853.jpg' },
+        { id: 8, titleKey: 'memories2022', image: '/2022/IMG20220901183138.jpg' },
+        { id: 9, titleKey: 'memories2022', image: '/2022/IMG20220901182716.jpg' },
+        { id: 10, titleKey: 'memories2022', image: '/2022/IMG20220901182104.jpg' },
+        { id: 11, titleKey: 'memories2022', image: '/2022/IMG20220901181517.jpg' },
+        { id: 12, titleKey: 'memories2022', image: '/2022/IMG20220901172152.jpg' },
+        { id: 13, titleKey: 'memories2022', image: '/2022/IMG20220901172125.jpg' },
+        { id: 14, titleKey: 'memories2022', image: '/2022/IMG20220831133559.jpg' },
+        { id: 15, titleKey: 'memories2022', image: '/2022/IMG20220831123108.jpg' },
+        { id: 16, titleKey: 'memories2022', image: '/2022/IMG20220831114330.jpg' },
+        { id: 17, titleKey: 'memories2022', image: '/2022/IMG20220831113519.jpg' },
+        { id: 18, titleKey: 'memories2022', image: '/2022/IMG20220830232648.jpg' },
+        { id: 19, titleKey: 'memories2022', image: '/2022/IMG-20220907-WA0006.jpg' },
+        { id: 20, titleKey: 'memories2022', image: '/2022/IMG-20220901-WA0013.jpg' },
+        { id: 21, titleKey: 'memories2022', image: '/2022/IMG-20220828-WA0014.jpg' },
+        { id: 22, titleKey: 'memories2022', image: '/2022/1662141078872.jpg' }
       ]
     },
     2023: {
+      // Carousel images (5 selected from year photos)
       memories: [
-        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2023-1.jpg', gradient: 'from-orange-100 to-amber-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
-        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2023-2.jpg', gradient: 'from-pink-100 to-rose-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
-        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2023-3.jpg', gradient: 'from-blue-100 to-indigo-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
-        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2023-4.jpg', gradient: 'from-green-100 to-emerald-100', border: 'border-green-200', iconColor: 'text-green-400' },
-        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2023-5.jpg', gradient: 'from-purple-100 to-violet-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
+        { id: 1, titleKey: 'ganeshChaturthi2023', descriptionKey: 'desc1', image: '/2023/SAVE_20230919_095020.jpg', gradient: 'from-orange-100 to-amber-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
+        { id: 2, titleKey: 'celebration2023', descriptionKey: 'desc2', image: '/2023/IMG_20230922_215750.jpg', gradient: 'from-pink-100 to-rose-100', border: 'border-pink-200', iconColor: 'text-pink-400' },
+        { id: 3, titleKey: 'devotion2023', descriptionKey: 'desc3', image: '/2023/IMG_20230922_215130.jpg', gradient: 'from-blue-100 to-indigo-100', border: 'border-blue-200', iconColor: 'text-blue-400' },
+        { id: 4, titleKey: 'festival2023', descriptionKey: 'desc4', image: '/2023/IMG_20230922_204556.jpg', gradient: 'from-green-100 to-emerald-100', border: 'border-green-200', iconColor: 'text-green-400' },
+        { id: 5, titleKey: 'memories2023', descriptionKey: 'desc5', image: '/2023/IMG_9961.jpg', gradient: 'from-purple-100 to-violet-100', border: 'border-purple-200', iconColor: 'text-purple-400' }
+      ],
+      // All gallery images for the year (from your year folders)
+      gallery: [
+        { id: 1, titleKey: 'ganeshChaturthi2023', image: '/2023/SAVE_20230919_095020.jpg' },
+        { id: 2, titleKey: 'celebration2023', image: '/2023/IMG_20230922_215750.jpg' },
+        { id: 3, titleKey: 'devotion2023', image: '/2023/IMG_20230922_215130.jpg' },
+        { id: 4, titleKey: 'festival2023', image: '/2023/IMG_20230922_204556.jpg' },
+        { id: 5, titleKey: 'memories2023', image: '/2023/IMG_9961.jpg' },
+        { id: 6, titleKey: 'memories2023', image: '/2023/IMG_9902.jpg' },
+        { id: 7, titleKey: 'memories2023', image: '/2023/IMG_9849.jpg' },
+        { id: 8, titleKey: 'memories2023', image: '/2023/IMG_9846.jpg' },
+        { id: 9, titleKey: 'memories2023', image: '/2023/IMG_9833.jpg' },
+        { id: 10, titleKey: 'memories2023', image: '/2023/IMG_9784.jpg' },
+        { id: 11, titleKey: 'memories2023', image: '/2023/IMG_0156.jpg' },
+        { id: 12, titleKey: 'memories2023', image: '/2023/IMG_0146.jpg' },
+        { id: 13, titleKey: 'memories2023', image: '/2023/IMG_0097.jpg' },
+        { id: 14, titleKey: 'memories2023', image: '/2023/IMG_0075.jpg' },
+        { id: 15, titleKey: 'memories2023', image: '/2023/IMG_0061.jpg' },
+        { id: 16, titleKey: 'memories2023', image: '/2023/IMG_0054.jpg' },
+        { id: 17, titleKey: 'memories2023', image: '/2023/IMG_0030.jpg' },
+        { id: 18, titleKey: 'memories2023', image: '/2023/20230924_165011.jpg' },
+        { id: 19, titleKey: 'memories2023', image: '/2023/IMG-20230918-WA0112.jpg' },
+        { id: 20, titleKey: 'memories2023', image: '/2023/IMG-20230918-WA0055.jpg' },
+        { id: 21, titleKey: 'memories2023', image: '/2023/51df652f55bb41139329ae634b8b0d33.jpg' }
       ]
     },
     2024: {
+      // Carousel images (5 selected from year photos)
       memories: [
-        { id: 1, titleKey: 'title1', descriptionKey: 'desc1', image: '/memories/2024-1.jpg', gradient: 'from-cyan-100 to-blue-100', border: 'border-cyan-200', iconColor: 'text-cyan-400' },
-        { id: 2, titleKey: 'title2', descriptionKey: 'desc2', image: '/memories/2024-2.jpg', gradient: 'from-emerald-100 to-green-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
-        { id: 3, titleKey: 'title3', descriptionKey: 'desc3', image: '/memories/2024-3.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
-        { id: 4, titleKey: 'title4', descriptionKey: 'desc4', image: '/memories/2024-4.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
-        { id: 5, titleKey: 'title5', descriptionKey: 'desc5', image: '/memories/2024-5.jpg', gradient: 'from-amber-100 to-orange-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
+        { id: 1, titleKey: 'ganeshChaturthi2024', descriptionKey: 'desc1', image: '/2024/IMG-20240921-WA0075.jpg', gradient: 'from-cyan-100 to-blue-100', border: 'border-cyan-200', iconColor: 'text-cyan-400' },
+        { id: 2, titleKey: 'celebration2024', descriptionKey: 'desc2', image: '/2024/IMG_6852.jpg', gradient: 'from-emerald-100 to-green-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
+        { id: 3, titleKey: 'devotion2024', descriptionKey: 'desc3', image: '/2024/IMG_6844.jpg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
+        { id: 4, titleKey: 'festival2024', descriptionKey: 'desc4', image: '/2024/IMG_7083.jpg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
+        { id: 5, titleKey: 'memories2024', descriptionKey: 'desc5', image: '/2024/IMG_7058.jpg', gradient: 'from-amber-100 to-orange-100', border: 'border-amber-200', iconColor: 'text-amber-400' }
+      ],
+      // All gallery images for the year (from your year folders)
+      gallery: [
+        { id: 1, titleKey: 'ganeshChaturthi2024', image: '/2024/IMG-20240921-WA0075.jpg' },
+        { id: 2, titleKey: 'celebration2024', image: '/2024/IMG_6852.jpg' },
+        { id: 3, titleKey: 'devotion2024', image: '/2024/IMG_6844.jpg' },
+        { id: 4, titleKey: 'festival2024', image: '/2024/IMG_7083.jpg' },
+        { id: 5, titleKey: 'memories2024', image: '/2024/IMG_7058.jpg' },
+        { id: 6, titleKey: 'memories2024', image: '/2024/IMG_6997.jpg' },
+        { id: 7, titleKey: 'memories2024', image: '/2024/IMG_6974.jpg' },
+        { id: 8, titleKey: 'memories2024', image: '/2024/IMG_6953.jpg' },
+        { id: 9, titleKey: 'memories2024', image: '/2024/IMG_6902.jpg' },
+        { id: 10, titleKey: 'memories2024', image: '/2024/IMG_6736.jpg' },
+        { id: 11, titleKey: 'memories2024', image: '/2024/IMG_6718.jpg' },
+        { id: 12, titleKey: 'memories2024', image: '/2024/IMG_6717.jpg' },
+        { id: 13, titleKey: 'memories2024', image: '/2024/IMG_6706.jpg' },
+        { id: 14, titleKey: 'memories2024', image: '/2024/IMG_6647.jpg' },
+        { id: 15, titleKey: 'memories2024', image: '/2024/IMG_6626.jpg' },
+        { id: 16, titleKey: 'memories2024', image: '/2024/IMG_6593.jpg' },
+        { id: 17, titleKey: 'memories2024', image: '/2024/IMG_6580.jpg' },
+        { id: 18, titleKey: 'memories2024', image: '/2024/IMG_6571.jpg' },
+        { id: 19, titleKey: 'memories2024', image: '/2024/IMG_6562.jpg' },
+        { id: 20, titleKey: 'memories2024', image: '/2024/IMG_6561.jpg' },
+        { id: 21, titleKey: 'memories2024', image: '/2024/IMG_6557.jpg' },
+        { id: 22, titleKey: 'memories2024', image: '/2024/IMG_6524.jpg' },
+        { id: 23, titleKey: 'memories2024', image: '/2024/IMG_6514.jpg' },
+        { id: 24, titleKey: 'memories2024', image: '/2024/IMG_6423.jpg' },
+        { id: 25, titleKey: 'memories2024', image: '/2024/IMG_6422.jpg' },
+        { id: 26, titleKey: 'memories2024', image: '/2024/IMG_6394.jpg' },
+        { id: 27, titleKey: 'memories2024', image: '/2024/IMG_6384.jpg' },
+        { id: 28, titleKey: 'memories2024', image: '/2024/IMG_6379.jpg' },
+        { id: 29, titleKey: 'memories2024', image: '/2024/IMG20240914173225.jpg' },
+        { id: 30, titleKey: 'memories2024', image: '/2024/IMG20240913222500.jpg' },
+        { id: 31, titleKey: 'memories2024', image: '/2024/IMG20240913222127.jpg' },
+        { id: 32, titleKey: 'memories2024', image: '/2024/IMG_7092.jpg' },
+        { id: 33, titleKey: 'memories2024', image: '/2024/IMG_6996.jpg' },
+        { id: 34, titleKey: 'memories2024', image: '/2024/IMG_6888.jpg' },
+        { id: 35, titleKey: 'memories2024', image: '/2024/IMG_6776.jpg' },
+        { id: 36, titleKey: 'memories2024', image: '/2024/IMG_6766.jpg' },
+        { id: 37, titleKey: 'memories2024', image: '/2024/IMG_6758.jpg' },
+        { id: 38, titleKey: 'memories2024', image: '/2024/IMG_6651.jpg' },
+        { id: 39, titleKey: 'memories2024', image: '/2024/IMG_6511.jpg' },
+        { id: 40, titleKey: 'memories2024', image: '/2024/IMG_6386.jpg' },
+        { id: 41, titleKey: 'memories2024', image: '/2024/IMG_7073.JPG' },
+        { id: 42, titleKey: 'memories2024', image: '/2024/IMG-20240909-WA0016.jpg' },
+        { id: 43, titleKey: 'memories2024', image: '/2024/257610f7-50ae-428a-8e2a-f78983c73a8f.JPG' }
       ]
     }
   }
@@ -191,20 +342,273 @@ const GradientHeading = ({ children, className = '' }) => (
   </span>
 )
 
-const PhotoGridItem = ({ config, className = '', index = 0 }) => {
+// Carousel Row Component for optimized carousel rendering
+const CarouselRow = ({ memories, direction, rowId, onImageClick }) => {
+  const animationClass = direction === 'left' ? 'animate-move-left' : 'animate-move-right'
+  const justifyClass = direction === 'right' ? 'justify-end' : ''
+  
+  return (
+    <div className={`flex gap-4 ${justifyClass} ${animationClass} ${rowId === 'row1' ? 'mb-6' : ''}`}>
+      {/* Original content */}
+      {memories.map((memory, index) => (
+        <PhotoGridItem 
+          key={`${rowId}-orig-${memory.id}`} 
+          config={memory} 
+          index={index} 
+          onClick={onImageClick}
+        />
+      ))}
+      {/* Duplicated content for seamless loop */}
+      {memories.map((memory, index) => (
+        <PhotoGridItem 
+          key={`${rowId}-dupe-${memory.id}`} 
+          config={memory} 
+          index={index} 
+          onClick={onImageClick}
+        />
+      ))}
+    </div>
+  )
+}
+
+const PhotoGridItem = ({ config, className = '', index = 0, onClick }) => {
   const { translations } = useLanguage()
-  // Determine width based on index for alternating pattern
-  const isWide = index % 2 === 0
-  const widthClass = isWide ? 'w-96' : 'w-56'
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
+  
+  // Optimized width calculation based on index pattern
+  const getWidthClass = (index) => {
+    const widthPatterns = ['w-96', 'w-56', 'w-80', 'w-64', 'w-72']
+    return widthPatterns[index % widthPatterns.length]
+  }
+
+  const widthClass = getWidthClass(index)
 
   return (
     <div 
-      className={`flex-shrink-0 ${widthClass} h-56 bg-gradient-to-br ${config.gradient} rounded-2xl border ${config.border} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl ${className}`}
+      className={`flex-shrink-0 ${widthClass} h-56 bg-gradient-to-br ${config.gradient} rounded-2xl border ${config.border} overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer ${className}`}
+      onClick={onClick}
     >
-      <div className="text-center text-gray-600">
-        <svg className={`w-16 h-16 mx-auto mb-3 ${config.iconColor}`} fill="currentColor" viewBox="0 0 24 24">
-          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+      {/* Image Container */}
+      <div className="relative w-full h-full">
+        {/* Loading State */}
+        {!imageLoaded && !imageError && (
+          <div className="absolute inset-0 bg-gradient-to-br ${config.gradient} flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
+          </div>
+        )}
+        
+        {/* Error State */}
+        {imageError && (
+          <div className="absolute inset-0 bg-gradient-to-br ${config.gradient} flex items-center justify-center">
+            <div className="text-center text-gray-600">
+              <svg className={`w-16 h-16 mx-auto mb-3 ${config.iconColor}`} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+              </svg>
+              <p className="text-sm">{translations.imageLoadError}</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Actual Image */}
+        {!imageError && (
+          <img 
+            src={config.image} 
+            alt={translations[config.titleKey] || 'Memory'}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+            loading="lazy"
+          />
+        )}
+        
+        {/* Overlay with title */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4">
+          <h3 className="text-white font-semibold text-sm md:text-base truncate">
+            {translations[config.titleKey]}
+          </h3>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Gallery Grid Component (Google Photos Style)
+const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYearChange }) => {
+  const { translations } = useLanguage()
+  
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 bg-white">
+      {/* Header with Year Navigation */}
+      <div className="p-4 border-b">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">{translations.galleryTitle}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-600 hover:text-gray-800 transition-colors"
+            aria-label={translations.closeGallery}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        {/* Year Navigation */}
+        <div className="flex items-center space-x-2">
+          {JOURNEY_CONFIG.years.map((year) => (
+            <button
+              key={year}
+              onClick={() => onYearChange(year)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 ${
+                year === currentYear
+                  ? 'bg-[#8B4513] text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {year}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Asymmetrical Gallery Grid (Google Photos Style) */}
+      <div className="p-4 overflow-y-auto h-[calc(100vh-120px)]">
+        <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4" style={{
+          columnGap: '1rem',
+          columnFill: 'balance'
+        }}>
+          {images.map((image, index) => (
+            <div
+              key={image.id}
+              className="break-inside-avoid mb-4 overflow-hidden rounded-lg cursor-pointer hover:opacity-80 transition-all duration-300 hover:scale-[1.02] group"
+              onClick={() => onImageClick(index)}
+            >
+              <div className="relative">
+                <img
+                  src={image.image}
+                  alt={translations[image.titleKey] || 'Gallery Image'}
+                  className="w-full h-auto object-cover rounded-lg"
+                  loading="lazy"
+                  onLoad={(e) => {
+                    // Add natural aspect ratio class based on image dimensions
+                    const img = e.target
+                    const aspectRatio = img.naturalWidth / img.naturalHeight
+                    if (aspectRatio > 1.5) {
+                      img.classList.add('landscape-wide')
+                    } else if (aspectRatio < 0.7) {
+                      img.classList.add('portrait-tall')
+                    }
+                  }}
+                />
+                {/* Hover overlay with image info */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-lg flex items-end">
+                  <div className="w-full p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <p className="text-white text-sm font-medium truncate">
+                      {translations[image.titleKey] || 'Memory'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Single Image Modal Component
+const SingleImageModal = ({ isOpen, onClose, image, currentIndex, totalImages, onNavigate }) => {
+  const { translations } = useLanguage()
+  
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Escape') onClose()
+    if (e.key === 'ArrowLeft') onNavigate('prev')
+    if (e.key === 'ArrowRight') onNavigate('next')
+  }, [onClose, onNavigate])
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = 'hidden'
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen, handleKeyDown])
+
+  if (!isOpen || !image) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 transition-colors"
+        aria-label={translations.closeGallery}
+      >
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
+      </button>
+
+      {/* Navigation buttons */}
+      <button
+        onClick={() => onNavigate('prev')}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 transition-colors"
+        aria-label={translations.previousPhoto}
+      >
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <button
+        onClick={() => onNavigate('next')}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 transition-colors"
+        aria-label={translations.nextPhoto}
+      >
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      {/* Image container */}
+      <div className="relative w-full h-full flex items-center justify-center p-4">
+        <div className="max-w-4xl max-h-full">
+          <img
+            src={image.image}
+            alt={translations[image.titleKey] || 'Gallery Image'}
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+          />
+          
+          {/* Image info */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-sm">
+            <p className="text-sm font-medium">
+              {translations.photoOf.replace('{current}', currentIndex + 1).replace('{total}', totalImages)}
+            </p>
+            <p className="text-xs opacity-80">
+              {translations[image.titleKey]}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -298,6 +702,10 @@ function HomeContent() {
   const { translations } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(JOURNEY_CONFIG.defaultYear)
+  const [galleryImages, setGalleryImages] = useState([])
+  const [isGalleryGridOpen, setIsGalleryGridOpen] = useState(false)
+  const [isSingleImageOpen, setIsSingleImageOpen] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   // Memoized handlers
   const toggleMobileMenu = useCallback(() => {
@@ -307,6 +715,37 @@ function HomeContent() {
   const handleYearSelect = useCallback((year) => {
     setSelectedYear(year)
   }, [])
+
+  const openGalleryGrid = useCallback((year) => {
+    const yearContent = JOURNEY_CONFIG.yearContent[year]
+    if (yearContent && yearContent.gallery) {
+      setGalleryImages(yearContent.gallery)
+      setIsGalleryGridOpen(true)
+    }
+  }, [])
+
+  const closeGalleryGrid = useCallback(() => {
+    setIsGalleryGridOpen(false)
+  }, [])
+
+  const openSingleImage = useCallback((index) => {
+    setCurrentImageIndex(index)
+    setIsSingleImageOpen(true)
+  }, [])
+
+  const closeSingleImage = useCallback(() => {
+    setIsSingleImageOpen(false)
+  }, [])
+
+  const navigateSingleImage = useCallback((direction) => {
+    setCurrentImageIndex(prev => {
+      if (direction === 'next') {
+        return (prev + 1) % galleryImages.length
+      } else {
+        return (prev - 1 + galleryImages.length) % galleryImages.length
+      }
+    })
+  }, [galleryImages])
 
   // Memoized computed values
   const isYearSelected = useCallback((year) => year === selectedYear, [selectedYear])
@@ -527,29 +966,21 @@ function HomeContent() {
             {currentYearContent && row1Memories.length > 0 && (
               <>
                 {/* First Row - Moving Left with Duplicated Content */}
-                <div className="flex gap-4 mb-6 animate-move-left">
-                  {/* Original content */}
-                  {row1Memories.map((memory, index) => (
-                    <PhotoGridItem key={`row1-orig-${memory.id}`} config={memory} index={index} />
-                  ))}
-                  {/* Duplicated content for seamless loop */}
-                  {row1Memories.map((memory, index) => (
-                    <PhotoGridItem key={`row1-dupe-${memory.id}`} config={memory} index={index} />
-                  ))}
-                </div>
+                <CarouselRow 
+                  memories={row1Memories}
+                  direction="left"
+                  rowId="row1"
+                  onImageClick={() => openGalleryGrid(selectedYear)}
+                />
                 
                 {/* Second Row - Moving Right with Duplicated Content */}
                 {row2Memories.length > 0 && (
-                  <div className="flex gap-4 justify-end animate-move-right">
-                    {/* Original content */}
-                    {row2Memories.map((memory, index) => (
-                      <PhotoGridItem key={`row2-orig-${memory.id}`} config={memory} index={index} />
-                    ))}
-                    {/* Duplicated content for seamless loop */}
-                    {row2Memories.map((memory, index) => (
-                      <PhotoGridItem key={`row2-dupe-${memory.id}`} config={memory} index={index} />
-                    ))}
-                  </div>
+                  <CarouselRow 
+                    memories={row2Memories}
+                    direction="right"
+                    rowId="row2"
+                    onImageClick={() => openGalleryGrid(selectedYear)}
+                  />
                 )}
               </>
             )}
@@ -557,7 +988,10 @@ function HomeContent() {
 
           {/* View All Button */}
           <div className="text-center">
-            <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-300">
+            <Button 
+              className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-300"
+              onClick={() => openGalleryGrid(selectedYear)}
+            >
               {translations.viewAll}
             </Button>
           </div>
@@ -619,6 +1053,24 @@ function HomeContent() {
           </div>
         </div>
       </footer>
+
+      <GalleryGrid
+        isOpen={isGalleryGridOpen}
+        onClose={closeGalleryGrid}
+        images={galleryImages}
+        onImageClick={openSingleImage}
+        currentYear={selectedYear}
+        onYearChange={openGalleryGrid}
+      />
+
+      <SingleImageModal
+        isOpen={isSingleImageOpen}
+        onClose={closeSingleImage}
+        image={galleryImages[currentImageIndex]}
+        currentIndex={currentImageIndex}
+        totalImages={galleryImages.length}
+        onNavigate={navigateSingleImage}
+      />
 
 
     </div>

@@ -416,31 +416,33 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     const score = calculateScore(finalMoves, finalTime)
     
     return (
-      <div className="bg-gradient-to-br from-indigo-50 to-pink-50 p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">{PUZZLE_CONFIG.messages.solved.title}</h1>
-            
-            {/* Show the completed image clearly */}
-            <div className="mb-6">
-              <img
-                src={imageSrc}
-                alt="Completed Puzzle"
-                className="w-full max-w-md mx-auto rounded-lg shadow-lg border-4 border-green-500"
-              />
-            </div>
-            
-            <div className="bg-green-100 text-green-800 p-6 rounded-lg mb-6">
-              <h2 className="text-2xl font-bold mb-2">{PUZZLE_CONFIG.messages.solved.subtitle}</h2>
-              <p className="text-lg mb-2">{PUZZLE_CONFIG.messages.solved.moves.replace('{moves}', finalMoves)}</p>
-              <p className="text-lg">{PUZZLE_CONFIG.messages.solved.timeTaken.replace('{time}', formatTime(finalTime))}</p>
-              <p className="text-lg font-semibold">{PUZZLE_CONFIG.messages.solved.score.replace('{score}', score)}</p>
-            </div>
-            <Button onClick={startNewGame} className="text-lg px-8 py-3">
-              {PUZZLE_CONFIG.ui.buttons.playAgain}
-            </Button>
+      <div className="text-center space-y-8">
+        <div className="space-y-4">
+          <h1 className="text-4xl font-bold text-white">{PUZZLE_CONFIG.messages.solved.title}</h1>
+          
+          {/* Show the completed image clearly */}
+          <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20 max-w-sm mx-auto">
+            <img
+              src={imageSrc}
+              alt="Completed Puzzle"
+              className="w-full rounded-xl shadow-lg border-4 border-green-500"
+            />
+          </div>
+          
+          <div className="bg-green-500/20 text-green-300 p-4 rounded-2xl border border-green-500/30 max-w-sm mx-auto">
+            <h2 className="text-xl font-bold mb-3">{PUZZLE_CONFIG.messages.solved.subtitle}</h2>
+            <p className="text-base mb-2">{PUZZLE_CONFIG.messages.solved.moves.replace('{moves}', finalMoves)}</p>
+            <p className="text-base mb-2">{PUZZLE_CONFIG.messages.solved.timeTaken.replace('{time}', formatTime(finalTime))}</p>
+            <p className="text-lg font-semibold">{PUZZLE_CONFIG.messages.solved.score.replace('{score}', score)}</p>
           </div>
         </div>
+        
+        <Button 
+          onClick={startNewGame} 
+          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+        >
+          {PUZZLE_CONFIG.ui.buttons.playAgain}
+        </Button>
       </div>
     )
   }
@@ -448,40 +450,38 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
 
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 to-pink-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl md:text-3xl">{PUZZLE_CONFIG.ui.title}</CardTitle>
-            <CardDescription className="text-base">
-              {replacePlaceholders(PUZZLE_CONFIG.ui.description, { points: PUZZLE_CONFIG.scoring.baseScore })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Game Stats */}
-            {GameStats}
+    <div className="space-y-6">
+      <div className="text-center space-y-4">
+        <h1 className="text-2xl font-bold text-white">{PUZZLE_CONFIG.ui.title}</h1>
+        <p className="text-base text-white/80">
+          {replacePlaceholders(PUZZLE_CONFIG.ui.description, { points: PUZZLE_CONFIG.scoring.baseScore })}
+        </p>
+      </div>
 
-            {/* Game Instructions */}
-            {gameState === PUZZLE_CONFIG.states.ready && GameInstructions}
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
+        <div className="space-y-6">
+          {/* Game Stats */}
+          {GameStats}
 
-            {/* Puzzle Grid */}
-            {PuzzleGrid}
+          {/* Game Instructions */}
+          {gameState === PUZZLE_CONFIG.states.ready && GameInstructions}
 
-            {/* Game Status */}
-            {gameState === PUZZLE_CONFIG.states.playing && GameStatus}
-          </CardContent>
-        </Card>
+          {/* Puzzle Grid */}
+          {PuzzleGrid}
 
-        {/* Game instructions reminder */}
-        <div className="text-center mt-8">
-          <p className="text-gray-600">
-            {replacePlaceholders(PUZZLE_CONFIG.ui.gameStatus.complete, { points: PUZZLE_CONFIG.scoring.baseScore })}
-          </p>
+          {/* Game Status */}
+          {gameState === PUZZLE_CONFIG.states.playing && GameStatus}
         </div>
+      </div>
+
+      {/* Game instructions reminder */}
+      <div className="text-center">
+        <p className="text-white/60">
+          {replacePlaceholders(PUZZLE_CONFIG.ui.gameStatus.complete, { points: PUZZLE_CONFIG.scoring.baseScore })}
+        </p>
       </div>
     </div>
   )
 }
-
 
 

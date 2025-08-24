@@ -656,7 +656,7 @@ const GameTabs = ({ activeTab, onTabChange }) => {
   }
   
   return (
-    <div className="flex gap-2 justify-center p-3 mb-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+    <div className="flex gap-3 justify-center p-4 mb-8 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg">
       {GAME_TABS.map((tab) => {
         const isEnabled = isGameEnabled(tab.id)
         const isActive = activeTab === tab.id
@@ -664,11 +664,11 @@ const GameTabs = ({ activeTab, onTabChange }) => {
         return (
           <button
             key={tab.id}
-            className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all relative ${
+            className={`px-8 py-4 rounded-xl text-base font-semibold transition-all duration-300 relative transform hover:scale-105 ${
               isActive 
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-xl scale-105' 
                 : isEnabled
-                  ? 'bg-white/20 text-white/80 hover:bg-white/30'
+                  ? 'bg-white/20 text-white/80 hover:bg-white/30 hover:shadow-lg'
                   : 'bg-gray-500/30 text-gray-400 cursor-not-allowed'
             }`}
             onClick={() => onTabChange(tab.id)}
@@ -751,12 +751,14 @@ const GameContent = ({ activeTabConfig, user }) => {
   const GameComponent = activeTabConfig.component
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden">
-      {activeTabConfig.id === 'puzzle' ? (
-        <GameComponent user={user} imageSrc="/puzzle.jpg" onScoreSaved={checkPlayLimit} />
-      ) : (
-        <GameComponent user={user} onScoreSaved={checkPlayLimit} />
-      )}
+    <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 overflow-hidden shadow-2xl">
+      <div className="p-6">
+        {activeTabConfig.id === 'puzzle' ? (
+          <GameComponent user={user} imageSrc="/puzzle.jpg" onScoreSaved={checkPlayLimit} />
+        ) : (
+          <GameComponent user={user} onScoreSaved={checkPlayLimit} />
+        )}
+      </div>
     </div>
   )
 }

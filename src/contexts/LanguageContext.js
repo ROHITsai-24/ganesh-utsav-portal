@@ -38,6 +38,14 @@ const TRANSLATIONS = {
     noMemoriesYet: 'No Memories Yet',
     memoriesForYear: 'Memories for {year} will be added soon!',
     loadingMemories: 'Loading memories...',
+    imageLoadError: 'Image could not load',
+    
+    // Gallery translations
+    galleryTitle: 'Photo Gallery',
+    closeGallery: 'Close Gallery',
+    previousPhoto: 'Previous',
+    nextPhoto: 'Next',
+    photoOf: 'Photo {current} of {total}',
     
     // Memory Titles and Descriptions
     memories: {
@@ -53,6 +61,37 @@ const TRANSLATIONS = {
         title5: 'Community Celebration',
         desc5: 'Sharing joy with neighbors'
       },
+      
+    // Year-specific titles for gallery
+    ganeshChaturthi2020: 'Ganesh Chaturthi 2020',
+    celebration2020: 'Celebration 2020',
+    devotion2020: 'Devotion 2020',
+    festival2020: 'Festival 2020',
+    memories2020: 'Memories 2020',
+    
+    ganeshChaturthi2021: 'Ganesh Chaturthi 2021',
+    celebration2021: 'Celebration 2021',
+    devotion2021: 'Devotion 2021',
+    festival2021: 'Festival 2021',
+    memories2021: 'Memories 2021',
+    
+    ganeshChaturthi2022: 'Ganesh Chaturthi 2022',
+    celebration2022: 'Celebration 2022',
+    devotion2022: 'Devotion 2022',
+    festival2022: 'Festival 2022',
+    memories2022: 'Memories 2022',
+    
+    ganeshChaturthi2023: 'Ganesh Chaturthi 2023',
+    celebration2023: 'Celebration 2023',
+    devotion2023: 'Devotion 2023',
+    festival2023: 'Festival 2023',
+    memories2023: 'Memories 2023',
+    
+    ganeshChaturthi2024: 'Ganesh Chaturthi 2024',
+    celebration2024: 'Celebration 2024',
+    devotion2024: 'Devotion 2024',
+    festival2024: 'Festival 2024',
+    memories2024: 'Memories 2024',
       2021: {
         title1: 'Enhanced Decorations',
         desc1: 'More elaborate festival setup',
@@ -146,6 +185,14 @@ const TRANSLATIONS = {
     noMemoriesYet: 'ఇంకా జ్ఞాపకాలు లేవు',
     memoriesForYear: '{year} కోసం జ్ఞాపకాలు త్వరలో జోడించబడతాయి!',
     loadingMemories: 'జ్ఞాపకాలు లోడ్ అవుతున్నాయి...',
+    imageLoadError: 'చిత్రం లోడ్ కాలేదు',
+    
+    // Gallery translations
+    galleryTitle: 'ఫోటో గ్యాలరీ',
+    closeGallery: 'గ్యాలరీ మూసివేయి',
+    previousPhoto: 'మునుపటి',
+    nextPhoto: 'తదుపరి',
+    photoOf: 'ఫోటో {current} / {total}',
     
     // Memory Titles and Descriptions
     memories: {
@@ -161,6 +208,37 @@ const TRANSLATIONS = {
         title5: 'సమాజ వేడుక',
         desc5: 'పొరుగువారితో ఆనందాన్ని పంచుకోవడం'
       },
+      
+    // Year-specific titles for gallery (Telugu)
+    ganeshChaturthi2020: 'గణేష్ చతుర్థి 2020',
+    celebration2020: 'వేడుక 2020',
+    devotion2020: 'భక్తి 2020',
+    festival2020: 'పండుగ 2020',
+    memories2020: 'జ్ఞాపకాలు 2020',
+    
+    ganeshChaturthi2021: 'గణేష్ చతుర్థి 2021',
+    celebration2021: 'వేడుక 2021',
+    devotion2021: 'భక్తి 2021',
+    festival2021: 'పండుగ 2021',
+    memories2021: 'జ్ఞాపకాలు 2021',
+    
+    ganeshChaturthi2022: 'గణేష్ చతుర్థి 2022',
+    celebration2022: 'వేడుక 2022',
+    devotion2022: 'భక్తి 2022',
+    festival2022: 'పండుగ 2022',
+    memories2022: 'జ్ఞాపకాలు 2022',
+    
+    ganeshChaturthi2023: 'గణేష్ చతుర్థి 2023',
+    celebration2023: 'వేడుక 2023',
+    devotion2023: 'భక్తి 2023',
+    festival2023: 'పండుగ 2023',
+    memories2023: 'జ్ఞాపకాలు 2023',
+    
+    ganeshChaturthi2024: 'గణేష్ చతుర్థి 2024',
+    celebration2024: 'వేడుక 2024',
+    devotion2024: 'భక్తి 2024',
+    festival2024: 'పండుగ 2024',
+    memories2024: 'జ్ఞాపకాలు 2024',
       2021: {
         title1: 'మెరుగైన అలంకారాలు',
         desc1: 'మరింత వివరణాత్మకమైన పండుగ ఏర్పాటు',
