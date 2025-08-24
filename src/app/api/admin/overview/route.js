@@ -38,6 +38,7 @@ export async function GET(request) {
       id: u.id,
       email: u.email,
       username: u.user_metadata?.username || null,
+      readable_id: u.user_metadata?.readable_id || null,
       created_at: u.created_at,
       last_sign_in_at: u.last_sign_in_at,
     }))
@@ -68,6 +69,7 @@ export async function GET(request) {
         userId: u.id,
         email: u.email,
         username: u.username,
+        readableId: u.readable_id,
         createdAt: u.created_at,
         lastSignInAt: u.last_sign_in_at,
         gamesPlayed: agg.gamesPlayed,

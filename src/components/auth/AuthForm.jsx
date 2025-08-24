@@ -135,11 +135,33 @@ const useAuthForm = (onAuthSuccess) => {
       if (error) throw error
       return data
     } else {
+      // Generate unique user ID for new registrations
+      let uniqueId = null
+      try {
+        const response = await fetch('/api/generate-user-id', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (response.ok) {
+          const result = await response.json()
+          uniqueId = result.userId
+        }
+      } catch (error) {
+        console.error('Failed to generate user ID:', error)
+        // Continue with registration even if ID generation fails
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          data: { username: formData.username }
+          data: { 
+            username: formData.username,
+            readable_id: uniqueId // Add the unique readable ID
+          }
         }
       })
       if (error) throw error
@@ -164,6 +186,25 @@ const useAuthForm = (onAuthSuccess) => {
       }
       return data
     } else {
+      // Generate unique user ID for new registrations
+      let uniqueId = null
+      try {
+        const response = await fetch('/api/generate-user-id', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (response.ok) {
+          const result = await response.json()
+          uniqueId = result.userId
+        }
+      } catch (error) {
+        console.error('Failed to generate user ID:', error)
+        // Continue with registration even if ID generation fails
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -172,7 +213,8 @@ const useAuthForm = (onAuthSuccess) => {
             name: formData.name,
             surname: formData.surname,
             phone_number: formData.phone,
-            username: `${formData.name} ${formData.surname}`
+            username: `${formData.name} ${formData.surname}`,
+            readable_id: uniqueId // Add the unique readable ID
           }
         }
       })

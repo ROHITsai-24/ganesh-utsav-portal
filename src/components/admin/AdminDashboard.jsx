@@ -35,7 +35,7 @@ const GAME_CONFIG = {
 
 const TABLE_CONFIG = {
   users: {
-    headers: ['Email/Phone', 'Username', 'Games Played (All)', 'Total Points (All)', 'Last Played', 'Actions'],
+    headers: ['User ID', 'Email/Phone', 'Username', 'Games Played (All)', 'Total Points (All)', 'Last Played', 'Actions'],
     emptyMessage: 'No users found'
   },
   leaderboard: {
@@ -295,6 +295,11 @@ const UsersTable = ({ rows, onDelete }) => {
 
     return (
       <tr key={r.userId} className="border-b hover:bg-gray-50">
+        <td className="py-2 pr-4">
+          <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+            {r.readableId ? `#${r.readableId}` : '-'}
+          </span>
+        </td>
         <td className="py-2 pr-4">
           {userDisplay}
         </td>

@@ -11,6 +11,7 @@ import PlayLimitCard from '@/components/game/PlayLimitCard'
 import { useGameSettings } from '@/contexts/GameSettingsContext'
 import { usePlayLimit } from '@/hooks/usePlayLimit'
 import Link from 'next/link'
+import UserIdDisplay from '@/components/common/UserIdDisplay'
 
 // Custom hook to fetch user's total score
 const useUserScore = (user) => {
@@ -574,6 +575,14 @@ const HomepageNavigation = ({ onToggleMobileMenu, onStartPlaying, onSignOut, use
       {/* Auth Buttons - Hidden on Mobile */}
       <div className="hidden md:flex items-center space-x-4">
         <div className="flex items-center space-x-4">
+          {/* User ID Display - only show if user is logged in */}
+          {user && (
+            <UserIdDisplay 
+              user={user} 
+              className="mr-2"
+            />
+          )}
+          
           {/* Score Display - only show if user is logged in */}
           {user && (
             <ScoreDisplay 
@@ -613,6 +622,16 @@ const HomepageMobileMenu = ({ isOpen, onClose, onStartPlaying, onSignOut, user, 
         </div>
         <nav className="px-6 py-8">
           <div className="space-y-6">
+            {/* User ID Display - only show if user is logged in */}
+            {user && (
+              <div className="mb-4">
+                <UserIdDisplay 
+                  user={user} 
+                  className="w-full justify-center"
+                />
+              </div>
+            )}
+            
             {/* Score Display - only show if user is logged in */}
             {user && (
               <div className="mb-4">
@@ -689,6 +708,14 @@ const GamesHeader = ({ onBackToHomepage, onSignOut, onToggleMobileMenu, user, to
         {NAVIGATION_CONFIG.backToGamesHome}
       </BackButton>
       <div className="hidden md:flex items-center space-x-4">
+        {/* User ID Display - only show if user is logged in */}
+        {user && (
+          <UserIdDisplay 
+            user={user} 
+            className="mr-2"
+          />
+        )}
+        
         {/* Score Display - only show if user is logged in */}
         {user && (
           <ScoreDisplay 
@@ -725,6 +752,16 @@ const GamesMobileMenu = ({ isOpen, onClose, onBackToHomepage, onSignOut, user, t
         </div>
         <nav className="px-6 py-8">
           <div className="space-y-6">
+            {/* User ID Display - only show if user is logged in */}
+            {user && (
+              <div className="mb-4">
+                <UserIdDisplay 
+                  user={user} 
+                  className="w-full justify-center"
+                />
+              </div>
+            )}
+            
             {/* Score Display - only show if user is logged in */}
             {user && (
               <div className="mb-4">
