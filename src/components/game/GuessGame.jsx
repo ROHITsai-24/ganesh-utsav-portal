@@ -251,6 +251,8 @@ const useGameState = (user) => {
     shuffledImages,
     hasSaved,
     totalTimeRef,
+    questionStartTimeRef,
+    questionTimesRef,
     canProceed,
     playLimitExceeded,
     setSelectedImage,
@@ -338,7 +340,7 @@ const useScoreSaver = (user, score, currentQuestion, totalTimeRef, onScoreSaved)
 
 // Reusable components
 const GameHeader = ({ user, timeLeft, score, currentQuestion }) => (
-  <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
+  <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 md:p-6">
     <div className="text-center space-y-4">
       <div className="space-y-2">
         <h1 className="text-2xl md:text-3xl font-bold text-white">
@@ -350,14 +352,14 @@ const GameHeader = ({ user, timeLeft, score, currentQuestion }) => (
       </div>
       
       {/* Timer, Score, and Question - Horizontal Layout */}
-      <div className="flex flex-wrap gap-3 md:gap-4 justify-center items-center">
-        <div className="bg-red-500/20 text-red-300 px-4 py-2 rounded-full font-semibold text-sm md:text-base border border-red-500/30">
+      <div className="flex flex-wrap gap-2 md:gap-6 justify-center items-center">
+        <div className="bg-red-500/20 text-red-300 px-3 md:px-6 py-2 md:py-3 rounded-full font-semibold text-sm md:text-lg border border-red-500/30">
           ⏰ {formatTime(timeLeft)}
         </div>
-        <div className="bg-blue-500/20 text-blue-300 px-4 py-2 rounded-full font-semibold text-sm md:text-base border border-blue-500/30">
+        <div className="bg-blue-500/20 text-blue-300 px-3 md:px-6 py-2 md:py-3 rounded-full font-semibold text-sm md:text-lg border border-blue-500/30">
           🏆 Score: {score}
         </div>
-        <div className="bg-green-500/20 text-green-300 px-4 py-2 rounded-full font-semibold text-sm md:text-base border border-green-500/30">
+        <div className="bg-green-500/20 text-green-300 px-3 md:px-6 py-2 md:py-3 rounded-full font-semibold text-sm md:text-lg border border-green-500/30">
           📝 Q {currentQuestion}/{GAME_CONFIG.totalQuestions}
         </div>
       </div>
@@ -367,7 +369,7 @@ const GameHeader = ({ user, timeLeft, score, currentQuestion }) => (
 
 const ImageQuestion = ({ shuffledImages, selectedImage, onImageSelect }) => (
   <div className="space-y-6">
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-5 -mx-1 md:-mx-2">
       {shuffledImages.map((image) => (
         <div
           key={image.id}
@@ -381,7 +383,12 @@ const ImageQuestion = ({ shuffledImages, selectedImage, onImageSelect }) => (
           <img
             src={image.src}
             alt={image.alt}
-            className="w-full h-24 md:h-32 object-cover"
+            className="w-full h-32 md:h-36 object-cover"
+            loading="lazy"
+            onError={(e) => {
+              console.error(`Failed to load image: ${image.src}`)
+              e.target.style.display = 'none'
+            }}
           />
           {selectedImage === image.id && (
             <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold shadow-lg">
@@ -396,12 +403,12 @@ const ImageQuestion = ({ shuffledImages, selectedImage, onImageSelect }) => (
 
 const OptionQuestion = ({ options, selectedValue, onSelect, type }) => (
   <div className="space-y-4">
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 -mx-1 md:-mx-2">
       {options.map((option) => (
         <Button
           key={option.value}
           onClick={() => onSelect(option.value)}
-          className={`h-16 text-base font-semibold transition-all duration-300 transform hover:scale-105 ${
+          className={`h-18 md:h-20 text-base md:text-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
             selectedValue === option.value 
               ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
               : 'bg-white/10 text-white/90 hover:bg-white/20 border border-white/20 hover:border-white/40'
@@ -545,6 +552,8 @@ export default function GuessGame({ user, onScoreSaved = () => {} }) {
     shuffledImages,
     hasSaved,
     totalTimeRef,
+    questionStartTimeRef,
+    questionTimesRef,
     canProceed,
     playLimitExceeded,
     setSelectedImage,
@@ -646,9 +655,9 @@ export default function GuessGame({ user, onScoreSaved = () => {} }) {
         currentQuestion={currentQuestion} 
       />
 
-      {/* Game Section */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4">
-        <div className="space-y-6">
+      {/* Game Section - Mobile optimized */}
+      <div className="md:bg-white/10 md:backdrop-blur-sm md:rounded-2xl md:border md:border-white/20 md:p-6">
+        <div className="space-y-6 px-1 md:px-0">
           <div className="text-center space-y-2">
             <h2 className="text-xl font-bold text-white">
               {questionConfig.title}

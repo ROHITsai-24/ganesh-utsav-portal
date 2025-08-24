@@ -504,7 +504,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
             <img
               src={imageSrc}
               alt="Completed Puzzle"
-              className="w-full rounded-xl shadow-lg border-4 border-green-500"
+              className="w-full h-32 md:h-36 object-cover rounded-xl shadow-lg border-4 border-green-500"
             />
           </div>
           
