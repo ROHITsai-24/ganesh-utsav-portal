@@ -810,6 +810,7 @@ function HomeContent() {
             ))}
             
             <LanguageSelector />
+            
             <Link href="/games">
               <CTAButton>{translations.ctaText}</CTAButton>
             </Link>
@@ -835,12 +836,13 @@ function HomeContent() {
                 <NavigationItem key={item.href} {...item} className="block py-2" />
               ))}
               
-                              <div className="pt-4 border-t border-gray-100">
-                  <LanguageSelector className="mb-4" />
-                  <Link href="/games">
-                    <CTAButton className="w-full">{translations.ctaText}</CTAButton>
-                  </Link>
-                </div>
+              <div className="pt-4 border-t border-gray-100">
+                <LanguageSelector className="mb-4" />
+                
+                <Link href="/games">
+                  <CTAButton className="w-full">{translations.ctaText}</CTAButton>
+                </Link>
+              </div>
             </div>
           </div>
         )}
@@ -873,11 +875,13 @@ function HomeContent() {
                 {translations.description}
               </p>
 
-              <Link href="/games">
-                <CTAButton className="px-8 py-4 text-lg font-semibold">
-                  {translations.ctaText}
-                </CTAButton>
-              </Link>
+              <div className="flex items-center space-x-4">
+                <Link href="/games">
+                  <CTAButton className="px-8 py-4 text-lg font-semibold">
+                    {translations.ctaText}
+                  </CTAButton>
+                </Link>
+              </div>
             </div>
 
             {/* Desktop: Right Image */}

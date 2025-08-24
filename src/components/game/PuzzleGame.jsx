@@ -172,7 +172,6 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
       setElapsedTime(0) // Reset timer when starting
       gameStartTimeRef.current = Date.now() // Store exact start time
     } catch (error) {
-      console.error('Play limit validation failed:', error)
       // BLOCK the game if validation fails - don't allow fallback
       alert('Unable to validate play limit. Please try again later.')
       return
@@ -216,7 +215,6 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
       // If validation passes, start new game
       resetGame()
     } catch (error) {
-      console.error('Play limit validation failed:', error)
       alert('Unable to validate play limit. Please try again later.')
       return
     }
@@ -315,7 +313,6 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         const result = await response.json()
         
         if (result.success) {
-          console.log('Score saved:', result.action)
           // Trigger play limit refresh
           if (onScoreSaved) {
             onScoreSaved()
@@ -324,21 +321,21 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
           // Handle safety check rejections
           if (response.status === 403) {
             if (result.action === 'rejected_disabled') {
-              console.warn('Game is disabled - score not saved')
+              // Game is disabled - score not saved
             } else if (result.action === 'rejected_limit') {
-              console.warn('Play limit reached - score not saved')
+              // Play limit reached - score not saved
             }
           } else if (response.status === 409) {
-            console.warn('Score not better than existing - not saved')
+            // Score not better than existing - not saved
           } else {
-            console.error('Failed to save score:', result.error)
+            // Other error
           }
         }
       }
     } catch (error) {
-      console.error('Error saving score:', error)
+      throw error
     }
-  }, [user.id, calculateScore])
+  }, [user, calculateScore])
 
   // Keep the old function for backward compatibility
   const saveScore = useCallback(async (onScoreSaved) => {

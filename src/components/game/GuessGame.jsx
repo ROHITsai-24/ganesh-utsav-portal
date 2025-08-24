@@ -165,7 +165,6 @@ const useGameState = (user) => {
       setGameState('playing')
       questionStartTimeRef.current = Date.now() // Start timing first question
     } catch (error) {
-      console.error('Play limit validation failed:', error)
       // BLOCK the game if validation fails - don't allow fallback
       setPlayLimitExceeded(true)
       setGameState('limit_exceeded')
@@ -212,12 +211,13 @@ const useGameState = (user) => {
         isCorrect = false
     }
 
+    // Update score internally
     if (isCorrect) {
       setScore(prev => prev + GAME_CONFIG.pointsPerQuestion)
-      setGameState('correct')
-    } else {
-      setGameState('incorrect')
     }
+
+    // Show neutral state (no correct/incorrect feedback) - user clicks Next Question to continue
+    setGameState('neutral')
   }, [currentQuestion, selectedImage, selectedHeight, selectedPrice, shuffledImages])
 
   const canProceed = useMemo(() => {
@@ -309,7 +309,6 @@ const useScoreSaver = (user, score, currentQuestion, totalTimeRef, onScoreSaved)
         const result = await response.json()
         
         if (result.success) {
-          console.log('Score saved:', result.action)
           // Trigger play limit refresh
           if (onScoreSaved) {
             onScoreSaved()
@@ -318,19 +317,18 @@ const useScoreSaver = (user, score, currentQuestion, totalTimeRef, onScoreSaved)
           // Handle safety check rejections
           if (response.status === 403) {
             if (result.action === 'rejected_disabled') {
-              console.warn('Game is disabled - score not saved')
+              // Game is disabled - score not saved
             } else if (result.action === 'rejected_limit') {
-              console.warn('Play limit reached - score not saved')
+              // Play limit reached - score not saved
             }
           } else if (response.status === 409) {
-            console.warn('Score not better than existing - not saved')
+            // Score not better than existing - not saved
           } else {
-            console.error('Failed to save score:', result.error)
+            // Other error
           }
         }
       }
     } catch (error) {
-      console.error('Error saving score:', error)
       throw error
     }
   }, [user, score, currentQuestion, totalTimeRef, onScoreSaved])
@@ -417,46 +415,19 @@ const OptionQuestion = ({ options, selectedValue, onSelect, type }) => (
 )
 
 const ResultDisplay = ({ gameState, currentQuestion, onContinue }) => {
-  if (gameState === 'correct') {
+  if (gameState === 'neutral') {
     return (
-      <div className="text-center space-y-6">
-        <div className="bg-green-500/20 text-green-300 p-4 rounded-2xl border border-green-500/30">
-          <h3 className="font-bold text-lg mb-2">{GAME_CONFIG.correct.title}</h3>
-          <p className="text-base">{GAME_CONFIG.correct.message}</p>
+      <div className="text-center space-y-4">
+        <div className="bg-blue-100 text-blue-800 p-4 rounded-lg">
+          <h3 className="font-bold text-lg">Answer Submitted!</h3>
+          <p>Click Next Question to continue.</p>
         </div>
-                  <Button 
-            onClick={onContinue} 
-            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-2 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-          >
-          {currentQuestion < GAME_CONFIG.totalQuestions 
-            ? GAME_CONFIG.correct.buttonText 
-            : GAME_CONFIG.correct.finalButtonText
-          }
+        <Button onClick={onContinue} className="w-full text-lg py-3">
+          {currentQuestion < GAME_CONFIG.totalQuestions ? 'Next Question' : 'Finish Game'}
         </Button>
       </div>
     )
   }
-
-  if (gameState === 'incorrect') {
-    return (
-      <div className="text-center space-y-6">
-        <div className="bg-red-500/20 text-red-300 p-4 rounded-2xl border border-red-500/30">
-          <h3 className="font-bold text-lg mb-2">{GAME_CONFIG.incorrect.title}</h3>
-          <p className="text-base">{GAME_CONFIG.incorrect.message}</p>
-        </div>
-        <Button 
-          onClick={onContinue} 
-          className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-2 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-        >
-          {currentQuestion < GAME_CONFIG.totalQuestions 
-            ? GAME_CONFIG.incorrect.buttonText 
-            : GAME_CONFIG.incorrect.finalButtonText
-          }
-        </Button>
-      </div>
-    )
-  }
-
   return null
 }
 
@@ -701,13 +672,13 @@ export default function GuessGame({ user, onScoreSaved = () => {} }) {
           {/* Action Buttons */}
           {gameState === 'playing' && (
             <div className="flex justify-center">
-                        <Button 
-            onClick={checkAnswer} 
-            disabled={!canProceed}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-2 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            Submit Answer
-          </Button>
+              <Button 
+                onClick={checkAnswer} 
+                disabled={!canProceed}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-2 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                Submit Answer
+              </Button>
             </div>
           )}
 

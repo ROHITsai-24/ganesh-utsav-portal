@@ -12,6 +12,75 @@ import { useGameSettings } from '@/contexts/GameSettingsContext'
 import { usePlayLimit } from '@/hooks/usePlayLimit'
 import Link from 'next/link'
 
+// Custom hook to fetch user's total score
+const useUserScore = (user) => {
+  const [totalScore, setTotalScore] = useState(0)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!user?.id) {
+      setTotalScore(0)
+      return
+    }
+
+    const fetchScore = async () => {
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('game_results')
+          .select('score')
+          .eq('user_id', user.id)
+
+        if (error) {
+          throw error
+        }
+
+        const total = data?.reduce((sum, result) => sum + (result.score || 0), 0) || 0
+        setTotalScore(total)
+      } catch (error) {
+        console.error('Error fetching user score:', error)
+        setTotalScore(0)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchScore()
+  }, [user?.id])
+
+  return { totalScore, loading }
+}
+
+// Score Display Component with Coins UI
+const ScoreDisplay = ({ score, loading, className = '' }) => {
+  if (loading) {
+    return (
+      <div className={`flex items-center space-x-2 px-3 py-2 bg-yellow-100 rounded-full ${className}`}>
+        <div className="w-4 h-4 bg-yellow-400 rounded-full animate-pulse"></div>
+        <span className="text-yellow-800 text-sm font-medium">Loading...</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full shadow-lg ${className}`}>
+      {/* Coin Icon */}
+      <div className="relative">
+        <div className="w-5 h-5 bg-yellow-300 rounded-full border-2 border-yellow-600 flex items-center justify-center">
+          <span className="text-yellow-800 text-xs font-bold">₹</span>
+        </div>
+        {/* Coin shine effect */}
+        <div className="absolute top-0.5 left-0.5 w-1 h-1 bg-yellow-200 rounded-full"></div>
+      </div>
+      
+      {/* Score Text */}
+      <span className="text-white text-sm font-bold">
+        {score.toLocaleString()}
+      </span>
+    </div>
+  )
+}
+
 // Configuration objects for dynamic content
 const GAMES_CONFIG = {
   title: 'Choose Your Game',
@@ -495,7 +564,7 @@ const GameCard = ({ game = {}, onPlay }) => {
   )
 }
 
-const HomepageNavigation = ({ onToggleMobileMenu, onStartPlaying, onSignOut }) => (
+const HomepageNavigation = ({ onToggleMobileMenu, onStartPlaying, onSignOut, user, totalScore, scoreLoading }) => (
   <nav className="relative z-50 px-4 py-4 md:px-8 lg:px-16" style={{ border: 'none' }}>
     <div className="flex items-center justify-between">
       <Logo text={HOMEPAGE_CONFIG?.logo?.text} companyName={HOMEPAGE_CONFIG?.logo?.companyName} />
@@ -505,6 +574,15 @@ const HomepageNavigation = ({ onToggleMobileMenu, onStartPlaying, onSignOut }) =
       {/* Auth Buttons - Hidden on Mobile */}
       <div className="hidden md:flex items-center space-x-4">
         <div className="flex items-center space-x-4">
+          {/* Score Display - only show if user is logged in */}
+          {user && (
+            <ScoreDisplay 
+              score={totalScore} 
+              loading={scoreLoading} 
+              className="mr-2"
+            />
+          )}
+          
           <CTAButton onClick={onStartPlaying} variant="primary">
             Play Games
           </CTAButton>
@@ -593,19 +671,26 @@ const HomepageMobileMenu = ({ isOpen, onClose, onStartPlaying, onSignOut }) => {
   )
 }
 
-const GamesHeader = ({ onBackToHomepage, onSignOut, onToggleMobileMenu }) => (
+const GamesHeader = ({ onBackToHomepage, onSignOut, onToggleMobileMenu, user, totalScore, scoreLoading }) => (
   <div className="px-4 py-6 md:px-8 lg:px-16" style={{ border: 'none' }}>
     <div className="flex items-center justify-between">
       <BackButton onClick={onBackToHomepage}>
         {NAVIGATION_CONFIG.backToGamesHome}
       </BackButton>
-
       <div className="hidden md:flex items-center space-x-4">
+        {/* Score Display - only show if user is logged in */}
+        {user && (
+          <ScoreDisplay 
+            score={totalScore} 
+            loading={scoreLoading} 
+            className="mr-2"
+          />
+        )}
+        
         <CTAButton onClick={onSignOut} variant="danger">
           {NAVIGATION_CONFIG.signOut}
         </CTAButton>
       </div>
-
       <MobileMenuButton onClick={onToggleMobileMenu} />
     </div>
   </div>
@@ -688,6 +773,7 @@ const GameTabs = ({ activeTab, onTabChange }) => {
 const GameContent = ({ activeTabConfig, user }) => {
   const { isGameEnabled, loading: gameSettingsLoading, refreshSettings } = useGameSettings()
   const { canPlay, playCount, playLimit, loading: playLimitLoading, checkPlayLimit } = usePlayLimit(user, activeTabConfig?.id)
+  const { totalScore, loading: scoreLoading } = useUserScore(user)
   
   // Refresh settings when page becomes visible (user comes back to tab)
   useEffect(() => {
@@ -712,7 +798,7 @@ const GameContent = ({ activeTabConfig, user }) => {
   if (!activeTabConfig) return null
 
   // Show loading spinner while settings are being loaded
-  if (gameSettingsLoading || playLimitLoading) {
+  if (gameSettingsLoading || playLimitLoading || scoreLoading) {
     return (
       <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden">
         <div className="flex items-center justify-center py-16">
@@ -763,12 +849,15 @@ const GameContent = ({ activeTabConfig, user }) => {
   )
 }
 
-const Homepage = ({ onStartPlaying, onSignOut, mobileMenuOpen, onToggleMobileMenu, onCloseMobileMenu }) => (
+const Homepage = ({ onStartPlaying, onSignOut, mobileMenuOpen, onToggleMobileMenu, onCloseMobileMenu, user, totalScore, scoreLoading }) => (
   <div className="min-h-screen w-full bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 overflow-x-hidden" style={{ border: 'none', outline: 'none' }}>
     <HomepageNavigation 
       onToggleMobileMenu={onToggleMobileMenu}
       onStartPlaying={onStartPlaying}
       onSignOut={onSignOut}
+      user={user}
+      totalScore={totalScore}
+      scoreLoading={scoreLoading}
     />
 
     <HomepageMobileMenu 
@@ -783,7 +872,7 @@ const Homepage = ({ onStartPlaying, onSignOut, mobileMenuOpen, onToggleMobileMen
   </div>
 )
 
-const GamesSection = ({ user, onSignOut, onToggleMobileMenu, onCloseMobileMenu, onBackToHomepage, mobileMenuOpen }) => {
+const GamesSection = ({ user, onSignOut, onToggleMobileMenu, onCloseMobileMenu, onBackToHomepage, mobileMenuOpen, totalScore, scoreLoading }) => {
   const { activeTab, switchTab, activeTabConfig } = useGameTabs()
 
   return (
@@ -792,9 +881,12 @@ const GamesSection = ({ user, onSignOut, onToggleMobileMenu, onCloseMobileMenu, 
         onBackToHomepage={onBackToHomepage}
         onSignOut={onSignOut}
         onToggleMobileMenu={onToggleMobileMenu}
+        user={user}
+        totalScore={totalScore}
+        scoreLoading={scoreLoading}
       />
 
-            <GamesMobileMenu 
+      <GamesMobileMenu 
         isOpen={mobileMenuOpen} 
         onClose={onCloseMobileMenu} 
         onBackToHomepage={onBackToHomepage} 
@@ -843,6 +935,7 @@ export default function GamesPage() {
   const { user, loading, signOut, setUser } = useAuth()
   const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useMobileMenu()
   const { showGames, goToGames, goToHomepage } = useHomepageState()
+  const { totalScore, loading: scoreLoading } = useUserScore(user)
 
   const handleAuthSuccess = useCallback((user) => {
     console.log('Auth success callback triggered with user:', user)
@@ -859,10 +952,7 @@ export default function GamesPage() {
   }, [setUser, goToGames])
 
   if (loading) {
-    return <LoadingSpinner 
-      size={GAMES_CONFIG.loadingSpinner.size}
-      color={GAMES_CONFIG.loadingSpinner.color}
-    />
+    return <LoadingSpinner size={GAMES_CONFIG.loadingSpinner.size} color={GAMES_CONFIG.loadingSpinner.color} />
   }
 
   if (!user) {
@@ -878,6 +968,9 @@ export default function GamesPage() {
         mobileMenuOpen={mobileMenuOpen}
         onToggleMobileMenu={toggleMobileMenu}
         onCloseMobileMenu={closeMobileMenu}
+        user={user}
+        totalScore={totalScore}
+        scoreLoading={scoreLoading}
       />
     )
   }
@@ -890,6 +983,8 @@ export default function GamesPage() {
       onCloseMobileMenu={closeMobileMenu}
       onBackToHomepage={goToHomepage}
       mobileMenuOpen={mobileMenuOpen}
+      totalScore={totalScore}
+      scoreLoading={scoreLoading}
     />
   )
 }
