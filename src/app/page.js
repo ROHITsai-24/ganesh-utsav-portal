@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -371,12 +371,38 @@ const CarouselRow = ({ memories, direction, rowId, onImageClick }) => {
   )
 }
 
+// Photo Grid Item Component with Enhanced Lazy Loading (Original Design)
 const PhotoGridItem = ({ config, className = '', index = 0, onClick }) => {
   const { translations } = useLanguage()
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
-  
-  // Optimized width calculation based on index pattern
+  const [isInView, setIsInView] = useState(false)
+  const imageRef = useRef(null)
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true)
+          observer.unobserve(entry.target)
+        }
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    )
+
+    if (imageRef.current) {
+      observer.observe(imageRef.current)
+    }
+
+    return () => {
+      if (imageRef.current) {
+        observer.unobserve(imageRef.current)
+      }
+    }
+  }, [])
+
+  // Optimized width calculation based on index pattern (Original)
   const getWidthClass = (index) => {
     const widthPatterns = ['w-96', 'w-56', 'w-80', 'w-64', 'w-72']
     return widthPatterns[index % widthPatterns.length]
@@ -386,8 +412,19 @@ const PhotoGridItem = ({ config, className = '', index = 0, onClick }) => {
 
   return (
     <div 
+      ref={imageRef}
       className={`flex-shrink-0 ${widthClass} h-56 bg-gradient-to-br ${config.gradient} rounded-2xl border ${config.border} overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer ${className}`}
       onClick={onClick}
+      // Mobile touch optimizations
+      onTouchStart={(e) => {
+        e.currentTarget.style.transform = 'scale(0.98)'
+      }}
+      onTouchEnd={(e) => {
+        e.currentTarget.style.transform = 'scale(1)'
+      }}
+      onTouchCancel={(e) => {
+        e.currentTarget.style.transform = 'scale(1)'
+      }}
     >
       {/* Image Container */}
       <div className="relative w-full h-full">
@@ -410,8 +447,8 @@ const PhotoGridItem = ({ config, className = '', index = 0, onClick }) => {
           </div>
         )}
         
-        {/* Actual Image */}
-        {!imageError && (
+        {/* Actual Image with Lazy Loading */}
+        {isInView && !imageError && (
           <img 
             src={config.image} 
             alt={translations[config.titleKey] || 'Memory'}
@@ -421,6 +458,8 @@ const PhotoGridItem = ({ config, className = '', index = 0, onClick }) => {
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
             loading="lazy"
+            // Prevent zoom on double-tap for mobile
+            style={{ touchAction: 'manipulation' }}
           />
         )}
         
@@ -435,7 +474,7 @@ const PhotoGridItem = ({ config, className = '', index = 0, onClick }) => {
   )
 }
 
-// Gallery Grid Component (Google Photos Style)
+// Gallery Grid Component (Google Photos Style) with Mobile Touch Support
 const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYearChange }) => {
   const { translations } = useLanguage()
   
@@ -459,8 +498,15 @@ const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYea
           <h2 className="text-xl font-semibold">{translations.galleryTitle}</h2>
           <button
             onClick={onClose}
-            className="text-gray-600 hover:text-gray-800 transition-colors"
+            className="text-gray-600 hover:text-gray-800 transition-colors p-2"
             aria-label={translations.closeGallery}
+            // Mobile touch optimization
+            onTouchStart={(e) => {
+              e.currentTarget.style.transform = 'scale(0.95)'
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -479,6 +525,13 @@ const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYea
                   ? 'bg-[#8B4513] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
+              // Mobile touch optimization
+              onTouchStart={(e) => {
+                e.currentTarget.style.transform = 'scale(0.95)'
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = 'scale(1)'
+              }}
             >
               {year}
             </button>
@@ -497,6 +550,16 @@ const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYea
               key={image.id}
               className="break-inside-avoid mb-4 overflow-hidden rounded-lg cursor-pointer hover:opacity-80 transition-all duration-300 hover:scale-[1.02] group"
               onClick={() => onImageClick(index)}
+              // Mobile touch optimizations
+              onTouchStart={(e) => {
+                e.currentTarget.style.transform = 'scale(0.98)'
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = 'scale(1)'
+              }}
+              onTouchCancel={(e) => {
+                e.currentTarget.style.transform = 'scale(1)'
+              }}
             >
               <div className="relative">
                 <img
@@ -514,6 +577,8 @@ const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYea
                       img.classList.add('portrait-tall')
                     }
                   }}
+                  // Prevent zoom on double-tap for mobile
+                  style={{ touchAction: 'manipulation' }}
                 />
                 {/* Hover overlay with image info */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-lg flex items-end">
@@ -532,7 +597,7 @@ const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYea
   )
 }
 
-// Single Image Modal Component
+// Single Image Modal Component with Mobile Touch Support
 const SingleImageModal = ({ isOpen, onClose, image, currentIndex, totalImages, onNavigate }) => {
   const { translations } = useLanguage()
   
@@ -561,8 +626,15 @@ const SingleImageModal = ({ isOpen, onClose, image, currentIndex, totalImages, o
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 transition-colors"
+        className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 transition-colors p-2"
         aria-label={translations.closeGallery}
+        // Mobile touch optimization
+        onTouchStart={(e) => {
+          e.currentTarget.style.transform = 'scale(0.95)'
+        }}
+        onTouchEnd={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+        }}
       >
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -572,8 +644,15 @@ const SingleImageModal = ({ isOpen, onClose, image, currentIndex, totalImages, o
       {/* Navigation buttons */}
       <button
         onClick={() => onNavigate('prev')}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 transition-colors"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 transition-colors p-2"
         aria-label={translations.previousPhoto}
+        // Mobile touch optimization
+        onTouchStart={(e) => {
+          e.currentTarget.style.transform = 'scale(0.95)'
+        }}
+        onTouchEnd={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+        }}
       >
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -582,8 +661,15 @@ const SingleImageModal = ({ isOpen, onClose, image, currentIndex, totalImages, o
 
       <button
         onClick={() => onNavigate('next')}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 transition-colors"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 transition-colors p-2"
         aria-label={translations.nextPhoto}
+        // Mobile touch optimization
+        onTouchStart={(e) => {
+          e.currentTarget.style.transform = 'scale(0.95)'
+        }}
+        onTouchEnd={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+        }}
       >
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -597,18 +683,20 @@ const SingleImageModal = ({ isOpen, onClose, image, currentIndex, totalImages, o
             src={image.image}
             alt={translations[image.titleKey] || 'Gallery Image'}
             className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            // Prevent zoom on double-tap for mobile
+            style={{ touchAction: 'manipulation' }}
           />
-          
-          {/* Image info */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-sm">
-            <p className="text-sm font-medium">
-              {translations.photoOf.replace('{current}', currentIndex + 1).replace('{total}', totalImages)}
-            </p>
-            <p className="text-xs opacity-80">
-              {translations[image.titleKey]}
-            </p>
-          </div>
         </div>
+      </div>
+
+      {/* Image info */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-sm">
+        <p className="text-sm font-medium">
+          {translations.photoOf.replace('{current}', currentIndex + 1).replace('{total}', totalImages)}
+        </p>
+        <p className="text-xs opacity-80">
+          {translations[image.titleKey]}
+        </p>
       </div>
     </div>
   )
@@ -720,6 +808,7 @@ function HomeContent() {
     const yearContent = JOURNEY_CONFIG.yearContent[year]
     if (yearContent && yearContent.gallery) {
       setGalleryImages(yearContent.gallery)
+      setSelectedYear(year) // Update the selected year state
       setIsGalleryGridOpen(true)
     }
   }, [])

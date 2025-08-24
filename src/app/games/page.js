@@ -595,7 +595,7 @@ const HomepageNavigation = ({ onToggleMobileMenu, onStartPlaying, onSignOut, use
   </nav>
 )
 
-const HomepageMobileMenu = ({ isOpen, onClose, onStartPlaying, onSignOut }) => {
+const HomepageMobileMenu = ({ isOpen, onClose, onStartPlaying, onSignOut, user, totalScore, scoreLoading }) => {
   if (!isOpen) return null
 
   return (
@@ -613,6 +613,17 @@ const HomepageMobileMenu = ({ isOpen, onClose, onStartPlaying, onSignOut }) => {
         </div>
         <nav className="px-6 py-8">
           <div className="space-y-6">
+            {/* Score Display - only show if user is logged in */}
+            {user && (
+              <div className="mb-4">
+                <ScoreDisplay 
+                  score={totalScore} 
+                  loading={scoreLoading} 
+                  className="w-full justify-center"
+                />
+              </div>
+            )}
+            
             {HOMEPAGE_CONFIG?.navigation?.map((link) => {
               if (link.href.startsWith('/')) {
                 // External link - use Next.js Link
@@ -696,7 +707,7 @@ const GamesHeader = ({ onBackToHomepage, onSignOut, onToggleMobileMenu, user, to
   </div>
 )
 
-const GamesMobileMenu = ({ isOpen, onClose, onBackToHomepage, onSignOut }) => {
+const GamesMobileMenu = ({ isOpen, onClose, onBackToHomepage, onSignOut, user, totalScore, scoreLoading }) => {
   if (!isOpen) return null
 
   return (
@@ -714,6 +725,17 @@ const GamesMobileMenu = ({ isOpen, onClose, onBackToHomepage, onSignOut }) => {
         </div>
         <nav className="px-6 py-8">
           <div className="space-y-6">
+            {/* Score Display - only show if user is logged in */}
+            {user && (
+              <div className="mb-4">
+                <ScoreDisplay 
+                  score={totalScore} 
+                  loading={scoreLoading} 
+                  className="w-full justify-center"
+                />
+              </div>
+            )}
+            
             <button 
               onClick={() => { onBackToHomepage(); onClose(); }} 
               className="block w-full text-left text-white/80 hover:text-white transition-colors text-lg py-2"
@@ -865,6 +887,9 @@ const Homepage = ({ onStartPlaying, onSignOut, mobileMenuOpen, onToggleMobileMen
       onClose={onCloseMobileMenu}
       onStartPlaying={onStartPlaying}
       onSignOut={onSignOut}
+      user={user}
+      totalScore={totalScore}
+      scoreLoading={scoreLoading}
     />
 
     <HeroSection config={HOMEPAGE_CONFIG?.hero} onStartPlaying={onStartPlaying} />
@@ -891,6 +916,9 @@ const GamesSection = ({ user, onSignOut, onToggleMobileMenu, onCloseMobileMenu, 
         onClose={onCloseMobileMenu} 
         onBackToHomepage={onBackToHomepage} 
         onSignOut={onSignOut} 
+        user={user}
+        totalScore={totalScore}
+        scoreLoading={scoreLoading}
       />
 
       {/* Game Selection */}

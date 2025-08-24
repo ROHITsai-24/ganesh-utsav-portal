@@ -46,6 +46,9 @@ const TRANSLATIONS = {
     previousPhoto: 'Previous',
     nextPhoto: 'Next',
     photoOf: 'Photo {current} of {total}',
+    swipeToNavigate: 'Swipe to navigate',
+    loadingImage: 'Loading image...',
+    imageUnavailable: 'Image unavailable',
     
     // Memory Titles and Descriptions
     memories: {
@@ -193,6 +196,14 @@ const TRANSLATIONS = {
     previousPhoto: 'మునుపటి',
     nextPhoto: 'తదుపరి',
     photoOf: 'ఫోటో {current} / {total}',
+    swipeToNavigate: 'స్వైప్ నేవిగేట్',
+    loadingImage: 'చిత్రం లోడ్ అవుతోంది...',
+    imageUnavailable: 'చిత్రం అందుబాటులో లేదు',
+    
+    // Mobile touch optimizations
+    touchFeedback: 'స్ప్రెడ్ ఫీడ్బ్యాక్',
+    swipeLeft: 'స్వైప్ ఎడిగు',
+    swipeRight: 'స్వైప్ కొనిస్టు',
     
     // Memory Titles and Descriptions
     memories: {
