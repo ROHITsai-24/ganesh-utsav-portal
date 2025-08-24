@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,7 +21,16 @@ const AUTH_CONFIG = {
     switchText: 'Already have an account? Login'
   },
   loadingText: 'Loading...',
-  errorMessage: 'Authentication failed. Please try again.'
+  errorMessage: 'Authentication failed. Please try again.',
+  phoneValidationError: 'Please enter a valid phone number (e.g., +1234567890)'
+}
+
+// Phone authentication configuration
+const PHONE_AUTH_CONFIG = {
+  emailDomain: '@phone.local',
+  emailPrefix: 'phone_',
+  passwordSuffix: '_secure_2024',
+  phoneRegex: /^\+?[1-9]\d{1,14}$/
 }
 
 const FORM_FIELDS = {
@@ -30,9 +39,24 @@ const FORM_FIELDS = {
     placeholder: 'Username',
     required: true
   },
+  name: {
+    type: 'text',
+    placeholder: 'Name',
+    required: true
+  },
+  surname: {
+    type: 'text',
+    placeholder: 'Surname',
+    required: true
+  },
   email: {
     type: 'email',
     placeholder: 'Email',
+    required: true
+  },
+  phone: {
+    type: 'tel',
+    placeholder: 'Phone Number (e.g., +1234567890)',
     required: true
   },
   password: {
@@ -42,16 +66,50 @@ const FORM_FIELDS = {
   }
 }
 
+// Utility functions
+const cleanPhoneNumber = (phone) => phone.replace(/[^0-9]/g, '')
+
+const generatePhoneCredentials = (phone) => {
+  const cleanPhone = cleanPhoneNumber(phone)
+  return {
+    email: `${PHONE_AUTH_CONFIG.emailPrefix}${cleanPhone}${PHONE_AUTH_CONFIG.emailDomain}`,
+    password: `${PHONE_AUTH_CONFIG.emailPrefix}${cleanPhone}${PHONE_AUTH_CONFIG.passwordSuffix}`
+  }
+}
+
+const validatePhoneNumber = (phone) => {
+  return PHONE_AUTH_CONFIG.phoneRegex.test(phone.replace(/\s/g, ''))
+}
+
+const isPhoneEmail = (email) => {
+  return email.startsWith(PHONE_AUTH_CONFIG.emailPrefix) && email.endsWith(PHONE_AUTH_CONFIG.emailDomain)
+}
+
+const extractPhoneFromEmail = (email) => {
+  if (!isPhoneEmail(email)) return null
+  return email.replace(PHONE_AUTH_CONFIG.emailPrefix, '').replace(PHONE_AUTH_CONFIG.emailDomain, '')
+}
+
 // Custom hook for form state management
 const useAuthForm = (onAuthSuccess) => {
   const [isLogin, setIsLogin] = useState(true)
+  const [loginMode, setLoginMode] = useState('phone')
   const [formData, setFormData] = useState({
     email: '',
+    phone: '',
     password: '',
-    username: ''
+    username: '',
+    name: '',
+    surname: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Memoized form reset function
+  const resetForm = useCallback(() => {
+    setFormData({ email: '', phone: '', password: '', username: '', name: '', surname: '' })
+    setError('')
+  }, [])
 
   const updateField = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -59,9 +117,75 @@ const useAuthForm = (onAuthSuccess) => {
 
   const toggleMode = useCallback(() => {
     setIsLogin(prev => !prev)
-    setError('')
-    setFormData({ email: '', password: '', username: '' })
-  }, [])
+    resetForm()
+  }, [resetForm])
+
+  const toggleLoginMode = useCallback(() => {
+    setLoginMode(prev => prev === 'email' ? 'phone' : 'email')
+    resetForm()
+  }, [resetForm])
+
+  // Memoized authentication functions
+  const handleEmailAuth = useCallback(async (isLoginMode) => {
+    if (isLoginMode) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      })
+      if (error) throw error
+      return data
+    } else {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: { username: formData.username }
+        }
+      })
+      if (error) throw error
+      return data
+    }
+  }, [formData.email, formData.password, formData.username])
+
+  const handlePhoneAuth = useCallback(async (isLoginMode) => {
+    const { email, password } = generatePhoneCredentials(formData.phone)
+    
+    if (isLoginMode) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) {
+        // Handle specific error for non-existent user
+        if (error.message === 'Invalid login credentials') {
+          throw new Error('Phone number not registered. Please sign up first.')
+        }
+        throw error
+      }
+      return data
+    } else {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: formData.name,
+            surname: formData.surname,
+            phone_number: formData.phone,
+            username: `${formData.name} ${formData.surname}`
+          }
+        }
+      })
+      if (error) {
+        // Handle specific error for already existing user
+        if (error.message.includes('already registered')) {
+          throw new Error('Phone number already registered. Please sign in instead.')
+        }
+        throw error
+      }
+      return data
+    }
+  }, [formData.phone, formData.name, formData.surname])
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault()
@@ -69,53 +193,57 @@ const useAuthForm = (onAuthSuccess) => {
     setError('')
 
     try {
-      if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        })
-        if (error) {
-          console.error('Login error:', error)
-          throw error
-        }
-        if (data.user) {
-          console.log('Login successful, calling onAuthSuccess')
-          onAuthSuccess(data.user)
-        }
+      // Validate phone number format for phone mode
+      if (loginMode === 'phone' && formData.phone && !validatePhoneNumber(formData.phone)) {
+        setError(AUTH_CONFIG.phoneValidationError)
+        return
+      }
+
+      let data
+      if (loginMode === 'email') {
+        data = await handleEmailAuth(isLogin)
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              username: formData.username,
-            }
-          }
-        })
-        if (error) {
-          console.error('Signup error:', error)
-          throw error
-        }
-        if (data.user) {
-          console.log('Signup successful, calling onAuthSuccess')
-          onAuthSuccess(data.user)
-        }
+        data = await handlePhoneAuth(isLogin)
+      }
+
+      if (data?.user) {
+        onAuthSuccess(data.user)
       }
     } catch (error) {
-      console.error('Auth error:', error)
-      setError(error.message || AUTH_CONFIG.errorMessage)
+      // Only log actual errors, not user-friendly messages
+      if (!error.message.includes('Phone number not registered') && 
+          !error.message.includes('Phone number already registered')) {
+        console.error(`${loginMode} ${isLogin ? 'login' : 'signup'} error:`, error)
+      }
+      
+      // Provide user-friendly error messages
+      let userFriendlyError = error.message || AUTH_CONFIG.errorMessage
+      
+      if (loginMode === 'phone') {
+        if (error.message === 'Phone number not registered. Please sign up first.') {
+          userFriendlyError = 'Phone number not registered. Please sign up first.'
+        } else if (error.message === 'Phone number already registered. Please sign in instead.') {
+          userFriendlyError = 'Phone number already registered. Please sign in instead.'
+        } else if (error.message === 'Invalid login credentials') {
+          userFriendlyError = 'Phone number not registered. Please sign up first.'
+        }
+      }
+      
+      setError(userFriendlyError)
     } finally {
       setLoading(false)
     }
-  }, [isLogin, formData, onAuthSuccess])
+  }, [isLogin, loginMode, formData, handleEmailAuth, handlePhoneAuth, onAuthSuccess])
 
   return {
     isLogin,
+    loginMode,
     formData,
     loading,
     error,
     updateField,
     toggleMode,
+    toggleLoginMode,
     handleSubmit
   }
 }
@@ -134,12 +262,33 @@ const FormField = ({ field, config, value, onChange, required = false }) => (
   </div>
 )
 
-const ErrorDisplay = ({ message }) => {
+const ErrorDisplay = ({ message, onToggleMode, isLogin, loginMode }) => {
   if (!message) return null
+  
+  // Determine if we should show a suggestion to switch modes
+  const shouldShowSuggestion = loginMode === 'phone' && (
+    message.includes('not registered') || 
+    message.includes('already registered') ||
+    message.includes('Invalid login credentials')
+  )
   
   return (
     <div className="p-3 rounded-md bg-red-50 border border-red-200">
-      <p className="text-red-600 text-sm">{message}</p>
+      <p className="text-red-600 text-sm mb-2">{message}</p>
+      {shouldShowSuggestion && (
+        <div className="mt-2 pt-2 border-t border-red-200">
+          <p className="text-red-500 text-xs">
+            💡 Tip: {isLogin ? 'Try signing up instead' : 'Try signing in instead'}
+          </p>
+          <button
+            type="button"
+            onClick={onToggleMode}
+            className="text-blue-600 hover:text-blue-700 hover:underline text-xs font-medium mt-1 transition-colors duration-200"
+          >
+            Switch to {isLogin ? 'Sign Up' : 'Sign In'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -166,18 +315,102 @@ const ModeToggle = ({ isLogin, onToggle }) => (
   </div>
 )
 
+const LoginModeToggle = ({ loginMode, onToggle }) => {
+  const toggleOptions = useMemo(() => [
+    { key: 'phone', label: 'Phone Login' },
+    { key: 'email', label: 'Email Login' }
+  ], [])
+
+  return (
+    <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
+      {toggleOptions.map((option) => (
+        <button
+          key={option.key}
+          type="button"
+          onClick={onToggle}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
+            loginMode === option.key 
+              ? 'bg-white text-blue-600 shadow-sm' 
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// Memoized form field configurations
+const getEmailFields = (isLogin, formData, updateField) => (
+  <>
+    {!isLogin && (
+      <FormField
+        field="username"
+        config={FORM_FIELDS.username}
+        value={formData.username}
+        onChange={updateField}
+      />
+    )}
+    <FormField
+      field="email"
+      config={FORM_FIELDS.email}
+      value={formData.email}
+      onChange={updateField}
+    />
+    <FormField
+      field="password"
+      config={FORM_FIELDS.password}
+      value={formData.password}
+      onChange={updateField}
+    />
+  </>
+)
+
+const getPhoneFields = (isLogin, formData, updateField) => (
+  <>
+    {!isLogin && (
+      <>
+        <FormField
+          field="name"
+          config={FORM_FIELDS.name}
+          value={formData.name}
+          onChange={updateField}
+        />
+        <FormField
+          field="surname"
+          config={FORM_FIELDS.surname}
+          value={formData.surname}
+          onChange={updateField}
+        />
+      </>
+    )}
+    <FormField
+      field="phone"
+      config={FORM_FIELDS.phone}
+      value={formData.phone}
+      onChange={updateField}
+    />
+  </>
+)
+
 export default function AuthForm({ onAuthSuccess }) {
   const {
     isLogin,
+    loginMode,
     formData,
     loading,
     error,
     updateField,
     toggleMode,
+    toggleLoginMode,
     handleSubmit
   } = useAuthForm(onAuthSuccess)
 
-  const currentConfig = isLogin ? AUTH_CONFIG.login : AUTH_CONFIG.signup
+  const currentConfig = useMemo(() => 
+    isLogin ? AUTH_CONFIG.login : AUTH_CONFIG.signup, 
+    [isLogin]
+  )
 
   return (
     <Card className="w-full bg-white/95 backdrop-blur-sm shadow-xl border-0">
@@ -191,43 +424,28 @@ export default function AuthForm({ onAuthSuccess }) {
       </CardHeader>
       
       <CardContent>
+        <LoginModeToggle loginMode={loginMode} onToggle={toggleLoginMode} />
+        
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Username field - only show for signup */}
-          {!isLogin && (
-            <FormField
-              field="username"
-              config={FORM_FIELDS.username}
-              value={formData.username}
-              onChange={updateField}
-            />
-          )}
+          {loginMode === 'email' 
+            ? getEmailFields(isLogin, formData, updateField)
+            : getPhoneFields(isLogin, formData, updateField)
+          }
           
-          {/* Email field */}
-          <FormField
-            field="email"
-            config={FORM_FIELDS.email}
-            value={formData.email}
-            onChange={updateField}
+          <ErrorDisplay 
+            message={error} 
+            onToggleMode={toggleMode}
+            isLogin={isLogin}
+            loginMode={loginMode}
           />
-          
-          {/* Password field */}
-          <FormField
-            field="password"
-            config={FORM_FIELDS.password}
-            value={formData.password}
-            onChange={updateField}
-          />
-          
-          {/* Error display */}
-          <ErrorDisplay message={error} />
-          
-          {/* Submit button */}
           <SubmitButton loading={loading} isLogin={isLogin} />
         </form>
         
-        {/* Mode toggle */}
         <ModeToggle isLogin={isLogin} onToggle={toggleMode} />
       </CardContent>
     </Card>
   )
-} 
+}
+
+// Export utility functions for use in other components (like admin dashboard)
+export { isPhoneEmail, extractPhoneFromEmail } 

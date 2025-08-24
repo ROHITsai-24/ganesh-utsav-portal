@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import UpdatesManager from './UpdatesManager'
 import GameSettingsManager from './GameSettingsManager'
+import { isPhoneEmail, extractPhoneFromEmail } from '@/components/auth/AuthForm'
 
 // Configuration objects for dynamic content
 const DASHBOARD_CONFIG = {
@@ -34,7 +35,7 @@ const GAME_CONFIG = {
 
 const TABLE_CONFIG = {
   users: {
-    headers: ['Email', 'Username', 'Games Played (All)', 'Total Points (All)', 'Last Played'],
+    headers: ['Email/Phone', 'Username', 'Games Played (All)', 'Total Points (All)', 'Last Played', 'Actions'],
     emptyMessage: 'No users found'
   },
   leaderboard: {
@@ -144,7 +145,71 @@ const useAdminData = () => {
     loadData()
   }, [loadData])
 
-  return { adminEmail, rows, rawScores, loading, error, reload: loadData, deleteGameResult, deleteAllGameResults }
+  const deleteUser = useCallback(async (userId) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const email = session?.user?.email || ''
+      
+      const res = await fetch(`/api/admin/delete-user`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-email': email || ''
+        },
+        body: JSON.stringify({ userId })
+      })
+      
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body?.error || `Delete failed: ${res.status}`)
+      }
+      
+      // Reload data after successful deletion
+      await loadData()
+    } catch (e) {
+      console.error('Delete user error:', e)
+      setError(e?.message || 'Failed to delete user')
+    }
+  }, [loadData])
+
+  const deleteAllUsers = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const email = session?.user?.email || ''
+      
+      const res = await fetch(`/api/admin/delete-all-users`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-email': email || ''
+        }
+      })
+      
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body?.error || `Delete all failed: ${res.status}`)
+      }
+      
+      // Reload data after successful deletion
+      await loadData()
+    } catch (e) {
+      console.error('Delete all users error:', e)
+      setError(e?.message || 'Failed to delete all users')
+    }
+  }, [loadData])
+
+  return { 
+    adminEmail, 
+    rows, 
+    rawScores, 
+    loading, 
+    error, 
+    reload: loadData, 
+    deleteGameResult, 
+    deleteAllGameResults,
+    deleteUser,
+    deleteAllUsers
+  }
 }
 
 // Custom hook for authentication
@@ -204,7 +269,13 @@ const DataTable = ({ headers, children, emptyMessage, className = '' }) => (
   </div>
 )
 
-const UsersTable = ({ rows }) => {
+const UsersTable = ({ rows, onDelete }) => {
+  const handleDelete = (userId, userDisplay) => {
+    if (window.confirm(`Are you sure you want to delete user ${userDisplay}? This will also delete all their game results. This action cannot be undone.`)) {
+      onDelete(userId)
+    }
+  }
+
   if (rows.length === 0) {
     return (
       <tr>
@@ -215,17 +286,37 @@ const UsersTable = ({ rows }) => {
     )
   }
 
-  return rows.map((r) => (
-    <tr key={r.userId} className="border-b hover:bg-gray-50">
-      <td className="py-2 pr-4">{r.email || '-'}</td>
-      <td className="py-2 pr-4">{r.username || '-'}</td>
-      <td className="py-2 pr-4">{r.gamesPlayed}</td>
-      <td className="py-2 pr-4">{r.totalScore}</td>
-      <td className="py-2 pr-4">
-        {r.lastPlayed ? new Date(r.lastPlayed).toLocaleString() : '-'}
-      </td>
-    </tr>
-  ))
+  return rows.map((r) => {
+    const userDisplay = r.email ? (
+      isPhoneEmail(r.email) ? (
+        `📱 +${extractPhoneFromEmail(r.email)}`
+      ) : r.email
+    ) : r.username || 'Unknown User'
+
+    return (
+      <tr key={r.userId} className="border-b hover:bg-gray-50">
+        <td className="py-2 pr-4">
+          {userDisplay}
+        </td>
+        <td className="py-2 pr-4">{r.username || '-'}</td>
+        <td className="py-2 pr-4">{r.gamesPlayed}</td>
+        <td className="py-2 pr-4">{r.totalScore}</td>
+        <td className="py-2 pr-4">
+          {r.lastPlayed ? new Date(r.lastPlayed).toLocaleString() : '-'}
+        </td>
+        <td className="py-2 pr-4">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleDelete(r.userId, userDisplay)}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            🗑️ Delete
+          </Button>
+        </td>
+      </tr>
+    )
+  })
 }
 
 const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showTime }) => {
@@ -249,7 +340,12 @@ const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showT
     <tr key={row.id || idx} className="border-b">
       <td className="py-2 pr-4">{idx + 1}</td>
       <td className="py-2 pr-4">
-        {row.user_username || row.user_email || 'Unknown User'}
+        {row.user_username || (row.user_email ? (
+          isPhoneEmail(row.user_email) ? (
+            // Extract phone number from generated email
+            `📱 +${extractPhoneFromEmail(row.user_email)}`
+          ) : row.user_email
+        ) : 'Unknown User')}
       </td>
       <td className="py-2 pr-4">{row.score}</td>
       {showMovesTime && (
@@ -269,7 +365,12 @@ const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showT
         <Button
           variant="destructive"
           size="sm"
-          onClick={() => handleDelete(row.id, row.user_username || row.user_email || 'Unknown User')}
+          onClick={() => handleDelete(row.id, row.user_username || (row.user_email ? (
+            isPhoneEmail(row.user_email) ? (
+              // Extract phone number from generated email
+              `📱 +${extractPhoneFromEmail(row.user_email)}`
+            ) : row.user_email
+          ) : 'Unknown User'))}
           className="bg-red-600 hover:bg-red-700 text-white"
         >
           🗑️ Delete
@@ -358,7 +459,18 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
 }
 
 export default function AdminDashboard() {
-  const { adminEmail, rows, rawScores, loading, error, reload, deleteGameResult, deleteAllGameResults } = useAdminData()
+  const { 
+    adminEmail, 
+    rows, 
+    rawScores, 
+    loading, 
+    error, 
+    reload, 
+    deleteGameResult, 
+    deleteAllGameResults,
+    deleteUser,
+    deleteAllUsers
+  } = useAdminData()
   const { signOut } = useAuth()
 
   if (loading) {
@@ -401,12 +513,28 @@ export default function AdminDashboard() {
         {/* Users Overview */}
         <Card>
           <CardHeader>
-            <CardTitle>Users Overview</CardTitle>
-            <CardDescription>All users with games played and total points</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Users Overview</CardTitle>
+                <CardDescription>All users with games played and total points</CardDescription>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  if (window.confirm(`Are you sure you want to delete ALL users? This will also delete all their game results. This action cannot be undone.`)) {
+                    deleteAllUsers()
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                🗑️ Delete All Users
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <DataTable headers={TABLE_CONFIG.users.headers}>
-              <UsersTable rows={rows} />
+              <UsersTable rows={rows} onDelete={deleteUser} />
             </DataTable>
           </CardContent>
         </Card>
