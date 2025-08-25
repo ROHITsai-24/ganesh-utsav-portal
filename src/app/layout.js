@@ -15,8 +15,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Unprofessional Players - Gaming Festival",
-  description: "Experience the thrill of festival gaming with our interactive challenges. Test your skills, compete with friends, and discover amazing prizes!",
+  title: "Unprofessional Players - Ganesh Chaturthi",
+  description: "Experience the thrill of ganesh chaturthi with our interactive challenges. Test your skills, compete with friends, and discover amazing prizes!",
+  openGraph: {
+    title: "Unprofessional Players - Ganesh Chaturthi",
+    description: "Experience the thrill of ganesh chaturthi with our interactive challenges. Test your skills, compete with friends, and discover amazing prizes!",
+    images: [
+      {
+        url: '/g1.svg',
+        width: 1200,
+        height: 630,
+        alt: 'Unprofessional Players - Ganesh Chaturthi Logo',
+      },
+    ],
+    type: 'website',
+    siteName: 'Unprofessional Players - Ganesh Chaturthi',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Unprofessional Players - Ganesh Chaturthi",
+    description: "Experience the thrill of ganesh chaturthi with our interactive challenges. Test your skills, compete with friends, and discover amazing prizes!",
+    images: ['/g1.svg'],
+  },
 };
 
 export default function RootLayout({ children }) {
