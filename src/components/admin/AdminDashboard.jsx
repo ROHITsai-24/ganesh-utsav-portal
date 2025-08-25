@@ -39,7 +39,7 @@ const TABLE_CONFIG = {
     emptyMessage: 'No users found'
   },
   leaderboard: {
-    headers: ['#', 'User', 'Score', 'Moves / Time', 'When', 'Actions'],
+    headers: ['#', 'User ID', 'User', 'Score', 'Moves / Time', 'When', 'Actions'],
     emptyMessage: 'No scores yet'
   }
 }
@@ -254,18 +254,20 @@ const ErrorMessage = ({ message, onRetry }) => (
 
 const DataTable = ({ headers, children, emptyMessage, className = '' }) => (
   <div className={`overflow-x-auto ${className}`}>
-    <table className="min-w-full text-left text-sm">
-      <thead>
-        <tr className="border-b">
-          {headers.map((header, index) => (
-            <th key={index} className="py-2 pr-4">{header}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {children}
-      </tbody>
-    </table>
+    <div className="min-w-full">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b">
+            {headers.map((header, index) => (
+              <th key={index} className="py-2 pr-4 font-medium text-gray-700">{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {children}
+        </tbody>
+      </table>
+    </div>
   </div>
 )
 
@@ -300,7 +302,7 @@ const UsersTable = ({ rows, onDelete }) => {
             {r.readableId ? `#${r.readableId}` : '-'}
           </span>
         </td>
-        <td className="py-2 pr-4">
+        <td className="py-2 pr-4 break-all">
           {userDisplay}
         </td>
         <td className="py-2 pr-4">{r.username || '-'}</td>
@@ -314,7 +316,7 @@ const UsersTable = ({ rows, onDelete }) => {
             variant="destructive"
             size="sm"
             onClick={() => handleDelete(r.userId, userDisplay)}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1"
           >
             🗑️ Delete
           </Button>
@@ -341,48 +343,58 @@ const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showT
     )
   }
 
-  return leaderboard.map((row, idx) => (
-    <tr key={row.id || idx} className="border-b">
-      <td className="py-2 pr-4">{idx + 1}</td>
-      <td className="py-2 pr-4">
-        {row.user_username || (row.user_email ? (
-          isPhoneEmail(row.user_email) ? (
-            // Extract phone number from generated email
-            `📱 +${extractPhoneFromEmail(row.user_email)}`
-          ) : row.user_email
-        ) : 'Unknown User')}
-      </td>
-      <td className="py-2 pr-4">{row.score}</td>
-      {showMovesTime && (
+  return leaderboard.map((row, idx) => {
+    const userDisplay = row.user_username || (row.user_email ? (
+      isPhoneEmail(row.user_email) ? (
+        `📱 +${extractPhoneFromEmail(row.user_email)}`
+      ) : row.user_email
+    ) : 'Unknown User')
+
+    // Get user ID from the user data - now using the correct field from API
+    const userId = row.user_readable_id || '-'
+
+    return (
+      <tr key={row.id || idx} className="border-b hover:bg-gray-50">
+        <td className="py-2 pr-4">{idx + 1}</td>
         <td className="py-2 pr-4">
-          {row.moves ?? '-'} / {row.time_taken_seconds ?? '-'}s
+          <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+            {userId !== '-' ? `#${userId}` : '-'}
+          </span>
         </td>
-      )}
-      {showTime && (
+        <td className="py-2 pr-4 break-all">
+          {userDisplay}
+        </td>
+        <td className="py-2 pr-4 font-semibold">{row.score}</td>
+        {showMovesTime && (
+          <td className="py-2 pr-4">
+            <span className="font-mono text-sm">
+              {row.moves ?? '-'} / {row.time_taken_seconds ?? '-'}s
+            </span>
+          </td>
+        )}
+        {showTime && (
+          <td className="py-2 pr-4">
+            <span className="font-mono text-sm">
+              {row.time_taken_seconds ? `${row.time_taken_seconds}s` : '-'}
+            </span>
+          </td>
+        )}
+        <td className="py-2 pr-4 text-xs">
+          {row.created_at ? new Date(row.created_at).toLocaleString() : '-'}
+        </td>
         <td className="py-2 pr-4">
-          {row.time_taken_seconds ? `${row.time_taken_seconds}s` : '-'}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleDelete(row.id, userDisplay)}
+            className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1"
+          >
+            🗑️ Delete
+          </Button>
         </td>
-      )}
-      <td className="py-2 pr-4">
-        {row.created_at ? new Date(row.created_at).toLocaleString() : '-'}
-      </td>
-      <td className="py-2 pr-4">
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => handleDelete(row.id, row.user_username || (row.user_email ? (
-            isPhoneEmail(row.user_email) ? (
-              // Extract phone number from generated email
-              `📱 +${extractPhoneFromEmail(row.user_email)}`
-            ) : row.user_email
-          ) : 'Unknown User'))}
-          className="bg-red-600 hover:bg-red-700 text-white"
-        >
-          🗑️ Delete
-        </Button>
-      </td>
-    </tr>
-  ))
+      </tr>
+    )
+  })
 }
 
 const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
@@ -444,16 +456,16 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div>
-            <CardTitle>{gameConfig.title}</CardTitle>
-            <CardDescription>{gameConfig.description}</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">{gameConfig.title}</CardTitle>
+            <CardDescription className="text-sm">{gameConfig.description}</CardDescription>
           </div>
           <Button
             variant="destructive"
             size="sm"
             onClick={handleDeleteAll}
-            className="bg-red-700 hover:bg-red-800 text-white border-red-800"
+            className="bg-red-700 hover:bg-red-800 text-white border-red-800 text-xs px-3 py-1"
             title={`Delete all ${gameKey} game results`}
           >
             🗑️ Delete All
@@ -461,17 +473,19 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
         </div>
       </CardHeader>
       <CardContent>
-        <DataTable 
-          headers={
-            showMovesTime 
-              ? TABLE_CONFIG.leaderboard.headers 
-              : showTime 
-                ? ['#', 'User', 'Score', 'Time', 'When', 'Actions']
-                : TABLE_CONFIG.leaderboard.headers.filter(h => h !== 'Moves / Time')
-          }
-        >
-          <LeaderboardTable gameKey={gameKey} leaderboard={leaderboard} onDelete={onDelete} showMovesTime={showMovesTime} showTime={showTime} />
-        </DataTable>
+        <div className="overflow-x-auto">
+          <DataTable 
+            headers={
+              showMovesTime 
+                ? TABLE_CONFIG.leaderboard.headers 
+                : showTime 
+                  ? ['#', 'User ID', 'User', 'Score', 'Time', 'When', 'Actions']
+                  : ['#', 'User ID', 'User', 'Score', 'When', 'Actions']
+            }
+          >
+            <LeaderboardTable gameKey={gameKey} leaderboard={leaderboard} onDelete={onDelete} showMovesTime={showMovesTime} showTime={showTime} />
+          </DataTable>
+        </div>
       </CardContent>
     </Card>
   )
@@ -507,19 +521,19 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">{DASHBOARD_CONFIG.title}</h1>
-              <p className="text-gray-600">Signed in as: {adminEmail}</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{DASHBOARD_CONFIG.title}</h1>
+              <p className="text-sm sm:text-base text-gray-600">Signed in as: {adminEmail}</p>
             </div>
             <Button 
               variant="outline" 
               onClick={signOut}
-              className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+              className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 text-sm px-4 py-2"
             >
               {DASHBOARD_CONFIG.signOut}
             </Button>
@@ -530,12 +544,12 @@ export default function AdminDashboard() {
         {error && <ErrorMessage message={error} onRetry={reload} />}
 
         {/* Users Overview */}
-        <Card>
+        <Card className="mb-6 sm:mb-8">
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div>
-                <CardTitle>Users Overview</CardTitle>
-                <CardDescription>All users with games played and total points</CardDescription>
+                <CardTitle className="text-lg sm:text-xl">Users Overview</CardTitle>
+                <CardDescription className="text-sm">All users with games played and total points</CardDescription>
               </div>
               <Button
                 variant="destructive"
@@ -545,26 +559,28 @@ export default function AdminDashboard() {
                     deleteAllUsers()
                   }
                 }}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1"
               >
                 🗑️ Delete All Users
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <DataTable headers={TABLE_CONFIG.users.headers}>
-              <UsersTable rows={rows} onDelete={deleteUser} />
-            </DataTable>
+            <div className="overflow-x-auto">
+              <DataTable headers={TABLE_CONFIG.users.headers}>
+                <UsersTable rows={rows} onDelete={deleteUser} />
+              </DataTable>
+            </div>
           </CardContent>
         </Card>
 
         {/* Game Settings */}
-        <div className="mt-8">
+        <div className="mb-6 sm:mb-8">
           <GameSettingsManager />
         </div>
 
         {/* Per-game leaderboards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <div className="grid grid-cols-1 gap-6 mb-6 sm:mb-8">
           {Object.values(GAME_CONFIG).map((gameConfig) => (
             <GameLeaderboard 
               key={gameConfig.key} 
@@ -577,10 +593,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* Updates Manager */}
-        <Card className="mt-8">
+        <Card className="mb-6 sm:mb-8">
           <CardHeader>
-            <CardTitle>Daily Updates Management</CardTitle>
-            <CardDescription>Send and manage devotional messages for all users</CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Daily Updates Management</CardTitle>
+            <CardDescription className="text-sm">Send and manage devotional messages for all users</CardDescription>
           </CardHeader>
           <CardContent>
             <UpdatesManager adminEmail={adminEmail} />
@@ -588,8 +604,8 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Simple Refresh Button */}
-        <div className="mt-6 text-right">
-          <Button variant="outline" onClick={reload}>
+        <div className="text-center sm:text-right">
+          <Button variant="outline" onClick={reload} className="text-sm px-4 py-2">
             {DASHBOARD_CONFIG.refresh}
           </Button>
         </div>

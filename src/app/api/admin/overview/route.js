@@ -84,6 +84,7 @@ export async function GET(request) {
     // Flatten result rows for per-game dashboards
     const flatScores = (results || []).map(r => {
       const timeTaken = r.details?.time_taken ?? null
+      const user = flatUsers.find(u => u.id === r.user_id)
       
       return {
         id: r.id,
@@ -95,8 +96,9 @@ export async function GET(request) {
         moves: r.details?.moves ?? null,
         time_taken_seconds: timeTaken,
         // Add user details for display
-        user_email: flatUsers.find(u => u.id === r.user_id)?.email || null,
-        user_username: flatUsers.find(u => u.id === r.user_id)?.username || null,
+        user_email: user?.email || null,
+        user_username: user?.username || null,
+        user_readable_id: user?.readable_id || null,
       }
     })
 

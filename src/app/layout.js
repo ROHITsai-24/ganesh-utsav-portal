@@ -24,7 +24,7 @@ export const metadata = {
       {
         url: '/g1.png',
         width: 1200,
-        height: 630,
+        height: 800,
         alt: 'Unprofessional Players - Ganesh Chaturthi Logo',
       },
     ],

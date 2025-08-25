@@ -222,144 +222,124 @@ export default function UpdatesManager({ adminEmail }) {
     fetchUpdates()
   }, [fetchUpdates])
 
-  // Memoized header component
-  const HeaderComponent = useMemo(() => (
-    <div className="text-center">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">
-        {UPDATES_MANAGER_CONFIG.title}
-      </h2>
-      <p className="text-gray-600">
-        {UPDATES_MANAGER_CONFIG.description}
-      </p>
-    </div>
-  ), [])
-
-  // Memoized alert component
-  const AlertComponent = useMemo(() => (
-    alert && (
-      <Alert className={UPDATES_MANAGER_CONFIG.styles.alert[alert.type]}>
-        <AlertDescription className={UPDATES_MANAGER_CONFIG.styles.alertText[alert.type]}>
-          {alert.message}
-        </AlertDescription>
-      </Alert>
-    )
-  ), [alert])
-
-  // Memoized form component
-  const FormComponent = useMemo(() => (
-    <Card className="bg-white border border-gray-200 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-gray-800">Send New Update</CardTitle>
-        <CardDescription className="text-gray-600">
-          Create a new devotional message or announcement
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Input
-              type="text"
-              placeholder={UPDATES_MANAGER_CONFIG.form.titlePlaceholder}
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
-            />
-          </div>
-          
-          <div>
-            <Textarea
-              placeholder={UPDATES_MANAGER_CONFIG.form.messagePlaceholder}
-              value={formData.message}
-              onChange={(e) => handleInputChange('message', e.target.value)}
-              rows={4}
-              className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 resize-none"
-              required
-            />
-          </div>
-         
-          <Button
-            type="submit"
-            disabled={sending || !formData.message.trim()}
-            className={UPDATES_MANAGER_CONFIG.styles.button.submit}
-          >
-            {sending ? UPDATES_MANAGER_CONFIG.form.sendingText : UPDATES_MANAGER_CONFIG.form.submitText}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  ), [formData, sending, handleSubmit, handleInputChange])
-
-  // Memoized updates list component
-  const UpdatesListComponent = useMemo(() => (
-    <Card className="bg-white border border-gray-200 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-gray-800">Recent Updates</CardTitle>
-        <CardDescription className="text-gray-600">
-          Manage your sent messages
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading updates...</p>
-          </div>
-        ) : updates.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">📢</div>
-            <p className="text-gray-600">No updates sent yet</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {updates.map((update) => (
-              <div
-                key={update.id}
-                className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    {update.title && (
-                      <h4 className="font-semibold text-gray-800 mb-2">
-                        {update.title}
-                      </h4>
-                    )}
-                    <p className="text-gray-600 text-sm mb-2">
-                      {formatDate(update.created_at)}
-                    </p>
-                    <p className="text-gray-800 whitespace-pre-wrap">
-                      {update.message}
-                    </p>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(update.id)}
-                    className={UPDATES_MANAGER_CONFIG.styles.button.delete}
-                  >
-                    🗑️
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  ), [loading, updates, formatDate, handleDelete])
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      {HeaderComponent}
+      <div className="text-center">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+          {UPDATES_MANAGER_CONFIG.title}
+        </h2>
+        <p className="text-sm sm:text-base text-gray-600">
+          {UPDATES_MANAGER_CONFIG.description}
+        </p>
+      </div>
 
       {/* Alert Messages */}
-      {AlertComponent}
+      {alert && (
+        <Alert className={UPDATES_MANAGER_CONFIG.styles.alert[alert.type]}>
+          <AlertDescription className={UPDATES_MANAGER_CONFIG.styles.alertText[alert.type]}>
+            {alert.message}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Create Update Form */}
-      {FormComponent}
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-gray-800 text-lg sm:text-xl">Send New Update</CardTitle>
+          <CardDescription className="text-gray-600 text-sm">
+            Create a new devotional message or announcement
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Input
+                type="text"
+                placeholder={UPDATES_MANAGER_CONFIG.form.titlePlaceholder}
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 text-sm sm:text-base"
+              />
+            </div>
+            
+            <div>
+              <Textarea
+                placeholder={UPDATES_MANAGER_CONFIG.form.messagePlaceholder}
+                value={formData.message}
+                onChange={(e) => handleInputChange('message', e.target.value)}
+                rows={4}
+                className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 resize-none text-sm sm:text-base"
+                required
+              />
+            </div>
+           
+            <Button
+              type="submit"
+              disabled={sending || !formData.message.trim()}
+              className={UPDATES_MANAGER_CONFIG.styles.button.submit}
+            >
+              {sending ? UPDATES_MANAGER_CONFIG.form.sendingText : UPDATES_MANAGER_CONFIG.form.submitText}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Existing Updates */}
-      {UpdatesListComponent}
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-gray-800 text-lg sm:text-xl">Recent Updates</CardTitle>
+          <CardDescription className="text-gray-600 text-sm">
+            Manage your sent messages
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+              <p className="text-gray-600 mt-4 text-sm">Loading updates...</p>
+            </div>
+          ) : updates.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">📢</div>
+              <p className="text-gray-600 text-sm">No updates sent yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {updates.map((update) => (
+                <div
+                  key={update.id}
+                  className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200"
+                >
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      {update.title && (
+                        <h4 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">
+                          {update.title}
+                        </h4>
+                      )}
+                      <p className="text-gray-600 text-xs mb-2">
+                        {formatDate(update.created_at)}
+                      </p>
+                      <p className="text-gray-800 whitespace-pre-wrap text-sm sm:text-base">
+                        {update.message}
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(update.id)}
+                      className={UPDATES_MANAGER_CONFIG.styles.button.delete + " text-xs px-3 py-1"}
+                    >
+                      🗑️
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
