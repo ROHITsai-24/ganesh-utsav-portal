@@ -404,9 +404,23 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
         })
         .slice(0, 20)
     } else {
-      // For puzzle game: sort by score only
+      // For puzzle game: sort by score first, then by moves (fewer is better), then by time (faster is better)
       return filteredScores
-        .sort((a, b) => b.score - a.score)
+        .sort((a, b) => {
+          if (b.score !== a.score) {
+            return b.score - a.score // Higher score first
+          }
+          // If scores are equal, sort by moves (fewer moves first)
+          const movesA = a.moves || 0
+          const movesB = b.moves || 0
+          if (movesA !== movesB) {
+            return movesA - movesB // Fewer moves first
+          }
+          // If moves are also equal, sort by time (faster time first)
+          const timeA = a.time_taken_seconds || 0
+          const timeB = b.time_taken_seconds || 0
+          return timeA - timeB // Faster time first
+        })
         .slice(0, 20)
     }
   }, [rawScores, gameKey])

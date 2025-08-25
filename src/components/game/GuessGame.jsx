@@ -72,19 +72,19 @@ const GAME_OPTIONS = {
     { id: 10, src: '/puzzle.jpg', alt: 'Correct Idol Image' }
   ],
   heights: [
-    { value: '5\'6"', label: '5\'6"' },
-    { value: '5\'8"', label: '5\'8"' },
-    { value: '5\'10"', label: '5\'10"' },
+    { value: '5\'0"', label: '5\'0"' },
     { value: '6\'0"', label: '6\'0"' },
-    { value: '6\'2"', label: '6\'2"' },
-    { value: '6\'4"', label: '6\'4"' }
+    { value: '5\'5"', label: '5\'5"' },
+    { value: '6\'5"', label: '6\'5"' },
+    { value: '7\'0"', label: '7\'0"' },
+    { value: '7\'5"', label: '7\'5"' }
   ],
   prices: [
-    { value: '12000', label: '₹12,000' },
-    { value: '13500', label: '₹13,500' },
+    { value: '9000', label: '₹9,000' },
+    { value: '11000', label: '₹11,000' },
+    { value: '13000', label: '₹13,000' },
     { value: '15000', label: '₹15,000' },
-    { value: '16500', label: '₹16,500' },
-    { value: '18000', label: '₹18,000' },
+    { value: '17000', label: '₹17,000' },
     { value: '20000', label: '₹20,000' }
   ]
 }
@@ -98,7 +98,10 @@ const useGameState = (user) => {
   const [score, setScore] = useState(0)
   const [gameState, setGameState] = useState('ready')
   const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.timeLimit)
-  const [shuffledImages, setShuffledImages] = useState([])
+  const [shuffledImages, setShuffledImages] = useState(() => {
+    // Initialize with shuffled images on first render
+    return [...GAME_OPTIONS.images].sort(() => Math.random() - 0.5)
+  })
   const [hasSaved, setHasSaved] = useState(false)
   const [playLimitExceeded, setPlayLimitExceeded] = useState(false)
   
@@ -108,6 +111,9 @@ const useGameState = (user) => {
   const totalTimeRef = useRef(0)
   // Store when current question started
   const questionStartTimeRef = useRef(null)
+  
+  // Game state tracking to prevent refreshes during gameplay
+  const gameInProgressRef = useRef(false)
 
   const resetGame = useCallback(() => {
     setCurrentQuestion(1)
@@ -122,6 +128,13 @@ const useGameState = (user) => {
     questionTimesRef.current = []
     totalTimeRef.current = 0
     questionStartTimeRef.current = null
+    
+    // Reset game progress flags when user starts a new game
+    gameInProgressRef.current = false
+    if (typeof window !== 'undefined') {
+      window.gameInProgress = false
+      document.body.removeAttribute('data-game-playing')
+    }
     
     // Shuffle images for the first question
     const shuffled = [...GAME_OPTIONS.images].sort(() => Math.random() - 0.5)
@@ -164,6 +177,15 @@ const useGameState = (user) => {
       // If validation passes, start the game
       setGameState('playing')
       questionStartTimeRef.current = Date.now() // Start timing first question
+      
+      // Set game in progress flag to prevent refreshes
+      gameInProgressRef.current = true
+      
+      // Set global flag to prevent page refreshes during gameplay
+      if (typeof window !== 'undefined') {
+        window.gameInProgress = true
+        document.body.setAttribute('data-game-playing', 'true')
+      }
     } catch (error) {
       // BLOCK the game if validation fails - don't allow fallback
       setPlayLimitExceeded(true)
@@ -182,6 +204,13 @@ const useGameState = (user) => {
       const totalTime = questionTimesRef.current.reduce((sum, time) => sum + time, 0)
       setGameState('completed')
       totalTimeRef.current = totalTime
+      
+      // Reset game progress flags when game completes
+      gameInProgressRef.current = false
+      if (typeof window !== 'undefined') {
+        window.gameInProgress = false
+        document.body.removeAttribute('data-game-playing')
+      }
     }
   }, [currentQuestion])
 
@@ -237,6 +266,13 @@ const useGameState = (user) => {
       const totalTime = questionTimesRef.current.reduce((sum, time) => sum + time, 0)
       totalTimeRef.current = totalTime
       setGameState('completed')
+      
+      // Reset game progress flags when game completes
+      gameInProgressRef.current = false
+      if (typeof window !== 'undefined') {
+        window.gameInProgress = false
+        document.body.removeAttribute('data-game-playing')
+      }
     }
   }, [currentQuestion, nextQuestion, setGameState])
 
@@ -311,10 +347,8 @@ const useScoreSaver = (user, score, currentQuestion, totalTimeRef, onScoreSaved)
         const result = await response.json()
         
         if (result.success) {
-          // Trigger play limit refresh
-          if (onScoreSaved) {
-            onScoreSaved()
-          }
+          // Don't trigger play limit refresh immediately to prevent results screen refresh
+          // The refresh will happen when user starts a new game or navigates away
         } else {
           // Handle safety check rejections
           if (response.status === 403) {
@@ -574,10 +608,7 @@ export default function GuessGame({ user, onScoreSaved = () => {} }) {
   // Timer effect
   useTimer(timeLeft, gameState, setTimeLeft)
 
-  // Initialize game on mount
-  useEffect(() => {
-    resetGame()
-  }, [resetGame])
+  // Initialize game on mount - removed to prevent refresh issues during gameplay
 
   // Handle time up - automatically move to next question instead of ending game
   useEffect(() => {
@@ -610,6 +641,17 @@ export default function GuessGame({ user, onScoreSaved = () => {} }) {
     }
   }, [gameState, saveScore, hasSaved, setHasSaved])
 
+  // Cleanup effect to reset game progress flags when component unmounts
+  useEffect(() => {
+    return () => {
+      // Reset game progress flags on unmount
+      if (typeof window !== 'undefined') {
+        window.gameInProgress = false
+        document.body.removeAttribute('data-game-playing')
+      }
+    }
+  }, [])
+
   // Start screen
   if (gameState === 'ready') {
     return <StartScreen user={user} onStart={startGame} />
@@ -617,13 +659,21 @@ export default function GuessGame({ user, onScoreSaved = () => {} }) {
 
   // Game over states
   if (gameState === 'completed') {
+    const handlePlayAgain = () => {
+      resetGame()
+      // Trigger play limit refresh when starting a new game
+      if (onScoreSaved) {
+        onScoreSaved()
+      }
+    }
+    
     return (
       <GameOverScreen
         title={GAME_CONFIG.gameCompleted.title}
         subtitle={GAME_CONFIG.gameCompleted.subtitle}
         score={score}
         buttonText={GAME_CONFIG.gameCompleted.buttonText}
-        onButtonClick={resetGame}
+        onButtonClick={handlePlayAgain}
         bgColor="green"
       />
     )

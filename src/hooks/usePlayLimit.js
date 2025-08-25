@@ -66,16 +66,23 @@ export const usePlayLimit = (user, gameKey) => {
     checkPlayLimit()
   }, [checkPlayLimit])
 
-  // Real-time checking - poll every 2 minutes when user is active
+  // Real-time checking - poll every 2 minutes when user is active and no game is in progress
   useEffect(() => {
     if (!user || !gameKey) return
 
     const interval = setInterval(() => {
-      // Only check if user is on the page and not idle
+      // Only check if user is on the page and not idle AND no game is in progress
       if (!document.hidden) {
-        checkPlayLimit()
+        // Check multiple indicators to prevent refreshes during active gameplay
+        const isInActiveGameplay = document.querySelector('[data-game-playing="true"]')
+        const isGameInProgress = window.gameInProgress === true
+        
+        // Only refresh if NO game is in progress
+        if (!isInActiveGameplay && !isGameInProgress) {
+          checkPlayLimit()
+        }
       }
-    }, 120000) // 2 minutes instead of 60 seconds
+    }, 60000) // 1 minute for faster real-time updates
 
     return () => clearInterval(interval)
   }, [user, gameKey, checkPlayLimit])

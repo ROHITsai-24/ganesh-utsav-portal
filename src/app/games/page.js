@@ -834,12 +834,19 @@ const GameContent = ({ activeTabConfig, user }) => {
   const { canPlay, playCount, playLimit, loading: playLimitLoading, checkPlayLimit } = usePlayLimit(user, activeTabConfig?.id)
   const { totalScore, loading: scoreLoading } = useUserScore(user)
   
-  // Refresh settings when page becomes visible (user comes back to tab)
+  // Refresh settings when page becomes visible (user comes back to tab) - but not during active gameplay
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        refreshSettings()
-        checkPlayLimit()
+        // Check multiple indicators to prevent refreshes during active gameplay
+        const isInActiveGameplay = document.querySelector('[data-game-playing="true"]')
+        const isGameInProgress = window.gameInProgress === true
+        
+        // Only refresh if NO game is in progress
+        if (!isInActiveGameplay && !isGameInProgress) {
+          refreshSettings()
+          checkPlayLimit()
+        }
       }
     }
     

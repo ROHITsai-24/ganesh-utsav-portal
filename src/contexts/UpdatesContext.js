@@ -88,12 +88,19 @@ export const UpdatesProvider = ({ children }) => {
     if (!UPDATES_CONTEXT_CONFIG.polling.enabled) return null
     
     return setInterval(async () => {
-      const hasUpdatesResult = await checkForUpdates()
+      // Check if any game is in progress before polling
+      const isInActiveGameplay = document.querySelector('[data-game-playing="true"]')
+      const isGameInProgress = window.gameInProgress === true
       
-      // Stop polling if no updates exist
-      if (!hasUpdatesResult) {
-        console.log('No updates, stopped polling')
-        return null
+      // Only poll if NO game is in progress
+      if (!isInActiveGameplay && !isGameInProgress) {
+        const hasUpdatesResult = await checkForUpdates()
+        
+        // Stop polling if no updates exist
+        if (!hasUpdatesResult) {
+          console.log('No updates, stopped polling')
+          return null
+        }
       }
     }, UPDATES_CONTEXT_CONFIG.polling.interval)
   }, [checkForUpdates])

@@ -58,16 +58,23 @@ export const GameSettingsProvider = ({ children }) => {
     loadGameSettings() // Only load once on mount
   }, [loadGameSettings])
 
-  // Smart polling - only when enabled games exist
+  // Smart polling - only when enabled games exist and no game is in progress
   useEffect(() => {
     if (!hasEnabledGames) return
 
     const interval = setInterval(() => {
-      // Only refresh if user is on the page
+      // Only refresh if user is on the page AND no game is in progress
       if (!document.hidden) {
-        loadGameSettings()
+        // Check multiple indicators to prevent refreshes during active gameplay
+        const isInActiveGameplay = document.querySelector('[data-game-playing="true"]')
+        const isGameInProgress = window.gameInProgress === true
+        
+        // Only refresh if NO game is in progress
+        if (!isInActiveGameplay && !isGameInProgress) {
+          loadGameSettings()
+        }
       }
-    }, 120000) // 2 minutes instead of 30 seconds
+    }, 60000) // 1 minute for faster real-time updates
 
     return () => clearInterval(interval)
   }, [hasEnabledGames, loadGameSettings])

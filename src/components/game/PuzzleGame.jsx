@@ -105,7 +105,11 @@ function areAdjacent(index1, index2, gridSize) {
 }
 
 export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage, onScoreSaved = () => {} }) {
-  const [tiles, setTiles] = useState([])
+  const [tiles, setTiles] = useState(() => {
+    // Initialize with shuffled tiles on first render
+    const solvedTiles = createSolvedTiles(PUZZLE_CONFIG.gridSize)
+    return shuffleTiles(solvedTiles)
+  })
   const [moves, setMoves] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
   const [gameState, setGameState] = useState(PUZZLE_CONFIG.states.ready)
@@ -121,6 +125,9 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
   // Store exact moves count to bypass React state timing issues
   const exactMovesRef = useRef(0)
 
+  // Game state tracking to prevent refreshes during gameplay
+  const gameInProgressRef = useRef(false)
+
   // Memoized function to reset game
   const resetGame = useCallback(() => {
     const solvedTiles = createSolvedTiles(PUZZLE_CONFIG.gridSize)
@@ -131,7 +138,19 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     setGameState(PUZZLE_CONFIG.states.ready)
     setSelectedTile(null)
     exactMovesRef.current = 0  // Reset exact moves counter
-  }, [])
+    
+    // Reset game progress flags when user starts a new game
+    gameInProgressRef.current = false
+    if (typeof window !== 'undefined') {
+      window.gameInProgress = false
+      document.body.removeAttribute('data-game-playing')
+    }
+    
+    // Trigger play limit refresh when starting a new game
+    if (onScoreSaved) {
+      onScoreSaved()
+    }
+  }, [onScoreSaved])
 
   // Memoized function to start playing
   const startPlaying = useCallback(async () => {
@@ -171,6 +190,15 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
       setGameState(PUZZLE_CONFIG.states.playing)
       setElapsedTime(0) // Reset timer when starting
       gameStartTimeRef.current = Date.now() // Store exact start time
+      
+      // Set game in progress flag to prevent refreshes
+      gameInProgressRef.current = true
+      
+      // Set global flag to prevent page refreshes during gameplay
+      if (typeof window !== 'undefined') {
+        window.gameInProgress = true
+        document.body.setAttribute('data-game-playing', 'true')
+      }
     } catch (error) {
       // BLOCK the game if validation fails - don't allow fallback
       alert('Unable to validate play limit. Please try again later.')
@@ -264,6 +292,14 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         
         // Stop the timer immediately to prevent race condition
         setGameState(PUZZLE_CONFIG.states.solved)
+        
+        // Reset game progress flags to allow refreshes again
+        gameInProgressRef.current = false
+        if (typeof window !== 'undefined') {
+          window.gameInProgress = false
+          document.body.removeAttribute('data-game-playing')
+        }
+        
         // Use the exact calculated values, not React state
         const finalMoves = exactMoves
         const finalTime = exactElapsedSeconds
@@ -313,10 +349,8 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         const result = await response.json()
         
         if (result.success) {
-          // Trigger play limit refresh
-          if (onScoreSaved) {
-            onScoreSaved()
-          }
+          // Don't trigger play limit refresh immediately to prevent results screen refresh
+          // The refresh will happen when user starts a new game or navigates away
         } else {
           // Handle safety check rejections
           if (response.status === 403) {
@@ -389,9 +423,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     )
   }, [selectedTile, gameState, imageSrc, handleTileClick])
 
-  useEffect(() => {
-    startNewGame()
-  }, [startNewGame])
+  // Initialize game on mount - removed to prevent refresh issues during gameplay
 
   useEffect(() => {
     if (gameState === PUZZLE_CONFIG.states.playing) {
@@ -416,8 +448,20 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     }
   }, [gameState])
 
-  // Memoized game stats component
-  const GameStats = useMemo(() => (
+  // Cleanup effect to reset game progress flags when component unmounts
+  useEffect(() => {
+    return () => {
+      // Reset game progress flags on unmount
+      gameInProgressRef.current = false
+      if (typeof window !== 'undefined') {
+        window.gameInProgress = false
+        document.body.removeAttribute('data-game-playing')
+      }
+    }
+  }, [])
+
+  // Game stats component - removed useMemo to prevent refresh issues
+  const GameStats = (
     <div className="flex flex-wrap gap-2 md:gap-4 justify-center items-center mb-6">
       <div className="bg-red-100 text-red-800 px-2 md:px-4 py-1 md:py-2 rounded-full font-semibold text-sm md:text-base">
         ⏰ {formatTime(elapsedTime)}
@@ -429,10 +473,10 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         Player: {user?.user_metadata?.username || user?.email}
       </div>
     </div>
-  ), [elapsedTime, moves, user, formatTime])
+  )
 
-  // Memoized game instructions component
-  const GameInstructions = useMemo(() => (
+  // Game instructions component - removed useMemo to prevent refresh issues
+  const GameInstructions = (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-center">
       <h3 className="font-semibold text-blue-800 mb-2">{PUZZLE_CONFIG.ui.instructions.title}</h3>
       <div className="text-blue-700 text-sm space-y-1">
@@ -449,10 +493,10 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         {PUZZLE_CONFIG.ui.instructions.startButton}
       </Button>
     </div>
-  ), [startPlaying])
+  )
 
-  // Memoized puzzle grid component
-  const PuzzleGrid = useMemo(() => (
+  // Puzzle grid component - removed useMemo to prevent refresh issues
+  const PuzzleGrid = (
     <div className="w-full max-w-md mx-auto mb-6 -mx-2 md:mx-auto">
       <div
         className="grid gap-1 md:gap-2"
@@ -461,10 +505,10 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         {tiles.map((tileValue, index) => renderTile(tileValue, index))}
       </div>
     </div>
-  ), [tiles, renderTile])
+  )
 
-  // Memoized game status component
-  const GameStatus = useMemo(() => (
+  // Game status component - removed useMemo to prevent refresh issues
+  const GameStatus = (
     <div className="text-center space-y-3">
       {selectedTile !== null ? (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -483,7 +527,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         {PUZZLE_CONFIG.ui.gameStatus.reminder}
       </p>
     </div>
-  ), [selectedTile])
+  )
 
   if (gameState === PUZZLE_CONFIG.states.solved) {
     // Calculate EXACT same values for display as used in saveScoreWithValues
@@ -517,7 +561,13 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         </div>
         
         <Button 
-          onClick={startNewGame} 
+          onClick={() => {
+            startNewGame()
+            // Trigger play limit refresh when starting a new game
+            if (onScoreSaved) {
+              onScoreSaved()
+            }
+          }} 
           className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
         >
           {PUZZLE_CONFIG.ui.buttons.playAgain}
@@ -529,7 +579,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-game-playing={gameState === PUZZLE_CONFIG.states.playing}>
       <div className="text-center space-y-4">
         <h1 className="text-2xl font-bold text-white">{PUZZLE_CONFIG.ui.title}</h1>
         <p className="text-base text-white/80">
