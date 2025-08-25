@@ -474,9 +474,30 @@ const PhotoGridItem = ({ config, className = '', index = 0, onClick }) => {
   )
 }
 
-// Gallery Grid Component (Google Photos Style) with Mobile Touch Support
+// Gallery Grid Component (Google Photos Style) with Mobile Touch Support and Smooth Transitions
 const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYearChange }) => {
   const { translations } = useLanguage()
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [displayImages, setDisplayImages] = useState(images)
+  
+  // Add CSS keyframes for smooth animations
+  useEffect(() => {
+    if (!document.getElementById('gallery-animations')) {
+      const style = document.createElement('style')
+      style.id = 'gallery-animations'
+      style.textContent = `
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+          from { opacity: 1; transform: translateY(0); }
+          to { opacity: 0; transform: translateY(-20px); }
+        }
+      `
+      document.head.appendChild(style)
+    }
+  }, [])
   
   useEffect(() => {
     if (isOpen) {
@@ -487,6 +508,18 @@ const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYea
       document.body.style.overflow = 'unset'
     }
   }, [isOpen])
+
+  // Smooth transition when images change
+  useEffect(() => {
+    if (images.length > 0) {
+      setIsTransitioning(true)
+      const timer = setTimeout(() => {
+        setDisplayImages(images)
+        setIsTransitioning(false)
+      }, 150) // Quick fade transition
+      return () => clearTimeout(timer)
+    }
+  }, [images])
 
   if (!isOpen) return null
 
@@ -514,16 +547,20 @@ const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYea
           </button>
         </div>
         
-        {/* Year Navigation */}
+        {/* Year Navigation with Smooth Transitions */}
         <div className="flex items-center space-x-2">
           {JOURNEY_CONFIG.years.map((year) => (
             <button
               key={year}
-              onClick={() => onYearChange(year)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 ${
+              onClick={() => {
+                // Add smooth transition effect when changing years
+                setIsTransitioning(true)
+                onYearChange(year)
+              }}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
                 year === currentYear
-                  ? 'bg-[#8B4513] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-[#8B4513] text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
               }`}
               // Mobile touch optimization
               onTouchStart={(e) => {
@@ -539,16 +576,24 @@ const GalleryGrid = ({ isOpen, onClose, images, onImageClick, currentYear, onYea
         </div>
       </div>
 
-      {/* Asymmetrical Gallery Grid (Google Photos Style) */}
+      {/* Asymmetrical Gallery Grid (Google Photos Style) with Smooth Transitions */}
       <div className="p-4 overflow-y-auto h-[calc(100vh-120px)]">
-        <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4" style={{
-          columnGap: '1rem',
-          columnFill: 'balance'
-        }}>
-          {images.map((image, index) => (
+        <div 
+          className={`columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4 transition-all duration-300 ${
+            isTransitioning ? 'opacity-50 scale-95' : 'opacity-100 scale-100'
+          }`} 
+          style={{
+            columnGap: '1rem',
+            columnFill: 'balance'
+          }}
+        >
+          {displayImages.map((image, index) => (
             <div
-              key={image.id}
-              className="break-inside-avoid mb-4 overflow-hidden rounded-lg cursor-pointer hover:opacity-80 transition-all duration-300 hover:scale-[1.02] group"
+              key={`${image.id}-${currentYear}`}
+              className="break-inside-avoid mb-4 overflow-hidden rounded-lg cursor-pointer hover:opacity-80 transition-all duration-500 ease-out hover:scale-[1.02] group"
+              style={{
+                animation: isTransitioning ? 'none' : 'fadeIn 0.5s ease-out'
+              }}
               onClick={() => onImageClick(index)}
               // Mobile touch optimizations
               onTouchStart={(e) => {
