@@ -22,19 +22,20 @@ const PUZZLE_CONFIG = {
     description: 'Select a tile, then click an adjacent tile to swap them. Rearrange to form the complete picture and earn {points} points!',
     instructions: {
       title: 'How to Play:',
-      steps: [
-        '1. Click a tile to select it (it will be highlighted in blue)',
-        '2. Click an adjacent tile to swap them',
-        '3. Rearrange all tiles to form the complete picture',
-        '4. Complete the puzzle to earn {points} points!'
-      ],
+              steps: [
+          '1. Click a tile to select it (it will be highlighted in blue)',
+          '2. Click an adjacent tile to swap them',
+          '3. Rearrange all tiles to form the complete picture',
+          '4. Complete the puzzle to earn 20 points!',
+          '5. Fewer moves and faster time = higher ranking!'
+        ],
       startButton: 'Start Game'
     },
     gameStatus: {
       tileSelected: 'Tile selected! Click an adjacent tile to swap.',
       default: 'Click a tile to select it, then click an adjacent tile to swap.',
       reminder: 'Rearrange the tiles to match the original image',
-      complete: 'Complete the puzzle to earn {points} points!'
+              complete: 'Complete the puzzle to earn 20 points!'
     },
     buttons: {
       playAgain: 'Play Again'
@@ -47,7 +48,7 @@ const PUZZLE_CONFIG = {
       subtitle: 'Congratulations!',
       moves: 'You solved the puzzle in {moves} moves',
       timeTaken: 'Time taken: {time}',
-      score: 'Points earned: {score}'
+              score: 'Points earned: 20'
     }
   },
   // Score calculation - configurable
@@ -152,100 +153,131 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     }
   }, [onScoreSaved])
 
-  // Memoized function to start playing
-  const startPlaying = useCallback(async () => {
-    // Pre-game validation: Check if user can still play
-    try {
-      const response = await fetch('/api/check-play-limit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user?.id,
-          gameKey: 'puzzle'
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        if (response.status === 403) {
-          if (errorData.action === 'rejected_limit') {
-            // Show limit exceeded message
-            alert('Play limit exceeded! You have reached your maximum allowed games.')
-            return
-          }
-        }
-        throw new Error('Failed to validate play limit')
-      }
-
-      const data = await response.json()
-      if (!data.canPlay) {
-        // Show limit exceeded message
-        alert('Play limit exceeded! You have reached your maximum allowed games.')
-        return
-      }
-
-      // If validation passes, start the game
-      setGameState(PUZZLE_CONFIG.states.playing)
-      setElapsedTime(0) // Reset timer when starting
-      gameStartTimeRef.current = Date.now() // Store exact start time
-      
-      // Set game in progress flag to prevent refreshes
-      gameInProgressRef.current = true
-      
-      // Set global flag to prevent page refreshes during gameplay
-      if (typeof window !== 'undefined') {
-        window.gameInProgress = true
-        document.body.setAttribute('data-game-playing', 'true')
-      }
-    } catch (error) {
-      // BLOCK the game if validation fails - don't allow fallback
-      alert('Unable to validate play limit. Please try again later.')
-      return
+  // Memoized function to start playing - instant start with background validation
+  const startPlaying = useCallback(() => {
+    // Start game instantly for smooth user experience
+    setGameState(PUZZLE_CONFIG.states.playing)
+    setElapsedTime(0) // Reset timer when starting
+    gameStartTimeRef.current = Date.now() // Store exact start time
+    
+    // Set game in progress flag to prevent refreshes
+    gameInProgressRef.current = true
+    
+    // Set global flag to prevent page refreshes during gameplay
+    if (typeof window !== 'undefined') {
+      window.gameInProgress = true
+      document.body.setAttribute('data-game-playing', 'true')
     }
+
+    // Background validation - check if user can actually play
+    const validatePlayLimit = async () => {
+      try {
+        const response = await fetch('/api/check-play-limit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user?.id,
+            gameKey: 'puzzle'
+          })
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          if (response.status === 403) {
+            if (errorData.action === 'rejected_limit') {
+              // Show limit exceeded message
+              alert('Play limit exceeded! You have reached your maximum allowed games.')
+              // Reset game progress flags
+              gameInProgressRef.current = false
+              if (typeof window !== 'undefined') {
+                window.gameInProgress = false
+                document.body.removeAttribute('data-game-playing')
+              }
+              setGameState(PUZZLE_CONFIG.states.ready)
+              return
+            }
+          }
+          throw new Error('Failed to validate play limit')
+        }
+
+        const data = await response.json()
+        if (!data.canPlay) {
+          // Show limit exceeded message
+          alert('Play limit exceeded! You have reached your maximum allowed games.')
+          // Reset game progress flags
+          gameInProgressRef.current = false
+          if (typeof window !== 'undefined') {
+            window.gameInProgress = false
+            document.body.removeAttribute('data-game-playing')
+          }
+          setGameState(PUZZLE_CONFIG.states.ready)
+          return
+        }
+        // Validation passed - game continues normally
+      } catch (error) {
+        // If validation fails, block the game
+        alert('Unable to validate play limit. Please try again later.')
+        // Reset game progress flags
+        gameInProgressRef.current = false
+        if (typeof window !== 'undefined') {
+          window.gameInProgress = false
+          document.body.removeAttribute('data-game-playing')
+        }
+        setGameState(PUZZLE_CONFIG.states.ready)
+      }
+    }
+
+    // Run validation in background
+    validatePlayLimit()
   }, [user?.id])
 
-  // Memoized function to start new game (with limit check)
-  const startNewGame = useCallback(async () => {
-    // Check play limit before starting new game
-    try {
-      const response = await fetch('/api/check-play-limit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user?.id,
-          gameKey: 'puzzle'
+  // Memoized function to start new game - instant start with background validation
+  const startNewGame = useCallback(() => {
+    // Start new game instantly for smooth user experience
+    resetGame()
+
+    // Background validation - check if user can actually play
+    const validatePlayLimit = async () => {
+      try {
+        const response = await fetch('/api/check-play-limit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user?.id,
+            gameKey: 'puzzle'
+          })
         })
-      })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        if (response.status === 403) {
-          if (errorData.action === 'rejected_limit') {
-            // Show limit exceeded message
-            alert('Play limit exceeded! You have reached your maximum allowed games.')
-            return
+        if (!response.ok) {
+          const errorData = await response.json()
+          if (response.status === 403) {
+            if (errorData.action === 'rejected_limit') {
+              // Show limit exceeded message
+              alert('Play limit exceeded! You have reached your maximum allowed games.')
+              return
+            }
           }
+          throw new Error('Failed to validate play limit')
         }
-        throw new Error('Failed to validate play limit')
-      }
 
-      const data = await response.json()
-      if (!data.canPlay) {
-        // Show limit exceeded message
-        alert('Play limit exceeded! You have reached your maximum allowed games.')
-        return
+        const data = await response.json()
+        if (!data.canPlay) {
+          // Show limit exceeded message
+          alert('Play limit exceeded! You have reached your maximum allowed games.')
+          return
+        }
+        // Validation passed - game continues normally
+      } catch (error) {
+        alert('Unable to validate play limit. Please try again later.')
       }
-
-      // If validation passes, start new game
-      resetGame()
-    } catch (error) {
-      alert('Unable to validate play limit. Please try again later.')
-      return
     }
+
+    // Run validation in background
+    validatePlayLimit()
   }, [user?.id, resetGame])
 
   // Memoized function to handle tile click
@@ -475,22 +507,22 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
     </div>
   )
 
-  // Game instructions component - removed useMemo to prevent refresh issues
+  // Game instructions component - optimized design matching Guess Game theme
   const GameInstructions = (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-center">
-      <h3 className="font-semibold text-blue-800 mb-2">{PUZZLE_CONFIG.ui.instructions.title}</h3>
-      <div className="text-blue-700 text-sm space-y-1">
+    <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 mb-6 text-center max-w-2xl mx-auto">
+      <h3 className="font-semibold text-white text-xl mb-4">{PUZZLE_CONFIG.ui.instructions.title}</h3>
+      <div className="grid grid-cols-1 gap-3 text-left mb-6">
         {PUZZLE_CONFIG.ui.instructions.steps.map((step, index) => (
-          <p key={index} dangerouslySetInnerHTML={{ 
-            __html: replacePlaceholders(step, { points: PUZZLE_CONFIG.scoring.baseScore })
-          }} />
+          <p key={index} className="text-white/90">
+            {step}
+          </p>
         ))}
       </div>
       <Button 
         onClick={startPlaying} 
-        className="mt-3 bg-blue-600 hover:bg-blue-700"
+        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
       >
-        {PUZZLE_CONFIG.ui.instructions.startButton}
+        🚀 {PUZZLE_CONFIG.ui.instructions.startButton}
       </Button>
     </div>
   )

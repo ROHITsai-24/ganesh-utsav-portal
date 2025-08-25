@@ -141,56 +141,80 @@ const useGameState = (user) => {
     setShuffledImages(shuffled)
   }, [])
 
-  const startGame = useCallback(async () => {
-    // Pre-game validation: Check if user can still play
-    try {
-      const response = await fetch('/api/check-play-limit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user?.id,
-          gameKey: 'guess'
+  const startGame = useCallback(() => {
+    // Start game instantly for smooth user experience
+    setGameState('playing')
+    questionStartTimeRef.current = Date.now() // Start timing first question
+    
+    // Set game in progress flag to prevent refreshes
+    gameInProgressRef.current = true
+    
+    // Set global flag to prevent page refreshes during gameplay
+    if (typeof window !== 'undefined') {
+      window.gameInProgress = true
+      document.body.setAttribute('data-game-playing', 'true')
+    }
+
+    // Background validation - check if user can actually play
+    const validatePlayLimit = async () => {
+      try {
+        const response = await fetch('/api/check-play-limit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user?.id,
+            gameKey: 'guess'
+          })
         })
-      })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        if (response.status === 403) {
-          if (errorData.action === 'rejected_limit') {
-            setPlayLimitExceeded(true)
-            setGameState('limit_exceeded')
-            return
+        if (!response.ok) {
+          const errorData = await response.json()
+          if (response.status === 403) {
+            if (errorData.action === 'rejected_limit') {
+              setPlayLimitExceeded(true)
+              setGameState('limit_exceeded')
+              // Reset game progress flags
+              gameInProgressRef.current = false
+              if (typeof window !== 'undefined') {
+                window.gameInProgress = false
+                document.body.removeAttribute('data-game-playing')
+              }
+              return
+            }
           }
+          throw new Error('Failed to validate play limit')
         }
-        throw new Error('Failed to validate play limit')
-      }
 
-      const data = await response.json()
-      if (!data.canPlay) {
+        const data = await response.json()
+        if (!data.canPlay) {
+          setPlayLimitExceeded(true)
+          setGameState('limit_exceeded')
+          // Reset game progress flags
+          gameInProgressRef.current = false
+          if (typeof window !== 'undefined') {
+            window.gameInProgress = false
+            document.body.removeAttribute('data-game-playing')
+          }
+          return
+        }
+        // Validation passed - game continues normally
+      } catch (error) {
+        // If validation fails, block the game
         setPlayLimitExceeded(true)
         setGameState('limit_exceeded')
-        return
+        // Reset game progress flags
+        gameInProgressRef.current = false
+        if (typeof window !== 'undefined') {
+          window.gameInProgress = false
+          document.body.removeAttribute('data-game-playing')
+        }
       }
-
-      // If validation passes, start the game
-      setGameState('playing')
-      questionStartTimeRef.current = Date.now() // Start timing first question
-      
-      // Set game in progress flag to prevent refreshes
-      gameInProgressRef.current = true
-      
-      // Set global flag to prevent page refreshes during gameplay
-      if (typeof window !== 'undefined') {
-        window.gameInProgress = true
-        document.body.setAttribute('data-game-playing', 'true')
-      }
-    } catch (error) {
-      // BLOCK the game if validation fails - don't allow fallback
-      setPlayLimitExceeded(true)
-      setGameState('limit_exceeded')
     }
+
+    // Run validation in background
+    validatePlayLimit()
   }, [user?.id])
 
   const nextQuestion = useCallback(() => {
