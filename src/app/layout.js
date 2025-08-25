@@ -22,9 +22,9 @@ export const metadata = {
     description: "Experience the thrill of ganesh chaturthi with our interactive challenges. Test your skills, compete with friends, and discover amazing prizes!",
     images: [
       {
-        url: '/g1.png',
+        url: '/ganesha.png',
         width: 1200,
-        height: 800,
+        height: 630,
         alt: 'Unprofessional Players - Ganesh Chaturthi Logo',
       },
     ],
