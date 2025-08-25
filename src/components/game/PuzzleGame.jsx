@@ -543,13 +543,15 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         <div className="space-y-4">
           <h1 className="text-4xl font-bold text-white">{PUZZLE_CONFIG.messages.solved.title}</h1>
           
-          {/* Show the completed image clearly */}
+          {/* Show the completed image clearly - properly fitted within green border */}
           <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20 max-w-sm mx-auto">
-            <img
-              src={imageSrc}
-              alt="Completed Puzzle"
-              className="w-full h-32 md:h-36 object-cover rounded-xl shadow-lg border-4 border-green-500"
-            />
+            <div className="w-full h-64 md:h-80 border-4 border-green-500 rounded-xl shadow-lg overflow-hidden">
+              <img
+                src={imageSrc}
+                alt="Completed Puzzle"
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
           
           <div className="bg-green-500/20 text-green-300 p-4 rounded-2xl border border-green-500/30 max-w-sm mx-auto">
