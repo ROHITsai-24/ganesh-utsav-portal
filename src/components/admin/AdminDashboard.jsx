@@ -4,9 +4,13 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { ChevronsUpDown, Check } from 'lucide-react'
 import UpdatesManager from './UpdatesManager'
 import GameSettingsManager from './GameSettingsManager'
 import { isPhoneEmail, extractPhoneFromEmail } from '@/components/auth/AuthForm'
+import { cn } from '@/lib/utils'
 
 // Configuration objects for dynamic content
 const DASHBOARD_CONFIG = {
@@ -44,6 +48,84 @@ const TABLE_CONFIG = {
   }
 }
 
+// Custom hook for debouncing
+const useDebounce = (value, delay) => {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debounced;
+}
+
+// Search Combobox Component
+const FilterCombobox = ({ value, onChange, options, placeholder = "Select option", className = "" }) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
+
+  const filteredOptions = useMemo(() => {
+    if (!debouncedSearch) return options;
+    return options.filter(option =>
+      String(option).toLowerCase().includes(debouncedSearch.toLowerCase())
+    );
+  }, [options, debouncedSearch]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn("w-full justify-between", className)}
+        >
+          {value
+            ? options.find((option) => option === value) || value
+            : placeholder}
+          <ChevronsUpDown className="opacity-50 ml-2 h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0">
+        <Command>
+          <CommandInput
+            value={search}
+            onValueChange={setSearch}
+            placeholder={`Search ${placeholder.toLowerCase()}...`}
+            className="h-9"
+          />
+          <CommandList>
+            {filteredOptions.length === 0 ? (
+              <CommandEmpty>No options found.</CommandEmpty>
+            ) : (
+              <CommandGroup>
+                {filteredOptions.map((option) => (
+                  <CommandItem
+                    key={option}
+                    value={option}
+                    onSelect={(currentValue) => {
+                      onChange(currentValue === value ? "" : currentValue);
+                      setOpen(false);
+                    }}
+                  >
+                    {option}
+                    <Check
+                      className={cn(
+                        "ml-auto h-4 w-4",
+                        value === option ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 // Custom hook for admin data
 const useAdminData = () => {
   const [adminEmail, setAdminEmail] = useState('')
@@ -51,6 +133,50 @@ const useAdminData = () => {
   const [rawScores, setRawScores] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  
+  // Search states
+  const [userSearch, setUserSearch] = useState('')
+  const [guessSearch, setGuessSearch] = useState('')
+  const [puzzleSearch, setPuzzleSearch] = useState('')
+
+  // Debounced search values
+  const debouncedUserSearch = useDebounce(userSearch, 300)
+  const debouncedGuessSearch = useDebounce(guessSearch, 300)
+  const debouncedPuzzleSearch = useDebounce(puzzleSearch, 300)
+
+  // Filtered data based on search
+  const filteredUsers = useMemo(() => {
+    if (!debouncedUserSearch) return rows;
+    return rows.filter(user => 
+      user.username?.toLowerCase().includes(debouncedUserSearch.toLowerCase()) ||
+      user.email?.toLowerCase().includes(debouncedUserSearch.toLowerCase()) ||
+      user.readableId?.toString().includes(debouncedUserSearch)
+    );
+  }, [rows, debouncedUserSearch]);
+
+  const filteredGuessScores = useMemo(() => {
+    if (!debouncedGuessSearch) return rawScores.filter(s => s.game_key === 'guess');
+    return rawScores.filter(s => 
+      s.game_key === 'guess' && (
+        s.user_username?.toLowerCase().includes(debouncedGuessSearch.toLowerCase()) ||
+        s.user_email?.toLowerCase().includes(debouncedGuessSearch.toLowerCase()) ||
+        s.user_readable_id?.toString().includes(debouncedGuessSearch) ||
+        s.score?.toString().includes(debouncedGuessSearch)
+      )
+    );
+  }, [rawScores, debouncedGuessSearch]);
+
+  const filteredPuzzleScores = useMemo(() => {
+    if (!debouncedPuzzleSearch) return rawScores.filter(s => s.game_key === 'puzzle');
+    return rawScores.filter(s => 
+      s.game_key === 'puzzle' && (
+        s.user_username?.toLowerCase().includes(debouncedPuzzleSearch.toLowerCase()) ||
+        s.user_email?.toLowerCase().includes(debouncedPuzzleSearch.toLowerCase()) ||
+        s.user_readable_id?.toString().includes(debouncedPuzzleSearch) ||
+        s.score?.toString().includes(debouncedPuzzleSearch)
+      )
+    );
+  }, [rawScores, debouncedPuzzleSearch]);
 
   const loadData = useCallback(async () => {
     try {
@@ -208,7 +334,16 @@ const useAdminData = () => {
     deleteGameResult, 
     deleteAllGameResults,
     deleteUser,
-    deleteAllUsers
+    deleteAllUsers,
+    userSearch,
+    setUserSearch,
+    guessSearch,
+    setGuessSearch,
+    puzzleSearch,
+    setPuzzleSearch,
+    filteredUsers,
+    filteredGuessScores,
+    filteredPuzzleScores
   }
 }
 
@@ -258,9 +393,21 @@ const DataTable = ({ headers, children, emptyMessage, className = '' }) => (
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b">
-            {headers.map((header, index) => (
-              <th key={index} className="py-2 pr-4 font-medium text-gray-700">{header}</th>
-            ))}
+            {headers.map((header, index) => {
+              // Set specific column widths for better layout - mobile responsive
+              let colClass = "py-2 pr-2 md:pr-4 font-medium text-gray-700"
+              if (index === 0) colClass += " w-16 md:w-20" // User ID column - wider on mobile
+              else if (index === 1) colClass += " w-32 md:w-40" // Email/Phone column - much wider on mobile
+              else if (index === 2) colClass += " w-24 md:w-32" // Username column - wider on mobile
+              else if (index === 3) colClass += " w-20 md:w-24" // Games Played column
+              else if (index === 4) colClass += " w-20 md:w-24" // Total Points column
+              else if (index === 5) colClass += " w-32 md:w-40" // Last Played column - wider on mobile
+              else if (index === 6) colClass += " w-20 md:w-20" // Actions column
+              
+              return (
+                <th key={index} className={colClass}>{header}</th>
+              )
+            })}
           </tr>
         </thead>
         <tbody>
@@ -297,21 +444,27 @@ const UsersTable = ({ rows, onDelete }) => {
 
     return (
       <tr key={r.userId} className="border-b hover:bg-gray-50">
-        <td className="py-2 pr-4">
+        <td className="py-2 pr-2 md:pr-4 w-16 md:w-20">
           <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
             {r.readableId ? `#${r.readableId}` : '-'}
           </span>
         </td>
-        <td className="py-2 pr-4 break-all">
-          {userDisplay}
+        <td className="py-2 pr-2 md:pr-4 w-32 md:w-40 break-words min-w-0">
+          <div className="truncate" title={userDisplay}>
+            {userDisplay}
+          </div>
         </td>
-        <td className="py-2 pr-4">{r.username || '-'}</td>
-        <td className="py-2 pr-4">{r.gamesPlayed}</td>
-        <td className="py-2 pr-4">{r.totalScore}</td>
-        <td className="py-2 pr-4">
+        <td className="py-2 pr-2 md:pr-4 w-24 md:w-32 break-words min-w-0">
+          <div className="truncate" title={r.username || '-'}>
+            {r.username || '-'}
+          </div>
+        </td>
+        <td className="py-2 pr-2 md:pr-4 w-20 md:w-24">{r.gamesPlayed}</td>
+        <td className="py-2 pr-2 md:pr-4 w-20 md:w-24">{r.totalScore}</td>
+        <td className="py-2 pr-2 md:pr-4 w-32 md:w-40 text-xs">
           {r.lastPlayed ? new Date(r.lastPlayed).toLocaleString() : '-'}
         </td>
-        <td className="py-2 pr-4">
+        <td className="py-2 pr-2 md:pr-4 w-20">
           <Button
             variant="destructive"
             size="sm"
@@ -355,34 +508,36 @@ const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showT
 
     return (
       <tr key={row.id || idx} className="border-b hover:bg-gray-50">
-        <td className="py-2 pr-4">{idx + 1}</td>
-        <td className="py-2 pr-4">
+        <td className="py-2 pr-4 w-12">{idx + 1}</td>
+        <td className="py-2 pr-4 w-20">
           <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
             {userId !== '-' ? `#${userId}` : '-'}
           </span>
         </td>
-        <td className="py-2 pr-4 break-all">
-          {userDisplay}
+        <td className="py-2 pr-4 w-32 break-words min-w-0">
+          <div className="truncate" title={userDisplay}>
+            {userDisplay}
+          </div>
         </td>
-        <td className="py-2 pr-4 font-semibold">{row.score}</td>
+        <td className="py-2 pr-4 w-16 font-semibold">{row.score}</td>
         {showMovesTime && (
-          <td className="py-2 pr-4">
+          <td className="py-2 pr-4 w-24">
             <span className="font-mono text-sm">
               {row.moves ?? '-'} / {row.time_taken_seconds ?? '-'}s
             </span>
           </td>
         )}
         {showTime && (
-          <td className="py-2 pr-4">
+          <td className="py-2 pr-4 w-24">
             <span className="font-mono text-sm">
               {row.time_taken_seconds ? `${row.time_taken_seconds}s` : '-'}
             </span>
           </td>
         )}
-        <td className="py-2 pr-4 text-xs">
+        <td className="py-2 pr-4 w-32 text-xs">
           {row.created_at ? new Date(row.created_at).toLocaleString() : '-'}
         </td>
-        <td className="py-2 pr-4">
+        <td className="py-2 pr-4 w-20">
           <Button
             variant="destructive"
             size="sm"
@@ -397,7 +552,7 @@ const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showT
   })
 }
 
-const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
+const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValue, onSearchChange, searchPlaceholder }) => {
   const leaderboard = useMemo(() => {
     const filteredScores = rawScores.filter(s => s.game_key === gameKey)
     
@@ -461,30 +616,56 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll }) => {
             <CardTitle className="text-lg sm:text-xl">{gameConfig.title}</CardTitle>
             <CardDescription className="text-sm">{gameConfig.description}</CardDescription>
           </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteAll}
-            className="bg-red-700 hover:bg-red-800 text-white border-red-800 text-xs px-3 py-1"
-            title={`Delete all ${gameKey} game results`}
-          >
-            🗑️ Delete All
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <input
+                type="text"
+                placeholder={searchPlaceholder}
+                value={searchValue}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {searchValue && (
+                <button
+                  onClick={() => onSearchChange('')}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteAll}
+              className="bg-red-700 hover:bg-red-800 text-white border-red-800 text-xs px-3 py-1"
+              title={`Delete all ${gameKey} game results`}
+            >
+              🗑️ Delete All
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <DataTable 
-            headers={
-              showMovesTime 
-                ? TABLE_CONFIG.leaderboard.headers 
-                : showTime 
-                  ? ['#', 'User ID', 'User', 'Score', 'Time', 'When', 'Actions']
-                  : ['#', 'User ID', 'User', 'Score', 'When', 'Actions']
-            }
-          >
-            <LeaderboardTable gameKey={gameKey} leaderboard={leaderboard} onDelete={onDelete} showMovesTime={showMovesTime} showTime={showTime} />
-          </DataTable>
+          {searchValue && (
+            <div className="mb-3 text-sm text-gray-600">
+              Found {leaderboard.length} result{leaderboard.length !== 1 ? 's' : ''} matching "{searchValue}"
+            </div>
+          )}
+          <div className="max-h-96 overflow-y-auto admin-table-scrollbar border border-gray-200 rounded-lg p-1 shadow-sm">
+            <DataTable 
+              headers={
+                showMovesTime 
+                  ? TABLE_CONFIG.leaderboard.headers 
+                  : showTime 
+                    ? ['#', 'User ID', 'User', 'Score', 'Time', 'When', 'Actions']
+                    : ['#', 'User ID', 'User', 'Score', 'When', 'Actions']
+              }
+            >
+              <LeaderboardTable gameKey={gameKey} leaderboard={leaderboard} onDelete={onDelete} showMovesTime={showMovesTime} showTime={showTime} />
+            </DataTable>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -502,7 +683,16 @@ export default function AdminDashboard() {
     deleteGameResult, 
     deleteAllGameResults,
     deleteUser,
-    deleteAllUsers
+    deleteAllUsers,
+    userSearch,
+    setUserSearch,
+    guessSearch,
+    setGuessSearch,
+    puzzleSearch,
+    setPuzzleSearch,
+    filteredUsers,
+    filteredGuessScores,
+    filteredPuzzleScores
   } = useAdminData()
   const { signOut } = useAuth()
 
@@ -551,25 +741,53 @@ export default function AdminDashboard() {
                 <CardTitle className="text-lg sm:text-xl">Users Overview</CardTitle>
                 <CardDescription className="text-sm">All users with games played and total points</CardDescription>
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => {
-                  if (window.confirm(`Are you sure you want to delete ALL users? This will also delete all their game results. This action cannot be undone.`)) {
-                    deleteAllUsers()
-                  }
-                }}
-                className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1"
-              >
-                🗑️ Delete All Users
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    placeholder="Search users by name, email, or ID..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  {userSearch && (
+                    <button
+                      onClick={() => setUserSearch('')}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to delete ALL users? This will also delete all their game results. This action cannot be undone.`)) {
+                      deleteAllUsers()
+                    }
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-2 w-full sm:w-auto"
+                >
+                  🗑️ Delete All Users
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <DataTable headers={TABLE_CONFIG.users.headers}>
-                <UsersTable rows={rows} onDelete={deleteUser} />
-              </DataTable>
+              {userSearch && (
+                <div className="mb-3 text-sm text-gray-600">
+                  Found {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} matching "{userSearch}"
+                </div>
+              )}
+              <div className="max-h-96 overflow-y-auto admin-table-scrollbar border border-gray-200 rounded-lg p-1 shadow-sm">
+                <div className="min-w-[800px] md:min-w-0">
+                  <DataTable headers={TABLE_CONFIG.users.headers}>
+                    <UsersTable rows={filteredUsers} onDelete={deleteUser} />
+                  </DataTable>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -581,15 +799,26 @@ export default function AdminDashboard() {
 
         {/* Per-game leaderboards */}
         <div className="grid grid-cols-1 gap-6 mb-6 sm:mb-8">
-          {Object.values(GAME_CONFIG).map((gameConfig) => (
-            <GameLeaderboard 
-              key={gameConfig.key} 
-              gameKey={gameConfig.key} 
-              rawScores={rawScores} 
-              onDelete={deleteGameResult}
-              onDeleteAll={deleteAllGameResults}
-            />
-          ))}
+          <GameLeaderboard 
+            key="guess"
+            gameKey="guess" 
+            rawScores={filteredGuessScores} 
+            onDelete={deleteGameResult}
+            onDeleteAll={deleteAllGameResults}
+            searchValue={guessSearch}
+            onSearchChange={setGuessSearch}
+            searchPlaceholder="Search guess game results..."
+          />
+          <GameLeaderboard 
+            key="puzzle"
+            gameKey="puzzle" 
+            rawScores={filteredPuzzleScores} 
+            onDelete={deleteGameResult}
+            onDeleteAll={deleteAllGameResults}
+            searchValue={puzzleSearch}
+            onSearchChange={setPuzzleSearch}
+            searchPlaceholder="Search puzzle game results..."
+          />
         </div>
 
         {/* Updates Manager */}

@@ -232,6 +232,39 @@ html {
   background: #555;
 }
 
+/* Admin Dashboard Table Scrollbar */
+.admin-table-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-table-scrollbar::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 3px;
+}
+
+.admin-table-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c5cb;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.admin-table-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8b3bc;
+}
+
+/* Firefox scrollbar styling */
+.admin-table-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c5cb #f8f9fa;
+}
+
+/* Admin table scrollable area hover effect */
+.admin-table-scrollbar:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
 /* Mobile-specific fixes */
 @media (max-width: 768px) {
   html, body {
