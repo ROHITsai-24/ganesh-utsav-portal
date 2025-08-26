@@ -26,7 +26,12 @@ export async function POST(request) {
     // Verify user exists before proceeding
     const { data: userExists, error: userError } = await supabase.auth.admin.getUserById(user_id)
     if (userError || !userExists) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      // User was deleted - return special response to trigger redirect
+      return NextResponse.json({ 
+        error: 'User account not found',
+        action: 'user_deleted',
+        redirect: 'signup'
+      }, { status: 401 })
     }
 
     // Get game key from game_id

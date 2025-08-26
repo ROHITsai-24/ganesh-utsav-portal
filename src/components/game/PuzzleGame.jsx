@@ -105,6 +105,17 @@ function areAdjacent(index1, index2, gridSize) {
          (Math.abs(col1 - col2) === 1 && row1 === row2)
 }
 
+// Utility function to handle deleted users
+const handleDeletedUser = () => {
+  alert('Your account was deleted. Please sign up again to continue playing.')
+  // Clear session and redirect
+  if (typeof window !== 'undefined') {
+    localStorage.clear()
+    sessionStorage.clear()
+    window.location.href = '/games?showGames=true'
+  }
+}
+
 export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage, onScoreSaved = () => {} }) {
   const [tiles, setTiles] = useState(() => {
     // Initialize with shuffled tiles on first render
@@ -405,6 +416,9 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
             }
           } else if (response.status === 409) {
             // Score not better than existing - not saved
+          } else if (response.status === 401 && result.action === 'user_deleted') {
+            // User was deleted - redirect to signup
+            handleDeletedUser()
           } else {
             // Other error
           }
@@ -469,12 +483,42 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
 
   // Initialize game on mount - removed to prevent refresh issues during gameplay
 
+  // Timer effect with screen sleep detection
   useEffect(() => {
+    let isPaused = false
+    let pauseStartTime = null
+    let totalPausedTime = 0
+    let activeStartTime = gameStartTimeRef.current
+
+    // Screen visibility change handler
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Screen went to sleep - pause timer
+        if (gameState === PUZZLE_CONFIG.states.playing && !isPaused) {
+          isPaused = true
+          pauseStartTime = Date.now()
+        }
+      } else {
+        // Screen woke up - resume timer
+        if (gameState === PUZZLE_CONFIG.states.playing && isPaused) {
+          isPaused = false
+          if (pauseStartTime) {
+            totalPausedTime += Date.now() - pauseStartTime
+            pauseStartTime = null
+          }
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     if (gameState === PUZZLE_CONFIG.states.playing) {
       timerRef.current = setInterval(() => {
-        if (gameStartTimeRef.current) {
-          const exactElapsed = Math.floor((Date.now() - gameStartTimeRef.current) / 1000)
-          setElapsedTime(exactElapsed)
+        if (gameStartTimeRef.current && !isPaused) {
+          // Calculate only active time (excluding sleep time)
+          const currentTime = Date.now()
+          const activeElapsed = Math.floor((currentTime - activeStartTime - totalPausedTime) / 1000)
+          setElapsedTime(activeElapsed)
         }
       }, 1000)
     } else {
@@ -484,7 +528,9 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         timerRef.current = null
       }
     }
+    
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null
@@ -508,7 +554,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
   const GameStats = (
     <div className="flex flex-wrap gap-2 md:gap-4 justify-center items-center mb-6">
       <div className="bg-red-100 text-red-800 px-2 md:px-4 py-1 md:py-2 rounded-full font-semibold text-sm md:text-base">
-        ⏰ {formatTime(elapsedTime)}
+        ⏰ {formatTime(elapsedTime)} {document.hidden && gameState === PUZZLE_CONFIG.states.playing && '(Paused)'}
       </div>
       <div className="bg-blue-100 text-blue-800 px-2 md:px-4 py-1 md:py-2 rounded-full font-semibold text-sm md:text-base">
         Moves: {moves}

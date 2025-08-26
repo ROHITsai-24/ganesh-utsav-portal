@@ -348,6 +348,17 @@ const useTimer = (timeLeft, gameState, onTimeUp) => {
   }, [timeLeft, gameState, onTimeUp])
 }
 
+// Utility function to handle deleted users
+const handleDeletedUser = () => {
+  alert('Your account was deleted. Please sign up again to continue playing.')
+  // Clear session and redirect
+  if (typeof window !== 'undefined') {
+    localStorage.clear()
+    sessionStorage.clear()
+    window.location.href = '/games?showGames=true'
+  }
+}
+
 // Custom hook for score saving (optimized like puzzle game)
 const useScoreSaver = (user, score, currentQuestion, totalTimeRef, onScoreSaved) => {
   const saveScore = useCallback(async () => {
@@ -395,6 +406,9 @@ const useScoreSaver = (user, score, currentQuestion, totalTimeRef, onScoreSaved)
             }
           } else if (response.status === 409) {
             // Score not better than existing - not saved
+          } else if (response.status === 401 && result.action === 'user_deleted') {
+            // User was deleted - redirect to signup
+            handleDeletedUser()
           } else {
             // Other error
           }
