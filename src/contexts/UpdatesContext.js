@@ -151,6 +151,7 @@ export const UpdatesProvider = ({ children }) => {
   const contextValue = useMemo(() => ({
     updates,
     hasUpdates,
+    updatesCount: updates.length,
     loading,
     error,
     fetchUpdates,

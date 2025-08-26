@@ -278,7 +278,7 @@ const useSupabaseAuth = () => {
 }
 
 // Reusable components
-const NavigationItem = ({ href, labelKey, className = '' }) => {
+const NavigationItem = ({ href, labelKey, className = '', updatesCount = 0 }) => {
   const { translations } = useLanguage()
   
   const handleClick = (e) => {
@@ -291,14 +291,24 @@ const NavigationItem = ({ href, labelKey, className = '' }) => {
     }
   }
 
+  const isDailyUpdates = labelKey === 'dailyUpdates'
+  const showBadge = isDailyUpdates && updatesCount > 0
+
   return (
-    <a 
-      href={href} 
-      className={`text-gray-700 hover:text-[#8B4513] transition-colors cursor-pointer ${className}`}
-      onClick={handleClick}
-    >
-      {translations[labelKey]}
-    </a>
+    <div className="relative flex items-center">
+      <a 
+        href={href} 
+        className={`text-gray-700 hover:text-[#8B4513] transition-colors cursor-pointer ${className}`}
+        onClick={handleClick}
+      >
+        {translations[labelKey]}
+      </a>
+      {showBadge && (
+        <div className="ml-2 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+          {updatesCount}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -832,7 +842,7 @@ const GameCard = ({ game, className = '' }) => {
 
 function HomeContent() {
   const { user, loading } = useSupabaseAuth()
-  const { hasUpdates } = useUpdates()
+  const { hasUpdates, updatesCount } = useUpdates()
   const { translations } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(JOURNEY_CONFIG.defaultYear)
@@ -941,7 +951,11 @@ function HomeContent() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {filteredNavigationItems.map((item) => (
-              <NavigationItem key={item.href} {...item} />
+              <NavigationItem 
+                key={item.href} 
+                {...item} 
+                updatesCount={item.labelKey === 'dailyUpdates' ? updatesCount : 0}
+              />
             ))}
             
             <LanguageSelector />
@@ -968,7 +982,12 @@ function HomeContent() {
           <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 shadow-lg">
             <div className="px-4 py-6 space-y-4">
               {filteredNavigationItems.map((item) => (
-                <NavigationItem key={item.href} {...item} className="block py-2" />
+                <NavigationItem 
+                  key={item.href} 
+                  {...item} 
+                  className="block py-2"
+                  updatesCount={item.labelKey === 'dailyUpdates' ? updatesCount : 0}
+                />
               ))}
               
               <div className="pt-4 border-t border-gray-100">
