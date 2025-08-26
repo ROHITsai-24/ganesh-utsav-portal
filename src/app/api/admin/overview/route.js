@@ -47,6 +47,7 @@ export async function GET(request) {
     const { data: results, error: resErr } = await adminClient
       .from('game_results')
       .select('id, user_id, score, details, created_at, games!inner ( id, key, name )')
+      .not('user_id', 'is', null) // Filter out orphaned records with null user_id
     if (resErr) {
       return NextResponse.json({ error: resErr.message }, { status: 500 })
     }

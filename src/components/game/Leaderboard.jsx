@@ -6,11 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 // Configuration object for hardcoded values
 const LEADERBOARD_CONFIG = {
-  limit: 20,
+  limit: null, // Removed limit to show ALL users
   loadingText: 'Loading leaderboard...',
   emptyText: 'No scores yet. Be the first to play!',
   title: '🏆 Leaderboard',
-  description: 'Top players by total score',
+  description: 'All players by total score',
   // Medal colors and styles
   medals: {
     0: { bg: 'bg-yellow-50', border: 'border-yellow-200', badge: 'bg-yellow-400' },
@@ -56,7 +56,7 @@ export default function Leaderboard() {
           games!inner (name, key)
         `)
         .order('created_at', { ascending: false })
-        .limit(LEADERBOARD_CONFIG.limit)
+        // Removed .limit(LEADERBOARD_CONFIG.limit) to show ALL users
 
       if (error) {
         console.error('Supabase query error:', error)

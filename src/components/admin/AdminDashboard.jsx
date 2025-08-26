@@ -28,18 +28,18 @@ const GAME_CONFIG = {
   guess: {
     key: 'guess',
     title: 'Guess Game Leaderboard',
-    description: 'Top 20 by score, then by time (faster is better)'
+    description: 'All users by score, then by time (faster is better)'
   },
   puzzle: {
     key: 'puzzle',
     title: 'Puzzle Game Leaderboard',
-    description: 'Top 20 by score'
+    description: 'All users by score'
   }
 }
 
 const TABLE_CONFIG = {
   users: {
-    headers: ['User ID', 'Email/Phone', 'Username', 'Games Played (All)', 'Total Points (All)', 'Last Played', 'Actions'],
+    headers: ['#', 'User ID', 'Email/Phone', 'Username', 'Games Played (All)', 'Total Points (All)', 'Last Played', 'Actions'],
     emptyMessage: 'No users found'
   },
   leaderboard: {
@@ -146,35 +146,35 @@ const useAdminData = () => {
 
   // Filtered data based on search
   const filteredUsers = useMemo(() => {
-    if (!debouncedUserSearch) return rows;
+    if (!debouncedUserSearch) return rows.filter(user => user.email && user.userId);
     return rows.filter(user => 
-      user.username?.toLowerCase().includes(debouncedUserSearch.toLowerCase()) ||
-      user.email?.toLowerCase().includes(debouncedUserSearch.toLowerCase()) ||
-      user.readableId?.toString().includes(debouncedUserSearch)
+      user.email && 
+      user.userId && 
+      (user.username?.toLowerCase().includes(debouncedUserSearch.toLowerCase()) ||
+       user.email?.toLowerCase().includes(debouncedUserSearch.toLowerCase()) ||
+       user.readableId?.toString().includes(debouncedUserSearch))
     );
   }, [rows, debouncedUserSearch]);
 
   const filteredGuessScores = useMemo(() => {
-    if (!debouncedGuessSearch) return rawScores.filter(s => s.game_key === 'guess');
+    if (!debouncedGuessSearch) return rawScores.filter(s => s.game_key === 'guess' && s.user_id);
     return rawScores.filter(s => 
-      s.game_key === 'guess' && (
-        s.user_username?.toLowerCase().includes(debouncedGuessSearch.toLowerCase()) ||
-        s.user_email?.toLowerCase().includes(debouncedGuessSearch.toLowerCase()) ||
-        s.user_readable_id?.toString().includes(debouncedGuessSearch) ||
-        s.score?.toString().includes(debouncedGuessSearch)
-      )
+      s.game_key === 'guess' && 
+      s.user_id &&
+      (s.user_email?.toLowerCase().includes(debouncedGuessSearch.toLowerCase()) ||
+       s.user_username?.toLowerCase().includes(debouncedGuessSearch.toLowerCase()) ||
+       s.user_readable_id?.toString().includes(debouncedGuessSearch))
     );
   }, [rawScores, debouncedGuessSearch]);
 
   const filteredPuzzleScores = useMemo(() => {
-    if (!debouncedPuzzleSearch) return rawScores.filter(s => s.game_key === 'puzzle');
+    if (!debouncedPuzzleSearch) return rawScores.filter(s => s.game_key === 'puzzle' && s.user_id);
     return rawScores.filter(s => 
-      s.game_key === 'puzzle' && (
-        s.user_username?.toLowerCase().includes(debouncedPuzzleSearch.toLowerCase()) ||
-        s.user_email?.toLowerCase().includes(debouncedPuzzleSearch.toLowerCase()) ||
-        s.user_readable_id?.toString().includes(debouncedPuzzleSearch) ||
-        s.score?.toString().includes(debouncedPuzzleSearch)
-      )
+      s.game_key === 'puzzle' && 
+      s.user_id &&
+      (s.user_email?.toLowerCase().includes(debouncedPuzzleSearch.toLowerCase()) ||
+       s.user_username?.toLowerCase().includes(debouncedPuzzleSearch.toLowerCase()) ||
+       s.user_readable_id?.toString().includes(debouncedPuzzleSearch))
     );
   }, [rawScores, debouncedPuzzleSearch]);
 
@@ -396,13 +396,14 @@ const DataTable = ({ headers, children, emptyMessage, className = '' }) => (
             {headers.map((header, index) => {
               // Set specific column widths for better layout - mobile responsive
               let colClass = "py-2 pr-2 md:pr-4 font-medium text-gray-700"
-              if (index === 0) colClass += " w-16 md:w-20" // User ID column - wider on mobile
-              else if (index === 1) colClass += " w-32 md:w-40" // Email/Phone column - much wider on mobile
-              else if (index === 2) colClass += " w-24 md:w-32" // Username column - wider on mobile
-              else if (index === 3) colClass += " w-20 md:w-24" // Games Played column
-              else if (index === 4) colClass += " w-20 md:w-24" // Total Points column
-              else if (index === 5) colClass += " w-32 md:w-40" // Last Played column - wider on mobile
-              else if (index === 6) colClass += " w-20 md:w-20" // Actions column
+              if (index === 0) colClass += " w-8 md:w-12" // Serial number column
+              else if (index === 1) colClass += " w-16 md:w-20" // User ID column - wider on mobile
+              else if (index === 2) colClass += " w-32 md:w-40" // Email/Phone column - much wider on mobile
+              else if (index === 3) colClass += " w-24 md:w-32" // Username column - wider on mobile
+              else if (index === 4) colClass += " w-20 md:w-24" // Games Played column
+              else if (index === 5) colClass += " w-20 md:w-24" // Total Points column
+              else if (index === 6) colClass += " w-32 md:w-40" // Last Played column - wider on mobile
+              else if (index === 7) colClass += " w-20 md:w-20" // Actions column
               
               return (
                 <th key={index} className={colClass}>{header}</th>
@@ -435,15 +436,18 @@ const UsersTable = ({ rows, onDelete }) => {
     )
   }
 
-  return rows.map((r) => {
+  return rows.map((r, idx) => {
     const userDisplay = r.email ? (
       isPhoneEmail(r.email) ? (
         `📱 +${extractPhoneFromEmail(r.email)}`
       ) : r.email
-    ) : r.username || 'Unknown User'
+    ) : 'Unknown User'
 
     return (
       <tr key={r.userId} className="border-b hover:bg-gray-50">
+        <td className="py-2 pr-2 md:pr-4 w-8 md:w-12 font-semibold text-gray-600">
+          {idx + 1}
+        </td>
         <td className="py-2 pr-2 md:pr-4 w-16 md:w-20">
           <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
             {r.readableId ? `#${r.readableId}` : '-'}
@@ -569,7 +573,7 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValu
           const timeB = b.time_taken_seconds || 0
           return timeA - timeB
         })
-        .slice(0, 20)
+        // Removed .slice(0, 20) to show ALL users
     } else {
       // For puzzle game: sort by score first, then by moves (fewer is better), then by time (faster is better)
       return filteredScores
@@ -588,7 +592,7 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValu
           const timeB = b.time_taken_seconds || 0
           return timeA - timeB // Faster time first
         })
-        .slice(0, 20)
+        // Removed .slice(0, 20) to show ALL users
     }
   }, [rawScores, gameKey])
 

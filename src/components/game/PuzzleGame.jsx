@@ -155,6 +155,12 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
 
   // Memoized function to start playing - instant start with background validation
   const startPlaying = useCallback(() => {
+    // Validate user authentication before starting game
+    if (!user?.id) {
+      alert('Please login to play the game')
+      return
+    }
+    
     // Start game instantly for smooth user experience
     setGameState(PUZZLE_CONFIG.states.playing)
     setElapsedTime(0) // Reset timer when starting
@@ -218,7 +224,7 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
         // Validation passed - game continues normally
       } catch (error) {
         // If validation fails, block the game
-        alert('Unable to validate play limit. Please try again later.')
+        alert('Unable to validate play limit. Please try again.')
         // Reset game progress flags
         gameInProgressRef.current = false
         if (typeof window !== 'undefined') {
@@ -358,6 +364,12 @@ export default function PuzzleGame({ user, imageSrc = PUZZLE_CONFIG.defaultImage
 
   // Memoized function to save score with actual values
   const saveScoreWithValues = useCallback(async (actualMoves, actualTime, onScoreSaved) => {
+    // Validate user authentication before saving
+    if (!user?.id) {
+      console.error('No valid user session - score not saved')
+      return
+    }
+    
     try {
       const gameId = await getGameIdByKey('puzzle')
       if (gameId) {

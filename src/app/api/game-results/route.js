@@ -9,6 +9,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Additional validation: ensure user_id is not null or empty
+    if (!user_id || user_id === 'null' || user_id === '') {
+      return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
+    }
+
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -17,6 +22,12 @@ export async function POST(request) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // Verify user exists before proceeding
+    const { data: userExists, error: userError } = await supabase.auth.admin.getUserById(user_id)
+    if (userError || !userExists) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
     // Get game key from game_id
     const { data: game, error: gameError } = await supabase

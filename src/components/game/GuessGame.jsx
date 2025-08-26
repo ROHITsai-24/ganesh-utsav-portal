@@ -142,6 +142,12 @@ const useGameState = (user) => {
   }, [])
 
   const startGame = useCallback(() => {
+    // Validate user authentication before starting game
+    if (!user?.id) {
+      alert('Please login to play the game')
+      return
+    }
+    
     // Start game instantly for smooth user experience
     setGameState('playing')
     questionStartTimeRef.current = Date.now() // Start timing first question
@@ -345,6 +351,12 @@ const useTimer = (timeLeft, gameState, onTimeUp) => {
 // Custom hook for score saving (optimized like puzzle game)
 const useScoreSaver = (user, score, currentQuestion, totalTimeRef, onScoreSaved) => {
   const saveScore = useCallback(async () => {
+    // Validate user authentication before saving
+    if (!user?.id) {
+      console.error('No valid user session - score not saved')
+      return
+    }
+    
     try {
       const gameId = await getGameIdByKey('guess')
       if (gameId) {
