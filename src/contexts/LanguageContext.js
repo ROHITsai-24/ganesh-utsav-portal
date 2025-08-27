@@ -12,7 +12,7 @@ const TRANSLATIONS = {
     title: 'Unprofessional Players',
     tagline: 'Celebrate Ganesh Chaturthi with Joy and Devotion!',
     description: "We've created this space to honor Lord Ganesha and bring the vibrant energy of the festival right to your screen. Join us in celebrating with a joyful heart and a blessed spirit!",
-    ctaText: 'Guess the Ganesha Idol',
+    ctaText: 'Play Ganesh Puzzle',
     heroImageAlt: 'Lord Ganesha - Watercolor illustration with mandala backdrop',
     
     // Navigation
@@ -28,6 +28,10 @@ const TRANSLATIONS = {
     gameTag: 'Game 01',
     gameCardTitle: 'Guess My Ganesha',
     gameCardDescription: 'A fun festive quiz to test your eye for Bappa\'s idol, price, and height. Play, guess and see who knows Ganesha best!',
+    // Puzzle Game translations
+    puzzleGameTag: 'Game 02',
+    puzzleGameCardTitle: 'Ganesha Puzzle Challenge',
+    puzzleGameCardDescription: 'Participate in our sliding puzzle game featuring beautiful Ganesha idols. Solve the puzzle to win exciting prizes and test your problem-solving skills!',
     playNow: 'Play Now',
     
     // Journey Configuration
@@ -162,7 +166,7 @@ const TRANSLATIONS = {
     title: 'అన్‌ప్రొఫెషనల్ ప్లేయర్స్',
     tagline: 'గణేష్ చతుర్థిని ఆనందం మరియు భక్తితో జరుపుకోండి!',
     description: 'మేము ఈ స్థలాన్ని భగవాన్ గణేషుని గౌరవించడానికి మరియు పండుగ యొక్క శక్తివంతమైన శక్తిని మీ స్క్రీన్ వద్దకు తీసుకురావడానికి సృష్టించాము. ఆనందమైన హృదయంతో మరియు ఆశీర్వదించబడిన ఆత్మతో జరుపుకోవడానికి మమ్మలో చేరండి!',
-    ctaText: 'గణేష్ విగ్రహాన్ని ఊహించండి',
+    ctaText: 'గణేష్ పజిల్ ఆడండి',
     heroImageAlt: 'భగవాన్ గణేష - మండలా నేపథ్యంతో నీటి రంగుల చిత్రం',
     
     // Navigation
@@ -178,6 +182,10 @@ const TRANSLATIONS = {
     gameTag: 'ఆట 01',
     gameCardTitle: 'మా గణేష్ ని ఊహించండి',
     gameCardDescription: 'బప్పా విగ్రహం, ధర మరియు ఎత్తు కోసం మీ కంటి పరీక్ష చేయడానికి ఒక సరదా పండుగ క్విజ్. ఆడండి, ఊహించండి మరియు గణేషుని ఎవరు బాగా తెలుసుకున్నారో చూడండి!',
+    // Puzzle Game translations
+    puzzleGameTag: 'ఆట 02',
+    puzzleGameCardTitle: 'గణేషా పజిల్ సవాలు',
+    puzzleGameCardDescription: 'అందమైన గణేషా విగ్రహాలతో మా స్లైడింగ్ పజిల్ గేమ్‌లో పాల్గొనండి. ఉత్తేజకరమైన బహుమతులను గెలవడానికి మరియు మీ సమస్య పరిష్కార నైపుణ్యాలను పరీక్షించడానికి పజిల్‌ను పరిష్కరించండి!',
     playNow: 'ఇప్పుడు ఆడండి',
     
     // Journey Configuration

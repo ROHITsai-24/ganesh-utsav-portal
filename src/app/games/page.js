@@ -242,8 +242,13 @@ const useMobileMenu = () => {
 // Custom hook for game tabs
 const useGameTabs = () => {
   const [activeTab, setActiveTab] = useState(() => {
-    // Try to get the active tab from localStorage on initial load
+    // Try to get the active tab from URL parameters first, then localStorage
     if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const urlActiveTab = urlParams.get('activeTab')
+      if (urlActiveTab && ['guess', 'puzzle'].includes(urlActiveTab)) {
+        return urlActiveTab
+      }
       return localStorage.getItem('activeGameTab') || 'guess'
     }
     return 'guess'
