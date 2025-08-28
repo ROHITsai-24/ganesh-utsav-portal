@@ -31,7 +31,7 @@ export const metadata = {
         url: '/dailyupdate.png',
         width: 1200,
         height: 630,
-        alt: 'Daily Updates - Unprofessional Players',
+        alt: 'Daily Updates - Unprofessional Player',
       },
     ],
     type: 'website',
