@@ -915,6 +915,36 @@ function HomeContent() {
   const [isSingleImageOpen, setIsSingleImageOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
+  // Handle hash fragment navigation for shared links
+  useEffect(() => {
+    const handleHashNavigation = () => {
+      const hash = window.location.hash
+      if (hash === '#daily-updates') {
+        // Wait for the page to fully load and updates to be available
+        setTimeout(() => {
+          const updatesSection = document.getElementById('daily-updates')
+          if (updatesSection) {
+            updatesSection.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            })
+          }
+        }, 1000) // Give time for updates to load
+      }
+    }
+
+    // Handle initial load
+    handleHashNavigation()
+
+    // Handle hash changes
+    const handleHashChange = () => {
+      handleHashNavigation()
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [hasUpdates]) // Re-run when updates become available
+
   // Memoized handlers
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen(prev => !prev)

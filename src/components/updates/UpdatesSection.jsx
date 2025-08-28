@@ -46,6 +46,110 @@ const UpdateCard = ({ update }) => {
   // Memoized formatted date
   const formattedDate = useMemo(() => formatDate(update.created_at), [update.created_at, formatDate])
 
+  // Share functionality
+  const handleShare = useCallback(async () => {
+    // Ensure proper URL formatting for sharing
+    const baseUrl = window.location.origin + window.location.pathname
+    const shareUrl = `${baseUrl}#daily-updates`
+    
+    // Create a more engaging share text
+    const shareText = update.title 
+      ? `📢 ${update.title}\n\n${update.message}`
+      : `📢 ${update.message}`
+    
+    // Update Open Graph meta tags for better sharing preview
+    const updateOpenGraph = () => {
+      // Update title
+      const titleMeta = document.querySelector('meta[property="og:title"]')
+      if (titleMeta) {
+        titleMeta.setAttribute('content', `Daily Updates - ${update.title || 'Latest Announcements'}`)
+      }
+      
+      // Update description
+      const descMeta = document.querySelector('meta[property="og:description"]')
+      if (descMeta) {
+        const shortMessage = update.message.length > 150 
+          ? update.message.substring(0, 150) + '...' 
+          : update.message
+        descMeta.setAttribute('content', shortMessage)
+      }
+      
+      // Update image to daily updates specific image
+      const imageMeta = document.querySelector('meta[property="og:image"]')
+      if (imageMeta) {
+        imageMeta.setAttribute('content', `${window.location.origin}/dailyupdate.png`)
+      }
+      
+      // Update Twitter image too
+      const twitterImageMeta = document.querySelector('meta[name="twitter:image"]')
+      if (twitterImageMeta) {
+        twitterImageMeta.setAttribute('content', `${window.location.origin}/dailyupdate.png`)
+      }
+    }
+    
+    // Update meta tags for better sharing
+    updateOpenGraph()
+    
+    const shareData = {
+      title: 'Daily Updates - Unprofessional Players',
+      text: shareText,
+      url: shareUrl
+    }
+
+    try {
+      // Try native Web Share API first (works best on mobile)
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData)
+      } else {
+        // Fallback to clipboard copy for desktop
+        const fullShareText = `${shareText}\n\n${shareUrl}`
+        await navigator.clipboard.writeText(fullShareText)
+        
+        // Show success message with better visual feedback
+        const shareButton = document.querySelector(`[data-share-id="${update.id}"]`)
+        if (shareButton) {
+          const originalHTML = shareButton.innerHTML
+          shareButton.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          `
+          shareButton.classList.add('bg-green-50', 'text-green-600')
+          setTimeout(() => {
+            shareButton.innerHTML = originalHTML
+            shareButton.classList.remove('bg-green-50', 'text-green-600')
+          }, 2000)
+        }
+      }
+    } catch (error) {
+      console.error('Error sharing:', error)
+      // Fallback for older browsers or when Web Share API fails
+      try {
+        const fullShareText = `${shareText}\n\n${shareUrl}`
+        await navigator.clipboard.writeText(fullShareText)
+        
+        const shareButton = document.querySelector(`[data-share-id="${update.id}"]`)
+        if (shareButton) {
+          const originalHTML = shareButton.innerHTML
+          shareButton.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          `
+          shareButton.classList.add('bg-green-50', 'text-green-600')
+          setTimeout(() => {
+            shareButton.innerHTML = originalHTML
+            shareButton.classList.remove('bg-green-50', 'text-green-600')
+          }, 2000)
+        }
+      } catch (clipboardError) {
+        console.error('Clipboard fallback failed:', clipboardError)
+        // Last resort: show alert
+        alert('Link copied to clipboard!')
+      }
+    }
+  }, [update.title, update.message, update.id])
+
   return (
     <Card className="bg-white/95 backdrop-blur-sm border-white/30 hover:bg-white/100 transition-all duration-300 group shadow-lg">
       <CardContent className="p-6">
@@ -62,8 +166,21 @@ const UpdateCard = ({ update }) => {
                 {formattedDate}
               </p>
             </div>
-            <div className="text-4xl opacity-60 group-hover:opacity-100 transition-opacity">
-              📢
+            <div className="flex items-center gap-2">
+              <div className="text-4xl opacity-60 group-hover:opacity-100 transition-opacity">
+                📢
+              </div>
+              <button
+                onClick={handleShare}
+                data-share-id={update.id}
+                className="p-2 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 transition-all duration-200 opacity-60 group-hover:opacity-100"
+                title="Share this update"
+                aria-label="Share this update"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+              </button>
             </div>
           </div>
           
