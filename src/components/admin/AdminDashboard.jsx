@@ -131,6 +131,8 @@ const useAdminData = () => {
   const [adminEmail, setAdminEmail] = useState('')
   const [rows, setRows] = useState([])
   const [rawScores, setRawScores] = useState([])
+  const [totalUsers, setTotalUsers] = useState(0)
+  const [totalScores, setTotalScores] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   
@@ -187,7 +189,7 @@ const useAdminData = () => {
       const email = session?.user?.email || ''
       setAdminEmail(email)
 
-      const res = await fetch('/api/admin/overview', {
+      const res = await fetch(`/api/admin/overview?t=${Date.now()}`, {
         headers: {
           'x-admin-email': email || ''
         }
@@ -201,6 +203,8 @@ const useAdminData = () => {
       const payload = await res.json()
       setRows(payload.users || [])
       setRawScores(payload.scores || [])
+      setTotalUsers(payload.totalUsers || 0)
+      setTotalScores(payload.totalScores || 0)
     } catch (e) {
       console.error('Admin data load error:', e)
       setError(e?.message || 'Failed to load admin data')
@@ -328,6 +332,8 @@ const useAdminData = () => {
     adminEmail, 
     rows, 
     rawScores, 
+    totalUsers,
+    totalScores,
     loading, 
     error, 
     reload: loadData, 
@@ -618,7 +624,9 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValu
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div>
             <CardTitle className="text-lg sm:text-xl">{gameConfig.title}</CardTitle>
-            <CardDescription className="text-sm">{gameConfig.description}</CardDescription>
+            <CardDescription className="text-sm">
+              {gameConfig.description} • Total: {rawScores.filter(s => s.game_key === gameKey).length} results
+            </CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <div className="relative w-full sm:w-64">
@@ -681,6 +689,8 @@ export default function AdminDashboard() {
     adminEmail, 
     rows, 
     rawScores, 
+    totalUsers,
+    totalScores,
     loading, 
     error, 
     reload, 
@@ -743,7 +753,9 @@ export default function AdminDashboard() {
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div>
                 <CardTitle className="text-lg sm:text-xl">Users Overview</CardTitle>
-                <CardDescription className="text-sm">All users with games played and total points</CardDescription>
+                <CardDescription className="text-sm">
+                  All users with games played and total points • Total: {totalUsers} users
+                </CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <div className="relative w-full sm:w-64">

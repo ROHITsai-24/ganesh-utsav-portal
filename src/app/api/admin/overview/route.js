@@ -28,13 +28,36 @@ export async function GET(request) {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
-    // Get all users (email, id, metadata)
-    const { data: usersList, error: usersErr } = await adminClient.auth.admin.listUsers()
-    if (usersErr) {
-      return NextResponse.json({ error: usersErr.message }, { status: 500 })
+    // Get all users (email, id, metadata) - handle pagination
+    let allUsers = []
+    let page = 0
+    const perPage = 1000 // Supabase default is 1000
+    
+    while (true) {
+      const { data: usersList, error: usersErr } = await adminClient.auth.admin.listUsers({
+        page: page,
+        perPage: perPage
+      })
+      
+      if (usersErr) {
+        return NextResponse.json({ error: usersErr.message }, { status: 500 })
+      }
+      
+      if (!usersList?.users || usersList.users.length === 0) {
+        break // No more users
+      }
+      
+      allUsers = allUsers.concat(usersList.users)
+      
+      // If we got less than perPage, we've reached the end
+      if (usersList.users.length < perPage) {
+        break
+      }
+      
+      page++
     }
 
-    const flatUsers = (usersList?.users || []).map(u => ({
+    const flatUsers = allUsers.map(u => ({
       id: u.id,
       email: u.email,
       username: u.user_metadata?.username || null,
@@ -103,7 +126,12 @@ export async function GET(request) {
       }
     })
 
-    return NextResponse.json({ users: records, scores: flatScores })
+    return NextResponse.json({ 
+      users: records, 
+      scores: flatScores,
+      totalUsers: records.length,
+      totalScores: flatScores.length
+    })
   } catch (e) {
     return NextResponse.json({ error: e?.message || 'Unknown error' }, { status: 500 })
   }
