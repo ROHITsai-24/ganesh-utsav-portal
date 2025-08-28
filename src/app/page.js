@@ -924,12 +924,36 @@ function HomeContent() {
         setTimeout(() => {
           const updatesSection = document.getElementById('daily-updates')
           if (updatesSection) {
-            updatesSection.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'start' 
-            })
+            // Use a more precise scroll with better timing
+            const elementTop = updatesSection.offsetTop
+            const headerOffset = 80 // Account for any fixed header
+            const offsetPosition = elementTop - headerOffset
+            
+            // Smooth scroll with custom duration
+            const startPosition = window.pageYOffset
+            const distance = offsetPosition - startPosition
+            const duration = 1200 // Increased duration for smoother scroll
+            let start = null
+            
+            const animation = (currentTime) => {
+              if (start === null) start = currentTime
+              const timeElapsed = currentTime - start
+              const run = easeInOutQuad(timeElapsed, startPosition, distance, duration)
+              window.scrollTo(0, run)
+              if (timeElapsed < duration) requestAnimationFrame(animation)
+            }
+            
+            // Easing function for smooth animation
+            const easeInOutQuad = (t, b, c, d) => {
+              t /= d / 2
+              if (t < 1) return c / 2 * t * t + b
+              t--
+              return -c / 2 * (t * (t - 2) - 1) + b
+            }
+            
+            requestAnimationFrame(animation)
           }
-        }, 1000) // Give time for updates to load
+        }, 500) // Reduced delay for faster response
       }
     }
 
