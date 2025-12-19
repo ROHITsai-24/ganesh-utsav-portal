@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase-server'
 
 export async function POST(request) {
   try {
@@ -9,14 +9,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing userId or gameKey' }, { status: 400 })
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = await createClient()
 
     // Get game ID
     const { data: game, error: gameError } = await supabase

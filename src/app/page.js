@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -248,17 +248,6 @@ const useSupabaseAuth = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Missing Supabase environment variables')
-      setLoading(false)
-      return
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()

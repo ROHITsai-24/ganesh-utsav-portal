@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
 
 export async function POST(request) {
   try {
     const { user_id, score, idol_name, user_guess } = await request.json()
 
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('game_scores')
       .insert([
@@ -29,6 +30,7 @@ export async function POST(request) {
 
 export async function GET() {
   try {
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('game_scores')
       .select(`
