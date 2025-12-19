@@ -1187,7 +1187,7 @@ function HomeContent() {
           </p>
 
           {/* Game Card - Updated Design */}
-          <PuzzleGameCard game={GAME_CONFIG.puzzleGame} />
+          <GameCard game={GAME_CONFIG.game} />
         </div>
       </section>
 
