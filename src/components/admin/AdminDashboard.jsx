@@ -9,6 +9,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { ChevronsUpDown, Check } from 'lucide-react'
 import UpdatesManager from './UpdatesManager'
 import GameSettingsManager from './GameSettingsManager'
+import DonationsManager from './DonationsManager'
 import { isPhoneEmail, extractPhoneFromEmail } from '@/components/auth/AuthForm'
 import { cn } from '@/lib/utils'
 
@@ -805,6 +806,19 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Donations */}
+        <Card className="mb-6 sm:mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg sm:text-xl">Donations</CardTitle>
+            <CardDescription className="text-sm">
+              Donation details submitted from the Hero Donation section • Also mirrored to the configured Google Sheet
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DonationsManager adminEmail={adminEmail} />
           </CardContent>
         </Card>
 

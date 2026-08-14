@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import UpdatesSection from '@/components/updates/UpdatesSection'
+import DonationSection from '@/components/donation/DonationSection'
 import { UpdatesProvider, useUpdates } from '@/contexts/UpdatesContext'
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext'
 
@@ -1158,6 +1159,9 @@ function HomeContent() {
           </div>
         </div>
       </section>
+
+      {/* Donation Section */}
+      <DonationSection />
 
       {/* Ganpati Games Section */}
       <section id="games" className="px-4 py-16 md:py-24 md:px-8 lg:px-16 bg-gray-50">
