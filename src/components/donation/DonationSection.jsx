@@ -122,13 +122,17 @@ export default function DonationSection() {
             <div className="mb-6 flex flex-col items-center">
               {qrImageSrc ? (
                 <>
-                  <div className="rounded-2xl bg-white p-3 shadow-lg">
+                  <div className="rounded-2xl bg-white p-2 shadow-lg">
+                    {/* Fixed width with automatic height: the card hugs the QR
+                        whatever its shape, so a portrait QR exported from a
+                        payment app leaves no empty band beside it, and a square
+                        generated QR still renders exactly as before. */}
                     <img
                       key={qrImageSrc}
                       src={qrImageSrc}
                       alt={translations.donationScanInstruction}
                       onError={handleQrError}
-                      className="h-48 w-48 object-contain sm:h-56 sm:w-56"
+                      className="block h-auto w-48 rounded-xl sm:w-56"
                     />
                   </div>
                   <p className="mt-3 text-center text-sm text-white/80">
