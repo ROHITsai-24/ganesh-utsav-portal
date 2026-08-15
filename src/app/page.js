@@ -6,7 +6,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import UpdatesSection from '@/components/updates/UpdatesSection'
-import DonationSection from '@/components/donation/DonationSection'
+import SiteHeader from '@/components/layout/SiteHeader'
+import SiteFooter from '@/components/layout/SiteFooter'
+import CTAButton from '@/components/common/CTAButton'
 import { UpdatesProvider, useUpdates } from '@/contexts/UpdatesContext'
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext'
 
@@ -16,13 +18,6 @@ import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext'
 const SITE_CONFIG = {
   heroImage: '/ganesha.png'
 }
-
-const NAVIGATION_ITEMS = [
-  { href: '#about', labelKey: 'about' },
-  { href: '#games', labelKey: 'games' },
-  { href: '#donation', labelKey: 'donation' },
-  { href: '#daily-updates', labelKey: 'dailyUpdates', conditional: true }
-]
 
 const GAME_CONFIG = {
   game: {
@@ -273,68 +268,6 @@ const useSupabaseAuth = () => {
 }
 
 // Reusable components
-const NavigationItem = ({ href, labelKey, className = '', updatesCount = 0 }) => {
-  const { translations } = useLanguage()
-  
-  const handleClick = (e) => {
-    if (href.startsWith('#')) {
-      e.preventDefault()
-      const element = document.querySelector(href)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' })
-      }
-    }
-  }
-
-  const isDailyUpdates = labelKey === 'dailyUpdates'
-  const showBadge = isDailyUpdates && updatesCount > 0
-
-  return (
-    <div className="relative flex items-center">
-      <a 
-        href={href} 
-        className={`text-gray-700 hover:text-[#8B4513] transition-colors cursor-pointer ${className}`}
-        onClick={handleClick}
-      >
-        {translations[labelKey]}
-      </a>
-      {showBadge && (
-        <div className="ml-2 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
-          {updatesCount}
-        </div>
-      )}
-    </div>
-  )
-}
-
-const LanguageSelector = ({ className = '' }) => {
-  const { language, toggleLanguage, translations } = useLanguage()
-  
-  return (
-    <button 
-      onClick={toggleLanguage}
-      className={`flex items-center space-x-2 font-bold cursor-pointer ${className}`}
-    >
-      <span className={language === 'en' ? 'text-[#8B4513]' : 'text-[#8B4513]/50'}>
-        English
-      </span>
-      <span className="text-gray-700">|</span>
-      <span className={language === 'te' ? 'text-[#8B4513]' : 'text-[#8B4513]/50'}>
-        తెలుగు
-      </span>
-    </button>
-  )
-}
-
-const CTAButton = ({ children, className = '', ...props }) => (
-  <Button 
-    className={`bg-[#8B4513] hover:bg-[#A0522D] text-white px-6 py-3 rounded-full ${className}`}
-    {...props}
-  >
-    {children}
-  </Button>
-)
-
 const SectionTag = ({ children, className = '' }) => (
   <div className={`inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium ${className}`}>
     {children}
@@ -896,9 +829,8 @@ const PuzzleGameCard = ({ game, className = '' }) => {
 
 function HomeContent() {
   const { user, loading } = useSupabaseAuth()
-  const { hasUpdates, updatesCount } = useUpdates()
+  const { hasUpdates } = useUpdates()
   const { translations } = useLanguage()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(JOURNEY_CONFIG.defaultYear)
   const [galleryImages, setGalleryImages] = useState([])
   const [isGalleryGridOpen, setIsGalleryGridOpen] = useState(false)
@@ -960,10 +892,6 @@ function HomeContent() {
   }, [hasUpdates]) // Re-run when updates become available
 
   // Memoized handlers
-  const toggleMobileMenu = useCallback(() => {
-    setMobileMenuOpen(prev => !prev)
-  }, [])
-
   const handleYearSelect = useCallback((year) => {
     setSelectedYear(year)
   }, [])
@@ -1015,16 +943,6 @@ function HomeContent() {
     return JOURNEY_CONFIG.yearContent[selectedYear] || JOURNEY_CONFIG.yearContent[JOURNEY_CONFIG.defaultYear]
   }, [selectedYear])
 
-  // Filter navigation items based on conditions (e.g., updates availability)
-  const filteredNavigationItems = useMemo(() => {
-    return NAVIGATION_ITEMS.filter(item => {
-      if (item.conditional) {
-        return hasUpdates
-      }
-      return true
-    })
-  }, [hasUpdates])
-
   // Split memories into two rows for alternating animation
   const { row1Memories, row2Memories } = useMemo(() => {
     const memories = currentYearContent?.memories || []
@@ -1049,66 +967,7 @@ function HomeContent() {
   return (
     <div className="min-h-screen bg-[#FDFCFA]">
       {/* Header/Navigation */}
-      <header className="relative z-50 px-4 py-3 md:py-6 md:px-8 lg:px-16 bg-white/80 backdrop-blur-sm border-b border-gray-100">
-        <nav className="max-w-[85rem] mx-auto flex items-center justify-between">
-          {/* Logo */}
-          <div className="text-2xl font-bold text-[#8B4513]">
-            {translations.title}
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {filteredNavigationItems.map((item) => (
-              <NavigationItem 
-                key={item.href} 
-                {...item} 
-                updatesCount={item.labelKey === 'dailyUpdates' ? updatesCount : 0}
-              />
-            ))}
-            
-            <LanguageSelector />
-            
-            <Link href="/games">
-              <CTAButton>{translations.ctaText}</CTAButton>
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2"
-            onClick={toggleMobileMenu}
-            aria-label="Toggle mobile menu"
-          >
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </nav>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 shadow-lg">
-            <div className="px-4 py-6 space-y-4">
-              {filteredNavigationItems.map((item) => (
-                <NavigationItem 
-                  key={item.href} 
-                  {...item} 
-                  className="block py-2"
-                  updatesCount={item.labelKey === 'dailyUpdates' ? updatesCount : 0}
-                />
-              ))}
-              
-              <div className="pt-4 border-t border-gray-100">
-                <LanguageSelector className="mb-4" />
-                
-                <Link href="/games">
-                  <CTAButton className="w-full">{translations.ctaText}</CTAButton>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </header>
+      <SiteHeader />
 
       {/* Hero Section */}
       <section className="px-4 py-16 md:py-24 lg:py-32 md:px-8 lg:px-12">
@@ -1159,9 +1018,6 @@ function HomeContent() {
           </div>
         </div>
       </section>
-
-      {/* Donation Section */}
-      <DonationSection />
 
       {/* Ganpati Games Section */}
       <section id="games" className="px-4 py-16 md:py-24 md:px-8 lg:px-16 bg-gray-50">
@@ -1273,55 +1129,7 @@ function HomeContent() {
       </section>
 
       {/* Footer */}
-              <footer className="relative bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-gray-800 px-4 py-6 md:py-12 md:px-8 lg:px-16 overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-amber-200 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-40 h-40 bg-orange-200 rounded-full blur-3xl"></div>
-        </div>
-        
-        {/* Subtle dot pattern overlay */}
-        <div className="absolute inset-0 opacity-8">
-          <div className="w-full h-full" style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(245, 101, 101, 0.08) 1px, transparent 0)`,
-            backgroundSize: '30px 30px'
-          }}></div>
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Left - Logo and Copyright */}
-            <div className="space-y-4">
-              <div className="text-2xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 bg-clip-text text-transparent">
-                {translations.title}
-              </div>
-              <p className="text-gray-600">
-                © 2025 {translations.title} - {translations.allRightsReserved}
-              </p>
-            </div>
-
-            {/* Right - Navigation */}
-            <div className="flex flex-wrap gap-6 md:justify-end">
-              {NAVIGATION_ITEMS.map((item) => {
-                // Skip conditional items if they shouldn't be shown
-                if (item.conditional && item.labelKey === 'dailyUpdates' && !hasUpdates) {
-                  return null
-                }
-                
-                return (
-                  <a 
-                    key={item.href} 
-                    href={item.href} 
-                    className="text-gray-600 hover:text-amber-600 transition-colors duration-300"
-                  >
-                    {translations[item.labelKey]}
-                  </a>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
       <GalleryGrid
         isOpen={isGalleryGridOpen}
