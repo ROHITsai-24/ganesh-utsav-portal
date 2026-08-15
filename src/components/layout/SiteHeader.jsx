@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useUpdates } from '@/contexts/UpdatesContext'
 import { NAVIGATION_ITEMS } from '@/lib/navigation'
 import CTAButton from '@/components/common/CTAButton'
+import BrandLogo from '@/components/common/BrandLogo'
 
 // Shared site header. Markup is unchanged from the original home page header,
 // extracted so the home page and the donation page stay identical.
@@ -84,8 +85,13 @@ export default function SiteHeader() {
     <header className="relative z-50 px-4 py-3 md:py-6 md:px-8 lg:px-16 bg-white/80 backdrop-blur-sm border-b border-gray-100">
       <nav className="max-w-[85rem] mx-auto flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="text-2xl font-bold text-[#8B4513]">
-          {translations.title}
+        <Link href="/" className="flex items-center gap-2 md:gap-3 min-w-0">
+          <BrandLogo className="h-8 w-8 md:h-10 md:w-10" />
+          {/* Slightly smaller on mobile so the mark and the name fit together
+              on narrow phones without wrapping. */}
+          <span className="text-xl md:text-2xl font-bold text-[#8B4513] truncate">
+            {translations.title}
+          </span>
         </Link>
 
         {/* Desktop Navigation */}

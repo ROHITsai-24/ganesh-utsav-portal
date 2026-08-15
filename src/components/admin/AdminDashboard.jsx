@@ -10,6 +10,7 @@ import { ChevronsUpDown, Check } from 'lucide-react'
 import UpdatesManager from './UpdatesManager'
 import GameSettingsManager from './GameSettingsManager'
 import DonationsManager from './DonationsManager'
+import BrandLogo from '@/components/common/BrandLogo'
 import { isPhoneEmail, extractPhoneFromEmail } from '@/components/auth/AuthForm'
 import { cn } from '@/lib/utils'
 
@@ -731,9 +732,12 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">{DASHBOARD_CONFIG.title}</h1>
-              <p className="text-sm sm:text-base text-gray-600">Signed in as: {adminEmail}</p>
+            <div className="flex items-center gap-3">
+              <BrandLogo className="h-10 w-10 sm:h-12 sm:w-12" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">{DASHBOARD_CONFIG.title}</h1>
+                <p className="text-sm sm:text-base text-gray-600">Signed in as: {adminEmail}</p>
+              </div>
             </div>
             <Button 
               variant="outline" 

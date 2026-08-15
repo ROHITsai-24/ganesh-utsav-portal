@@ -3,6 +3,7 @@
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useUpdates } from '@/contexts/UpdatesContext'
 import { NAVIGATION_ITEMS } from '@/lib/navigation'
+import BrandLogo from '@/components/common/BrandLogo'
 
 // Shared site footer. Markup is unchanged from the original home page footer,
 // extracted so the home page and the donation page stay identical.
@@ -31,8 +32,11 @@ export default function SiteFooter() {
         <div className="grid md:grid-cols-2 gap-8 items-center">
           {/* Left - Logo and Copyright */}
           <div className="space-y-4">
-            <div className="text-2xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 bg-clip-text text-transparent">
-              {translations.title}
+            <div className="flex items-center gap-3">
+              <BrandLogo className="h-10 w-10" />
+              <div className="text-2xl font-bold bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 bg-clip-text text-transparent">
+                {translations.title}
+              </div>
             </div>
             <p className="text-gray-600">
               © 2025 {translations.title} - {translations.allRightsReserved}
