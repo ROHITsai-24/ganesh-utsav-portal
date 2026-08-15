@@ -16,7 +16,9 @@ export const buildSheetRow = (donation) => ({
   donationOption: DONATION_OPTION_LABELS[donation.status] || donation.status,
   name: donation.name,
   phone: formatPhone(donation.phone),
-  amount: donation.amount,
+  // Sent as a number, not the string Supabase returns for a numeric column, so
+  // the amount column in the Sheet can be summed and sorted.
+  amount: Number(donation.amount),
   paymentDate: donation.payment_date,
   screenshotUrl: donation.screenshot_url || '',
   recordId: donation.id

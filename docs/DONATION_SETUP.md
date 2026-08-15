@@ -67,30 +67,71 @@ needed. If you would rather keep the bucket private, make it private and switch
 
 ## 3. Google Sheet + Apps Script Web App
 
-1. Create a new Google Sheet. Name the first tab **`Donations`**.
+Donations land in **one spreadsheet with two tabs** — a single link to share:
+
+| Tab | Receives | Columns |
+| --- | --- | --- |
+| **Already Paid** | Already Paid submissions | Submitted At, Name, Phone Number, Donation Amount Paid, Payment Date, Payment Screenshot, Record ID |
+| **Planning to Pay** | Planning to Pay submissions | Submitted At, Name, Phone Number, Amount Planned to Pay, Planned Payment Date, Record ID |
+
+Both tabs are created automatically on the first donation of each kind, with the
+header row written and frozen. You do not create them by hand.
+
+1. Create a new Google Sheet. The default `Sheet1` tab can stay or be deleted —
+   it is not used.
 2. **Extensions → Apps Script**, delete the placeholder code, and paste this:
 
 ```javascript
-// Receives donations from the Ganesh Utsav portal and appends them as rows.
-const SHEET_NAME = 'Donations';
+// Receives donations from the Ganesh Utsav portal and files each one into its
+// own tab of THIS spreadsheet. Both tabs live here, so there is one link to
+// share rather than two separate sheets.
 
 // Must match GOOGLE_SHEETS_SHARED_SECRET in your .env.local / Vercel env.
 // Leave as '' to accept any request (not recommended).
 const SHARED_SECRET = 'change-me-to-a-long-random-string';
 
-const HEADERS = [
-  'Submitted At',
-  'Donation Option',
-  'Name',
-  'Phone Number',
-  'Amount',
-  'Payment Date',
-  'Payment Screenshot',
-  'Record ID'
-];
+// Keys must match the donation option names sent by the portal exactly.
+const TABS = {
+  'Already Paid': {
+    name: 'Already Paid',
+    headers: [
+      'Submitted At',
+      'Name',
+      'Phone Number',
+      'Donation Amount Paid',
+      'Payment Date',
+      'Payment Screenshot',
+      'Record ID'
+    ],
+    row: function (d) {
+      return [d.submittedAt, d.name, d.phone, d.amount, d.paymentDate, d.screenshotUrl, d.recordId];
+    }
+  },
+  'Planning to Pay': {
+    name: 'Planning to Pay',
+    // No screenshot column: nothing has been paid yet.
+    headers: [
+      'Submitted At',
+      'Name',
+      'Phone Number',
+      'Amount Planned to Pay',
+      'Planned Payment Date',
+      'Record ID'
+    ],
+    row: function (d) {
+      return [d.submittedAt, d.name, d.phone, d.amount, d.paymentDate, d.recordId];
+    }
+  }
+};
 
 function doPost(e) {
+  // Two people submitting at the same instant would otherwise race for the
+  // same row, so serialise the append.
+  const lock = LockService.getScriptLock();
+
   try {
+    lock.waitLock(20000);
+
     const body = JSON.parse(e.postData.contents);
 
     if (SHARED_SECRET && body.secret !== SHARED_SECRET) {
@@ -102,37 +143,46 @@ function doPost(e) {
       return jsonResponse({ success: false, error: 'Missing donation payload' });
     }
 
-    const sheet = getSheet();
+    const tab = TABS[donation.donationOption];
+    if (!tab) {
+      return jsonResponse({ success: false, error: 'Unknown donation option: ' + donation.donationOption });
+    }
 
-    sheet.appendRow([
-      donation.submittedAt,
-      donation.donationOption,
-      donation.name,
-      donation.phone,
-      donation.amount,
-      donation.paymentDate,
-      donation.screenshotUrl,
-      donation.recordId
-    ]);
+    getSheet(tab).appendRow(tab.row(donation).map(toCellValue));
 
     return jsonResponse({ success: true });
   } catch (error) {
     return jsonResponse({ success: false, error: String(error) });
+  } finally {
+    lock.releaseLock();
   }
 }
 
-function getSheet() {
+// Sheets reads a leading +, =, - or @ as the start of a formula, so a phone
+// number like "+91 78010 13396" would land as #ERROR! (Formula parse error).
+// A leading apostrophe forces the value to be stored as text and is not shown
+// in the cell. Numbers are passed through untouched so the amount column stays
+// summable.
+function toCellValue(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'number') return value;
+
+  const text = String(value);
+  return /^[=+\-@]/.test(text) ? "'" + text : text;
+}
+
+function getSheet(tab) {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = spreadsheet.getSheetByName(SHEET_NAME);
+  let sheet = spreadsheet.getSheetByName(tab.name);
 
   if (!sheet) {
-    sheet = spreadsheet.insertSheet(SHEET_NAME);
+    sheet = spreadsheet.insertSheet(tab.name);
   }
 
-  // Write the header row once, the first time a donation arrives.
+  // Write the header row once, the first time a donation of this kind arrives.
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(HEADERS);
-    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+    sheet.appendRow(tab.headers);
+    sheet.getRange(1, 1, 1, tab.headers.length).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
 
@@ -201,7 +251,8 @@ them**.
    Pay** donation without one.
 3. Check `/admin` → **Donations**: both rows appear, the screenshot link opens,
    and the Sheet column shows ✅.
-4. Check the Google Sheet: both rows are there.
+4. Check the Google Sheet: an **Already Paid** tab and a **Planning to Pay** tab
+   have appeared, each holding its own submission.
 5. Click **Export CSV** and confirm the file downloads.
 
 ### If the Sheet column shows ⚠️

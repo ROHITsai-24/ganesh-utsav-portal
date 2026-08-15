@@ -12,6 +12,7 @@ import { useGameSettings } from '@/contexts/GameSettingsContext'
 import { usePlayLimit } from '@/hooks/usePlayLimit'
 import Link from 'next/link'
 import UserIdDisplay from '@/components/common/UserIdDisplay'
+import BrandLogo from '@/components/common/BrandLogo'
 
 // Custom hook to fetch user's total score
 const useUserScore = (user) => {
@@ -105,7 +106,6 @@ const NAVIGATION_CONFIG = {
 
 const HOMEPAGE_CONFIG = {
   logo: {
-    text: 'UP',
     companyName: 'Unprofessional Players'
   },
   navigation: [
@@ -331,10 +331,12 @@ const BackButton = ({ href, onClick, children, className = '' }) => {
   )
 }
 
-const Logo = ({ text = 'UP', companyName = 'Company' }) => (
+const Logo = ({ companyName = 'Company' }) => (
   <div className="flex items-center space-x-2">
-    <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-400 rounded-lg flex items-center justify-center">
-      <span className="text-white font-bold text-xl">{text}</span>
+    {/* The mark is dark brown and this nav sits on a dark gradient, so it needs
+        a light tile behind it to stay legible. */}
+    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1.5">
+      <BrandLogo className="w-full h-full" />
     </div>
     <span className="text-white font-bold text-xl md:text-2xl">{companyName}</span>
   </div>
@@ -573,7 +575,7 @@ const GameCard = ({ game = {}, onPlay }) => {
 const HomepageNavigation = ({ onToggleMobileMenu, onStartPlaying, onSignOut, user, totalScore, scoreLoading }) => (
   <nav className="relative z-50 px-4 py-4 md:px-8 lg:px-16" style={{ border: 'none' }}>
     <div className="flex items-center justify-between">
-      <Logo text={HOMEPAGE_CONFIG?.logo?.text} companyName={HOMEPAGE_CONFIG?.logo?.companyName} />
+      <Logo companyName={HOMEPAGE_CONFIG?.logo?.companyName} />
       <NavigationLinks links={HOMEPAGE_CONFIG?.navigation} />
       <MobileMenuButton onClick={onToggleMobileMenu} />
 
