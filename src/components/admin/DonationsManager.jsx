@@ -14,8 +14,11 @@ import {
 const DONATIONS_MANAGER_CONFIG = {
   api: {
     donations: '/api/admin/donations',
+    deleteAll: '/api/admin/donations/delete-all',
     export: '/api/admin/donations/export'
   },
+  // The server rejects a delete-all without this exact token.
+  deleteAllToken: 'DELETE_ALL_DONATIONS',
   table: {
     headers: [
       '#',
@@ -34,6 +37,7 @@ const DONATIONS_MANAGER_CONFIG = {
   messages: {
     failedToLoad: 'Failed to load donations',
     failedToDelete: 'Failed to delete donation',
+    failedToDeleteAll: 'Failed to delete all donations',
     failedToExport: 'Failed to export donations',
     confirmDelete: 'Are you sure you want to delete this donation record? This cannot be undone.'
   }
@@ -70,6 +74,7 @@ export default function DonationsManager({ adminEmail }) {
   const [donations, setDonations] = useState([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+  const [deletingAll, setDeletingAll] = useState(false)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
@@ -131,6 +136,45 @@ export default function DonationsManager({ adminEmail }) {
     },
     [adminEmail, loadDonations]
   )
+
+  const handleDeleteAll = useCallback(async () => {
+    // Two steps, matching the other destructive actions in the dashboard: an
+    // initial confirm, then typing the word, so this cannot happen on a misclick.
+    const warning =
+      `⚠️ DANGER: This permanently deletes ALL ${donations.length} donation record` +
+      `${donations.length === 1 ? '' : 's'} and their payment screenshots.\n\n` +
+      'Rows already written to the Google Sheet are NOT removed - delete those in the Sheet ' +
+      'itself.\n\nThis action CANNOT be undone.'
+
+    if (!window.confirm(warning)) return
+    if (window.prompt('Type "delete" to confirm:') !== 'delete') return
+
+    try {
+      setDeletingAll(true)
+      setError('')
+
+      const response = await fetch(DONATIONS_MANAGER_CONFIG.api.deleteAll, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-email': adminEmail
+        },
+        body: JSON.stringify({ confirm: DONATIONS_MANAGER_CONFIG.deleteAllToken })
+      })
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}))
+        throw new Error(body?.error || DONATIONS_MANAGER_CONFIG.messages.failedToDeleteAll)
+      }
+
+      await loadDonations()
+    } catch (deleteAllError) {
+      console.error('Delete all donations error:', deleteAllError)
+      setError(deleteAllError?.message || DONATIONS_MANAGER_CONFIG.messages.failedToDeleteAll)
+    } finally {
+      setDeletingAll(false)
+    }
+  }, [adminEmail, donations.length, loadDonations])
 
   const handleExportCsv = useCallback(async () => {
     try {
@@ -280,6 +324,15 @@ export default function DonationsManager({ adminEmail }) {
               className="bg-green-600 text-sm text-white hover:bg-green-700"
             >
               {exporting ? 'Exporting...' : '⬇ Export CSV'}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAll}
+              disabled={deletingAll || donations.length === 0}
+              className="bg-red-700 text-sm text-white hover:bg-red-800"
+              title="Delete every donation record"
+            >
+              {deletingAll ? 'Deleting...' : '🗑️ Delete All'}
             </Button>
           </div>
         </div>
