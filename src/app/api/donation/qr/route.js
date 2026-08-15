@@ -12,9 +12,11 @@ import { DONATION_PAYMENT_INFO, buildUpiPaymentUri } from '@/lib/donation'
 const QR_OPTIONS = {
   type: 'png',
   width: 640,
-  margin: 2,
+  // A wider quiet zone and pure black on white: some UPI apps and older phone
+  // cameras reject tinted or tightly cropped QR codes outright.
+  margin: 4,
   errorCorrectionLevel: 'M',
-  color: { dark: '#782A0F', light: '#FFFFFF' }
+  color: { dark: '#000000', light: '#FFFFFF' }
 }
 
 export async function GET() {
@@ -36,7 +38,9 @@ export async function GET() {
     return new NextResponse(png, {
       headers: {
         'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=3600, s-maxage=86400'
+        // Not cached: generation takes a few milliseconds, and caching meant a
+        // corrected UPI ID kept serving the old QR until the cache expired.
+        'Cache-Control': 'no-store'
       }
     })
   } catch (error) {
