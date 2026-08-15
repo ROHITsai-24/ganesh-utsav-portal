@@ -148,7 +148,7 @@ function doPost(e) {
       return jsonResponse({ success: false, error: 'Unknown donation option: ' + donation.donationOption });
     }
 
-    getSheet(tab).appendRow(tab.row(donation));
+    getSheet(tab).appendRow(tab.row(donation).map(toCellValue));
 
     return jsonResponse({ success: true });
   } catch (error) {
@@ -156,6 +156,19 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// Sheets reads a leading +, =, - or @ as the start of a formula, so a phone
+// number like "+91 78010 13396" would land as #ERROR! (Formula parse error).
+// A leading apostrophe forces the value to be stored as text and is not shown
+// in the cell. Numbers are passed through untouched so the amount column stays
+// summable.
+function toCellValue(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'number') return value;
+
+  const text = String(value);
+  return /^[=+\-@]/.test(text) ? "'" + text : text;
 }
 
 function getSheet(tab) {
