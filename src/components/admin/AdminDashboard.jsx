@@ -13,7 +13,7 @@ import GameSettingsManager from './GameSettingsManager'
 import DonationsManager from './DonationsManager'
 import BrandLogo from '@/components/common/BrandLogo'
 import YearFilter from './YearFilter'
-import { availableYears, currentYear, matchesYear, YEAR_ALL } from '@/lib/year'
+import { availableYears, currentYear, matchesYear, yearOf, YEAR_ALL } from '@/lib/year'
 import { isPhoneEmail, extractPhoneFromEmail } from '@/components/auth/AuthForm'
 import { cn } from '@/lib/utils'
 
@@ -44,7 +44,9 @@ const GAME_CONFIG = {
 
 const TABLE_CONFIG = {
   users: {
-    headers: ['#', 'User ID', 'Email/Phone', 'Username', 'Games Played (All)', 'Total Points (All)', 'Last Played', 'Actions'],
+    // Joined sits next to Last Played so the two dates read together: which
+    // festival a user signed up for, and whether they are still active.
+    headers: ['#', 'User ID', 'Email/Phone', 'Username', 'Games Played (All)', 'Total Points (All)', 'Joined', 'Last Played', 'Actions'],
     emptyMessage: 'No users found'
   },
   leaderboard: {
@@ -154,12 +156,21 @@ const useAdminData = () => {
   // Filtered data based on search
   const filteredUsers = useMemo(() => {
     if (!debouncedUserSearch) return rows.filter(user => user.email && user.userId);
-    return rows.filter(user => 
-      user.email && 
-      user.userId && 
-      (user.username?.toLowerCase().includes(debouncedUserSearch.toLowerCase()) ||
-       user.email?.toLowerCase().includes(debouncedUserSearch.toLowerCase()) ||
-       user.readableId?.toString().includes(debouncedUserSearch))
+
+    // A bare 4-digit search is treated as a joined-year lookup, so "2025"
+    // lists everyone who signed up that festival rather than matching any
+    // field that happens to contain those digits.
+    const term = debouncedUserSearch.toLowerCase();
+    const isYearSearch = /^\d{4}$/.test(debouncedUserSearch);
+
+    return rows.filter(user =>
+      user.email &&
+      user.userId &&
+      (isYearSearch
+        ? yearOf(user.createdAt) === Number(debouncedUserSearch)
+        : (user.username?.toLowerCase().includes(term) ||
+           user.email?.toLowerCase().includes(term) ||
+           user.readableId?.toString().includes(debouncedUserSearch)))
     );
   }, [rows, debouncedUserSearch]);
 
@@ -413,8 +424,9 @@ const DataTable = ({ headers, children, emptyMessage, className = '' }) => (
               else if (index === 3) colClass += " w-24 md:w-32" // Username column - wider on mobile
               else if (index === 4) colClass += " w-20 md:w-24" // Games Played column
               else if (index === 5) colClass += " w-20 md:w-24" // Total Points column
-              else if (index === 6) colClass += " w-32 md:w-40" // Last Played column - wider on mobile
-              else if (index === 7) colClass += " w-20 md:w-20" // Actions column
+              else if (index === 6) colClass += " w-28 md:w-32" // Joined column
+              else if (index === 7) colClass += " w-32 md:w-40" // Last Played column - wider on mobile
+              else if (index === 8) colClass += " w-20 md:w-20" // Actions column
               
               return (
                 <th key={index} className={colClass}>{header}</th>
@@ -476,6 +488,18 @@ const UsersTable = ({ rows, onDelete }) => {
         </td>
         <td className="py-2 pr-2 md:pr-4 w-20 md:w-24">{r.gamesPlayed}</td>
         <td className="py-2 pr-2 md:pr-4 w-20 md:w-24">{r.totalScore}</td>
+        <td className="py-2 pr-2 md:pr-4 w-28 md:w-32 text-xs">
+          {r.createdAt ? (
+            <>
+              <span className="font-semibold text-gray-700">{new Date(r.createdAt).getFullYear()}</span>
+              <span className="block text-gray-500">
+                {new Date(r.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+              </span>
+            </>
+          ) : (
+            '-'
+          )}
+        </td>
         <td className="py-2 pr-2 md:pr-4 w-32 md:w-40 text-xs">
           {r.lastPlayed ? new Date(r.lastPlayed).toLocaleString() : '-'}
         </td>
@@ -735,6 +759,18 @@ export default function AdminDashboard() {
   // not make years appear and disappear from the filter.
   const scoreYears = useMemo(() => availableYears(rawScores), [rawScores])
 
+  // How many users signed up each festival. Users are accounts rather than
+  // events - someone who joined in 2025 and played again in 2026 belongs to
+  // both - so this is a breakdown rather than a filter that would hide them.
+  const usersByYear = useMemo(() => {
+    const counts = new Map()
+    for (const user of rows) {
+      const year = yearOf(user.createdAt)
+      if (year) counts.set(year, (counts.get(year) || 0) + 1)
+    }
+    return [...counts.entries()].sort((a, b) => b[0] - a[0])
+  }, [rows])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
@@ -794,13 +830,16 @@ export default function AdminDashboard() {
                 <CardTitle className="text-lg sm:text-xl">Users Overview</CardTitle>
                 <CardDescription className="text-sm">
                   All users with games played and total points • Total: {totalUsers} users
+                  {usersByYear.length > 0 && (
+                    <> • Joined: {usersByYear.map(([year, count]) => `${year} (${count})`).join(', ')}</>
+                  )}
                 </CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <div className="relative w-full sm:w-64">
                   <input
                     type="text"
-                    placeholder="Search users by name, email, or ID..."
+                    placeholder="Search by name, email, ID, or joined year..."
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
                     className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -837,7 +876,7 @@ export default function AdminDashboard() {
                 </div>
               )}
               <div className="max-h-96 overflow-y-auto admin-table-scrollbar border border-gray-200 rounded-lg p-1 shadow-sm">
-                <div className="min-w-[800px] md:min-w-0">
+                <div className="min-w-[900px] md:min-w-0">
                   <DataTable headers={TABLE_CONFIG.users.headers}>
                     <UsersTable rows={filteredUsers} onDelete={deleteUser} />
                   </DataTable>
