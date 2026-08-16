@@ -17,6 +17,7 @@ const DONATIONS_MANAGER_CONFIG = {
   api: {
     donations: '/api/admin/donations',
     deleteAll: '/api/admin/donations/delete-all',
+    resync: '/api/admin/donations/resync',
     export: '/api/admin/donations/export'
   },
   // The server rejects a delete-all without this exact token.
@@ -39,6 +40,7 @@ const DONATIONS_MANAGER_CONFIG = {
     failedToLoad: 'Failed to load donations',
     failedToDelete: 'Failed to delete donation',
     failedToDeleteAll: 'Failed to delete all donations',
+    failedToResync: 'Failed to resync donations to the Google Sheet',
     failedToExport: 'Failed to export donations',
     confirmDelete: 'Are you sure you want to delete this donation record? This cannot be undone.'
   }
@@ -76,6 +78,8 @@ export default function DonationsManager({ adminEmail }) {
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [deletingAll, setDeletingAll] = useState(false)
+  const [resyncing, setResyncing] = useState(false)
+  const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
@@ -179,6 +183,43 @@ export default function DonationsManager({ adminEmail }) {
     }
   }, [adminEmail, donations.length, loadDonations])
 
+  const handleResync = useCallback(async () => {
+    try {
+      setResyncing(true)
+      setError('')
+      setNotice('')
+
+      const response = await fetch(DONATIONS_MANAGER_CONFIG.api.resync, {
+        method: 'POST',
+        headers: { 'x-admin-email': adminEmail }
+      })
+
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(result?.error || DONATIONS_MANAGER_CONFIG.messages.failedToResync)
+      }
+
+      // A repeated failure is nearly always a config problem, so show the
+      // reason the sync gave rather than a generic message.
+      if (result.failed > 0) {
+        setError(`${result.message}. Reason: ${result.reason || 'unknown'}`)
+      } else {
+        setNotice(
+          result.remaining > 0
+            ? `${result.message}. ${result.remaining} still queued - run it again.`
+            : result.message
+        )
+      }
+
+      await loadDonations()
+    } catch (resyncError) {
+      console.error('Resync donations error:', resyncError)
+      setError(resyncError?.message || DONATIONS_MANAGER_CONFIG.messages.failedToResync)
+    } finally {
+      setResyncing(false)
+    }
+  }, [adminEmail, loadDonations])
+
   const handleExportCsv = useCallback(async () => {
     try {
       setExporting(true)
@@ -255,6 +296,13 @@ export default function DonationsManager({ adminEmail }) {
 
   const yearLabel = year === YEAR_ALL ? 'all years' : year
 
+  // Counted across every year: the resync endpoint works through all pending
+  // rows, not just the year on screen.
+  const unsyncedCount = useMemo(
+    () => donations.filter((donation) => !donation.synced_to_sheet).length,
+    [donations]
+  )
+
   return (
     <div className="space-y-5">
       {error && (
@@ -267,6 +315,28 @@ export default function DonationsManager({ adminEmail }) {
             className="ml-2 border-red-300 bg-red-100 hover:bg-red-200"
           >
             Retry
+          </Button>
+        </div>
+      )}
+
+      {notice && (
+        <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+          {notice}
+        </div>
+      )}
+
+      {unsyncedCount > 0 && (
+        <div className="flex flex-col gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-sm text-amber-900">
+            ⚠️ {unsyncedCount} donation{unsyncedCount === 1 ? '' : 's'} did not reach the Google
+            Sheet. The records are safe here — retry once the cause is fixed.
+          </span>
+          <Button
+            onClick={handleResync}
+            disabled={resyncing}
+            className="bg-amber-600 text-sm text-white hover:bg-amber-700 sm:flex-shrink-0"
+          >
+            {resyncing ? 'Syncing...' : '↻ Retry Sheet Sync'}
           </Button>
         </div>
       )}
