@@ -1,14 +1,10 @@
-import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import {
   DONATION_ERROR_MESSAGES_EN,
-  DONATION_OPTIONS,
-  DONATION_STORAGE_BUCKET,
   DONATION_TABLE,
   normalizePhone,
-  validateDonation,
-  validateScreenshot
+  validateDonation
 } from '@/lib/donation'
 import { appendDonationToSheet } from '@/lib/google-sheets'
 
@@ -18,7 +14,6 @@ import { appendDonationToSheet } from '@/lib/google-sheets'
 const DONATIONS_CONFIG = {
   errors: {
     invalidSubmission: 'Please correct the highlighted fields.',
-    failedToUpload: 'Could not upload the payment screenshot. Please try again.',
     failedToSave: 'Could not save your donation. Please try again.',
     internalError: 'Something went wrong. Please try again.'
   },
@@ -42,36 +37,6 @@ const toMessages = (errors) =>
     Object.entries(errors).map(([field, key]) => [field, DONATION_ERROR_MESSAGES_EN[key] || key])
   )
 
-const uploadScreenshot = async (file, donationOption) => {
-  if (!file || typeof file.arrayBuffer !== 'function' || file.size === 0) {
-    return { url: null }
-  }
-
-  // Only an Already Paid donation can carry proof of a completed payment.
-  if (donationOption !== DONATION_OPTIONS.alreadyPaid) {
-    return { url: null }
-  }
-
-  const extension = (file.name?.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
-  const objectPath = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}.${extension || 'jpg'}`
-  const bytes = new Uint8Array(await file.arrayBuffer())
-
-  const { error } = await supabase.storage
-    .from(DONATION_STORAGE_BUCKET)
-    .upload(objectPath, bytes, {
-      contentType: file.type || 'image/jpeg',
-      upsert: false
-    })
-
-  if (error) {
-    console.error('Donation screenshot upload error:', error)
-    return { error }
-  }
-
-  const { data } = supabase.storage.from(DONATION_STORAGE_BUCKET).getPublicUrl(objectPath)
-  return { url: data?.publicUrl || null }
-}
-
 export async function POST(request) {
   try {
     const formData = await request.formData()
@@ -88,26 +53,10 @@ export async function POST(request) {
     // than the donor, and a legitimate "today" must not be rejected.
     const { valid, errors } = validateDonation(values, { graceDays: 1 })
 
-    const screenshot = formData.get('screenshot')
-    const screenshotError = validateScreenshot(
-      screenshot && typeof screenshot.arrayBuffer === 'function' && screenshot.size > 0 ? screenshot : null
-    )
-    if (screenshotError) {
-      errors.screenshot = screenshotError
-    }
-
-    if (!valid || screenshotError) {
+    if (!valid) {
       return NextResponse.json(
         { error: DONATIONS_CONFIG.errors.invalidSubmission, fieldErrors: toMessages(errors) },
         { status: DONATIONS_CONFIG.status.badRequest }
-      )
-    }
-
-    const upload = await uploadScreenshot(screenshot, values.donationOption)
-    if (upload.error) {
-      return NextResponse.json(
-        { error: DONATIONS_CONFIG.errors.failedToUpload },
-        { status: DONATIONS_CONFIG.status.internalError }
       )
     }
 
@@ -119,8 +68,7 @@ export async function POST(request) {
           name: String(values.name).trim(),
           phone: normalizePhone(values.phone),
           amount: Number(values.amount),
-          payment_date: values.paymentDate,
-          screenshot_url: upload.url
+          payment_date: values.paymentDate
         }
       ])
       .select()

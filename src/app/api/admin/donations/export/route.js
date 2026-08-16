@@ -12,7 +12,6 @@ const CSV_HEADERS = [
   'Phone Number',
   'Amount',
   'Payment Date',
-  'Payment Screenshot',
   'Synced to Google Sheet',
   'Record ID'
 ]
@@ -37,7 +36,6 @@ const toCsv = (donations) => {
       formatPhone(donation.phone),
       donation.amount,
       donation.payment_date,
-      donation.screenshot_url || '',
       donation.synced_to_sheet ? 'Yes' : 'No',
       donation.id
     ].map(toCsvCell).join(',')
@@ -54,17 +52,27 @@ export async function GET(request) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status })
     }
 
-    const { data, error } = await supabase
-      .from(DONATION_TABLE)
-      .select('*')
-      .order('created_at', { ascending: false })
+    // Optional ?year=2026 so the export matches the year on screen in the
+    // admin panel. Omitted means every year.
+    const yearParam = new URL(request.url).searchParams.get('year')
+    const year = /^\d{4}$/.test(yearParam || '') ? Number(yearParam) : null
+
+    let query = supabase.from(DONATION_TABLE).select('*')
+
+    if (year) {
+      query = query
+        .gte('created_at', `${year}-01-01T00:00:00.000Z`)
+        .lt('created_at', `${year + 1}-01-01T00:00:00.000Z`)
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
       console.error('Donations export error:', error)
       return NextResponse.json({ error: 'Failed to export donations' }, { status: 500 })
     }
 
-    const filename = `donations-${new Date().toISOString().slice(0, 10)}.csv`
+    const filename = `donations-${year || 'all'}-${new Date().toISOString().slice(0, 10)}.csv`
 
     return new NextResponse(toCsv(data || []), {
       headers: {
