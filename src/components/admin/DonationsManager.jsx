@@ -10,6 +10,8 @@ import {
   formatPhone,
   normalizePhone
 } from '@/lib/donation'
+import { availableYears, currentYear, matchesYear, YEAR_ALL } from '@/lib/year'
+import YearFilter from './YearFilter'
 
 const DONATIONS_MANAGER_CONFIG = {
   api: {
@@ -28,7 +30,6 @@ const DONATIONS_MANAGER_CONFIG = {
       'Phone Number',
       'Amount',
       'Payment Date',
-      'Payment Screenshot',
       'Sheet',
       'Actions'
     ],
@@ -78,6 +79,8 @@ export default function DonationsManager({ adminEmail }) {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
+  // Opens on this year's donations; earlier festivals stay one click away.
+  const [year, setYear] = useState(currentYear())
 
   const loadDonations = useCallback(async () => {
     if (!adminEmail) return
@@ -142,9 +145,9 @@ export default function DonationsManager({ adminEmail }) {
     // initial confirm, then typing the word, so this cannot happen on a misclick.
     const warning =
       `⚠️ DANGER: This permanently deletes ALL ${donations.length} donation record` +
-      `${donations.length === 1 ? '' : 's'} and their payment screenshots.\n\n` +
-      'Rows already written to the Google Sheet are NOT removed - delete those in the Sheet ' +
-      'itself.\n\nThis action CANNOT be undone.'
+      `${donations.length === 1 ? '' : 's'}, across EVERY year - not just the year currently ` +
+      'shown.\n\nRows already written to the Google Sheet are NOT removed - delete those in the ' +
+      'Sheet itself.\n\nThis action CANNOT be undone.'
 
     if (!window.confirm(warning)) return
     if (window.prompt('Type "delete" to confirm:') !== 'delete') return
@@ -182,7 +185,9 @@ export default function DonationsManager({ adminEmail }) {
       setError('')
 
       // Fetched rather than linked so the admin header travels with the request.
-      const response = await fetch(DONATIONS_MANAGER_CONFIG.api.export, {
+      // Exports the year currently on screen, not silently everything.
+      const query = year === YEAR_ALL ? '' : `?year=${year}`
+      const response = await fetch(`${DONATIONS_MANAGER_CONFIG.api.export}${query}`, {
         headers: { 'x-admin-email': adminEmail }
       })
 
@@ -195,7 +200,7 @@ export default function DonationsManager({ adminEmail }) {
       const objectUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = objectUrl
-      link.download = `donations-${new Date().toISOString().slice(0, 10)}.csv`
+      link.download = `donations-${year === YEAR_ALL ? 'all' : year}-${new Date().toISOString().slice(0, 10)}.csv`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -206,28 +211,37 @@ export default function DonationsManager({ adminEmail }) {
     } finally {
       setExporting(false)
     }
-  }, [adminEmail])
+  }, [adminEmail, year])
+
+  const years = useMemo(() => availableYears(donations), [donations])
+
+  // Everything below the year filter - totals, table, export - describes the
+  // selected year only.
+  const yearDonations = useMemo(
+    () => donations.filter((donation) => matchesYear(donation, year)),
+    [donations, year]
+  )
 
   const stats = useMemo(() => {
     const sumFor = (status) =>
-      donations
+      yearDonations
         .filter((donation) => donation.status === status)
         .reduce((total, donation) => total + Number(donation.amount || 0), 0)
 
     return {
-      total: donations.length,
-      alreadyPaidCount: donations.filter((d) => d.status === DONATION_OPTIONS.alreadyPaid).length,
+      total: yearDonations.length,
+      alreadyPaidCount: yearDonations.filter((d) => d.status === DONATION_OPTIONS.alreadyPaid).length,
       alreadyPaidAmount: sumFor(DONATION_OPTIONS.alreadyPaid),
-      planningCount: donations.filter((d) => d.status === DONATION_OPTIONS.planningToPay).length,
+      planningCount: yearDonations.filter((d) => d.status === DONATION_OPTIONS.planningToPay).length,
       planningAmount: sumFor(DONATION_OPTIONS.planningToPay)
     }
-  }, [donations])
+  }, [yearDonations])
 
   const visibleDonations = useMemo(() => {
     const term = search.trim().toLowerCase()
     const digits = normalizePhone(search)
 
-    return donations.filter((donation) => {
+    return yearDonations.filter((donation) => {
       if (filter !== 'all' && donation.status !== filter) return false
       if (!term) return true
 
@@ -237,7 +251,9 @@ export default function DonationsManager({ adminEmail }) {
         String(donation.amount).includes(term)
       )
     })
-  }, [donations, search, filter])
+  }, [yearDonations, search, filter])
+
+  const yearLabel = year === YEAR_ALL ? 'all years' : year
 
   return (
     <div className="space-y-5">
@@ -255,12 +271,14 @@ export default function DonationsManager({ adminEmail }) {
         </div>
       )}
 
+      <YearFilter years={years} value={year} onChange={setYear} />
+
       {/* Summary */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard
           label="Total Submissions"
           value={stats.total}
-          sublabel="Across both donation options"
+          sublabel={`Both donation options • ${yearLabel}`}
           accent="border-gray-200 bg-white"
         />
         <StatCard
@@ -320,7 +338,7 @@ export default function DonationsManager({ adminEmail }) {
             </Button>
             <Button
               onClick={handleExportCsv}
-              disabled={exporting || donations.length === 0}
+              disabled={exporting || yearDonations.length === 0}
               className="bg-green-600 text-sm text-white hover:bg-green-700"
             >
               {exporting ? 'Exporting...' : '⬇ Export CSV'}
@@ -365,7 +383,7 @@ export default function DonationsManager({ adminEmail }) {
                   >
                     {search || filter !== 'all'
                       ? 'No donations match this search'
-                      : DONATIONS_MANAGER_CONFIG.table.emptyMessage}
+                      : `${DONATIONS_MANAGER_CONFIG.table.emptyMessage} for ${yearLabel}`}
                   </td>
                 </tr>
               ) : (
@@ -388,20 +406,6 @@ export default function DonationsManager({ adminEmail }) {
                       {formatAmount(donation.amount)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2">{donation.payment_date || '-'}</td>
-                    <td className="px-3 py-2">
-                      {donation.screenshot_url ? (
-                        <a
-                          href={donation.screenshot_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 underline hover:text-blue-800"
-                        >
-                          View
-                        </a>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
                     <td className="px-3 py-2">
                       <span
                         title={

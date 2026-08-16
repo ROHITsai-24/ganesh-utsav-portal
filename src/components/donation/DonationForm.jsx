@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,9 +9,9 @@ import {
   DONATION_LIMITS,
   DONATION_OPTIONS,
   formatAmount,
+  formatLongDate,
   todayISODate,
-  validateDonation,
-  validateScreenshot
+  validateDonation
 } from '@/lib/donation'
 
 const EMPTY_FORM = {
@@ -96,13 +96,10 @@ const DonationOptionCard = ({ value, title, hint, icon, selected, onSelect }) =>
 export default function DonationForm() {
   const { translations } = useLanguage()
   const [formData, setFormData] = useState(EMPTY_FORM)
-  const [screenshot, setScreenshot] = useState(null)
-  const [screenshotPreview, setScreenshotPreview] = useState('')
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
   const [submitted, setSubmitted] = useState(null)
-  const fileInputRef = useRef(null)
 
   const isAlreadyPaid = formData.donationOption === DONATION_OPTIONS.alreadyPaid
   const today = useMemo(() => todayISODate(), [])
@@ -118,50 +115,15 @@ export default function DonationForm() {
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev))
   }, [])
 
-  const clearScreenshot = useCallback(() => {
-    setScreenshot(null)
-    setScreenshotPreview((previous) => {
-      if (previous) URL.revokeObjectURL(previous)
-      return ''
-    })
-    setErrors((prev) => ({ ...prev, screenshot: undefined }))
-    if (fileInputRef.current) fileInputRef.current.value = ''
+  const selectOption = useCallback((option) => {
+    // The date rule flips between the two options - Already Paid cannot be in
+    // the future, Planning to Pay cannot be in the past - so a date chosen
+    // under one option is usually invalid under the other. Clearing it avoids
+    // leaving a value the field's own min/max now forbids, which previously
+    // surfaced as a confusing error on submit.
+    setFormData((prev) => ({ ...prev, donationOption: option, paymentDate: '' }))
+    setErrors((prev) => ({ ...prev, donationOption: undefined, paymentDate: undefined }))
   }, [])
-
-  const selectOption = useCallback(
-    (option) => {
-      setFormData((prev) => ({ ...prev, donationOption: option }))
-      // The date rule flips between the two options, and a screenshot only
-      // belongs to a completed payment — so drop both when switching.
-      setErrors((prev) => ({ ...prev, donationOption: undefined, paymentDate: undefined }))
-      if (option !== DONATION_OPTIONS.alreadyPaid) clearScreenshot()
-    },
-    [clearScreenshot]
-  )
-
-  const handleScreenshotChange = useCallback(
-    (event) => {
-      const file = event.target.files?.[0] || null
-      const errorKey = validateScreenshot(file)
-
-      // Replacing or rejecting a file always releases the previous preview URL.
-      setScreenshotPreview((previous) => {
-        if (previous) URL.revokeObjectURL(previous)
-        return errorKey || !file ? '' : URL.createObjectURL(file)
-      })
-
-      if (errorKey) {
-        setScreenshot(null)
-        setErrors((prev) => ({ ...prev, screenshot: messageFor(errorKey) }))
-        if (fileInputRef.current) fileInputRef.current.value = ''
-        return
-      }
-
-      setScreenshot(file)
-      setErrors((prev) => ({ ...prev, screenshot: undefined }))
-    },
-    [messageFor]
-  )
 
   const handleSubmit = useCallback(
     async (event) => {
@@ -169,14 +131,13 @@ export default function DonationForm() {
       setFormError('')
 
       const { valid, errors: validationErrors } = validateDonation(formData)
-      const screenshotErrorKey = validateScreenshot(screenshot)
 
-      if (!valid || screenshotErrorKey) {
-        const resolved = Object.fromEntries(
-          Object.entries(validationErrors).map(([field, key]) => [field, messageFor(key)])
+      if (!valid) {
+        setErrors(
+          Object.fromEntries(
+            Object.entries(validationErrors).map(([field, key]) => [field, messageFor(key)])
+          )
         )
-        if (screenshotErrorKey) resolved.screenshot = messageFor(screenshotErrorKey)
-        setErrors(resolved)
         return
       }
 
@@ -189,7 +150,6 @@ export default function DonationForm() {
         payload.append('phone', formData.phone.trim())
         payload.append('amount', formData.amount)
         payload.append('paymentDate', formData.paymentDate)
-        if (screenshot) payload.append('screenshot', screenshot)
 
         const response = await fetch('/api/donations', { method: 'POST', body: payload })
         const result = await response.json().catch(() => ({}))
@@ -208,7 +168,6 @@ export default function DonationForm() {
           paymentDate: formData.paymentDate
         })
         setFormData(EMPTY_FORM)
-        clearScreenshot()
         setErrors({})
       } catch (error) {
         console.error('Donation submission error:', error)
@@ -217,7 +176,7 @@ export default function DonationForm() {
         setSubmitting(false)
       }
     },
-    [formData, screenshot, messageFor, translations, clearScreenshot]
+    [formData, messageFor, translations]
   )
 
   // Success state -------------------------------------------------------------
@@ -380,6 +339,9 @@ export default function DonationForm() {
             id="donation-date"
             label={isAlreadyPaid ? translations.donationPaymentDateLabel : translations.donationPlannedDateLabel}
             error={errors.paymentDate}
+            // A native date input shows mm/dd/yyyy or dd/mm/yyyy depending on
+            // the browser locale, so echo the chosen date in words.
+            hint={formatLongDate(formData.paymentDate)}
           >
             <Input
               id="donation-date"
@@ -395,67 +357,6 @@ export default function DonationForm() {
             />
           </FormField>
         </div>
-
-        {/* Payment Screenshot — Already Paid only */}
-        {isAlreadyPaid && (
-          <FormField
-            id="donation-screenshot"
-            label={translations.donationScreenshotLabel}
-            badge={translations.donationOptionalTag}
-            error={errors.screenshot}
-            hint={translations.donationScreenshotHint}
-          >
-            <input
-              ref={fileInputRef}
-              id="donation-screenshot"
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={handleScreenshotChange}
-              className="sr-only"
-            />
-
-            {screenshot ? (
-              <div className="flex items-center gap-3 rounded-md border border-gray-200 bg-gray-50 p-2.5">
-                {screenshotPreview && (
-                  <img
-                    src={screenshotPreview}
-                    alt={translations.donationScreenshotLabel}
-                    className="h-12 w-12 flex-shrink-0 rounded object-cover"
-                  />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-800">{screenshot.name}</p>
-                  <p className="text-xs text-gray-500">{(screenshot.size / 1024).toFixed(0)} KB</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={clearScreenshot}
-                  className="flex-shrink-0 rounded px-2 py-1 text-sm font-medium text-red-600 hover:bg-red-50"
-                >
-                  {translations.donationScreenshotRemove}
-                </button>
-              </div>
-            ) : (
-              <label
-                htmlFor="donation-screenshot"
-                className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-4 text-sm font-medium transition-colors ${
-                  errors.screenshot
-                    ? 'border-red-400 text-red-600 hover:bg-red-50'
-                    : 'border-gray-300 text-gray-600 hover:border-[#8B4513]/50 hover:bg-gray-50'
-                }`}
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3 16.5V19a2 2 0 002 2h14a2 2 0 002-2v-2.5M12 3v13m0-13l-4 4m4-4l4 4"
-                  />
-                </svg>
-                {translations.donationScreenshotChoose}
-              </label>
-            )}
-          </FormField>
-        )}
       </div>
 
       <Button

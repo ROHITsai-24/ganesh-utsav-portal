@@ -23,9 +23,7 @@ export const DONATION_LIMITS = {
   nameMin: 2,
   nameMax: 80,
   amountMin: 1,
-  amountMax: 1000000,
-  screenshotMaxBytes: 5 * 1024 * 1024,
-  screenshotTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic']
+  amountMax: 1000000
 }
 
 // Payment details shown next to the QR code. NEXT_PUBLIC_ so the Hero section
@@ -39,7 +37,6 @@ export const DONATION_PAYMENT_INFO = {
   qrImagePath: '/donation-qr.png'
 }
 
-export const DONATION_STORAGE_BUCKET = 'donation-screenshots'
 export const DONATION_TABLE = 'donations'
 
 // Error keys are resolved to Telugu/English in the UI via the language context,
@@ -57,9 +54,7 @@ export const DONATION_ERROR_MESSAGES_EN = {
   paymentDateRequired: 'Please select the payment date.',
   paymentDateFuture: 'Payment date cannot be in the future.',
   plannedDateRequired: 'Please select the planned payment date.',
-  plannedDatePast: 'Planned payment date cannot be in the past.',
-  screenshotTooLarge: 'Screenshot must be 5 MB or smaller.',
-  screenshotInvalidType: 'Screenshot must be a JPG, PNG or WEBP image.'
+  plannedDatePast: 'Planned payment date cannot be in the past.'
 }
 
 /**
@@ -163,31 +158,6 @@ export const validateDonation = (values, options = {}) => {
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-/** Validates the optional Payment Screenshot. Returns an error key or null. */
-export const validateScreenshot = (file) => {
-  if (!file) return null
-  if (file.size > DONATION_LIMITS.screenshotMaxBytes) return 'screenshotTooLarge'
-
-  const type = String(file.type || '').toLowerCase()
-  if (type && !DONATION_LIMITS.screenshotTypes.includes(type)) {
-    return 'screenshotInvalidType'
-  }
-  return null
-}
-
-/**
- * Recovers the storage object path from a public screenshot URL so the file
- * can be removed alongside its record.
- */
-export const storagePathFromPublicUrl = (publicUrl) => {
-  if (!publicUrl) return null
-  const marker = `/${DONATION_STORAGE_BUCKET}/`
-  const index = publicUrl.indexOf(marker)
-  if (index === -1) return null
-  const path = publicUrl.slice(index + marker.length).split('?')[0]
-  return path ? decodeURIComponent(path) : null
-}
-
 /** Builds the `upi://` payload that a generated donation QR code encodes. */
 export const buildUpiPaymentUri = ({ upiId, payeeName }) => {
   if (!upiId) return null
@@ -200,6 +170,26 @@ export const buildUpiPaymentUri = ({ upiId, payeeName }) => {
   if (payeeName) params.push(`pn=${encodeURIComponent(String(payeeName).trim())}`)
 
   return `upi://pay?${params.join('&')}`
+}
+
+/**
+ * Renders a YYYY-MM-DD date as "15 August 2026".
+ *
+ * A native date input shows mm/dd/yyyy or dd/mm/yyyy depending on the
+ * browser's locale, which is genuinely ambiguous, so the form echoes the
+ * chosen date in words underneath the field.
+ */
+export const formatLongDate = (isoDate) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(isoDate ?? ''))) return ''
+
+  // Parsed as UTC and formatted in UTC so the displayed day always matches the
+  // string the user picked, whatever their timezone.
+  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC'
+  })
 }
 
 export const formatAmount = (amount) => {

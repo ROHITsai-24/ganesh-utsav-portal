@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyAdminAuth } from '@/lib/admin-auth'
-import { DONATION_STORAGE_BUCKET, DONATION_TABLE, storagePathFromPublicUrl } from '@/lib/donation'
+import { DONATION_TABLE } from '@/lib/donation'
 
 // Admin donation records: list them for the Admin panel table and delete a
-// record (with its Payment Screenshot) when needed.
+// record when needed.
 
 const ADMIN_DONATIONS_CONFIG = {
   errors: {
@@ -72,12 +72,6 @@ export async function DELETE(request) {
       )
     }
 
-    const { data: existing } = await supabase
-      .from(DONATION_TABLE)
-      .select('screenshot_url')
-      .eq('id', id)
-      .maybeSingle()
-
     const { error } = await supabase.from(DONATION_TABLE).delete().eq('id', id)
 
     if (error) {
@@ -86,17 +80,6 @@ export async function DELETE(request) {
         { error: ADMIN_DONATIONS_CONFIG.errors.failedToDelete },
         { status: ADMIN_DONATIONS_CONFIG.status.internalError }
       )
-    }
-
-    // Best-effort cleanup: an orphaned screenshot must not fail the delete.
-    const objectPath = storagePathFromPublicUrl(existing?.screenshot_url)
-    if (objectPath) {
-      const { error: storageError } = await supabase.storage
-        .from(DONATION_STORAGE_BUCKET)
-        .remove([objectPath])
-      if (storageError) {
-        console.error('Donation screenshot cleanup error:', storageError)
-      }
     }
 
     return NextResponse.json({ success: true, message: ADMIN_DONATIONS_CONFIG.success.deleted })

@@ -10,7 +10,6 @@ Hero Donation section (form)
         │
         ▼
 POST /api/donations
-        ├──► Supabase Storage  (Payment Screenshot, optional)
         ├──► Supabase table `donations`   ← source of truth, powers Admin panel + CSV
         └──► Google Apps Script Web App   ← appends a row to your Google Sheet
 ```
@@ -34,9 +33,9 @@ create table if not exists public.donations (
   amount numeric(12, 2) not null check (amount > 0),
   -- Payment Date for Already Paid, Planned Payment Date for Planning to Pay
   payment_date date not null,
-  -- Payment Screenshot; only ever set for Already Paid, and optional
-  screenshot_url text,
   synced_to_sheet boolean not null default false,
+  -- The year a donation belongs to is derived from created_at, so each
+  -- festival's donations are filtered apart without a separate column.
   created_at timestamptz not null default now()
 );
 
@@ -49,29 +48,24 @@ create index if not exists donations_created_at_idx
 alter table public.donations enable row level security;
 ```
 
-## 2. Storage bucket (for the Payment Screenshot)
+### Upgrading from an earlier version
 
-**Supabase dashboard → Storage → New bucket**
+The Payment Screenshot was removed. If your table already has the column, it is
+now unused and can be dropped, along with the `donation-screenshots` storage
+bucket (Storage → bucket → Delete). Neither is required — an unused nullable
+column is harmless, so only run this if you want the tidy-up:
 
-| Setting | Value |
-| --- | --- |
-| Name | `donation-screenshots` |
-| Public bucket | **Yes** (the Admin panel links directly to the image) |
-| File size limit | 5 MB |
-| Allowed MIME types | `image/jpeg`, `image/png`, `image/webp` |
+```sql
+alter table public.donations drop column if exists screenshot_url;
+```
 
-Uploads happen server-side with the service role key, so no storage policies are
-needed. If you would rather keep the bucket private, make it private and switch
-`getPublicUrl` to `createSignedUrl` in
-[src/app/api/donations/route.js](../src/app/api/donations/route.js).
-
-## 3. Google Sheet + Apps Script Web App
+## 2. Google Sheet + Apps Script Web App
 
 Donations land in **one spreadsheet with two tabs** — a single link to share:
 
 | Tab | Receives | Columns |
 | --- | --- | --- |
-| **Already Paid** | Already Paid submissions | Submitted At, Name, Phone Number, Donation Amount Paid, Payment Date, Payment Screenshot, Record ID |
+| **Already Paid** | Already Paid submissions | Submitted At, Name, Phone Number, Donation Amount Paid, Payment Date, Record ID |
 | **Planning to Pay** | Planning to Pay submissions | Submitted At, Name, Phone Number, Amount Planned to Pay, Planned Payment Date, Record ID |
 
 Both tabs are created automatically on the first donation of each kind, with the
@@ -100,16 +94,14 @@ const TABS = {
       'Phone Number',
       'Donation Amount Paid',
       'Payment Date',
-      'Payment Screenshot',
       'Record ID'
     ],
     row: function (d) {
-      return [d.submittedAt, d.name, d.phone, d.amount, d.paymentDate, d.screenshotUrl, d.recordId];
+      return [d.submittedAt, d.name, d.phone, d.amount, d.paymentDate, d.recordId];
     }
   },
   'Planning to Pay': {
     name: 'Planning to Pay',
-    // No screenshot column: nothing has been paid yet.
     headers: [
       'Submitted At',
       'Name',
@@ -247,10 +239,9 @@ them**.
 ## 6. Verify
 
 1. `npm run dev`, open the home page, scroll to **Donation**.
-2. Submit an **Already Paid** donation with a screenshot, and a **Planning to
-   Pay** donation without one.
-3. Check `/admin` → **Donations**: both rows appear, the screenshot link opens,
-   and the Sheet column shows ✅.
+2. Submit one **Already Paid** donation and one **Planning to Pay** donation.
+3. Check `/admin` → **Donations**: both rows appear under the current year and
+   the Sheet column shows ✅.
 4. Check the Google Sheet: an **Already Paid** tab and a **Planning to Pay** tab
    have appeared, each holding its own submission.
 5. Click **Export CSV** and confirm the file downloads.

@@ -183,11 +183,6 @@ const TRANSLATIONS = {
     donationAmountPlaceholder: 'Enter amount in rupees',
     donationPaymentDateLabel: 'Payment Date',
     donationPlannedDateLabel: 'Planned Payment Date',
-    donationScreenshotLabel: 'Payment Screenshot',
-    donationOptionalTag: 'Optional',
-    donationScreenshotHint: 'JPG, PNG or WEBP up to 5 MB. You can skip this if you do not have one.',
-    donationScreenshotChoose: 'Choose an image',
-    donationScreenshotRemove: 'Remove',
     donationSubmit: 'Submit Donation Details',
     donationSubmitting: 'Submitting...',
     donationSuccessTitle: 'Thank you for your contribution!',
@@ -208,9 +203,7 @@ const TRANSLATIONS = {
       paymentDateRequired: 'Please select the payment date.',
       paymentDateFuture: 'Payment date cannot be in the future.',
       plannedDateRequired: 'Please select the planned payment date.',
-      plannedDatePast: 'Planned payment date cannot be in the past.',
-      screenshotTooLarge: 'Screenshot must be 5 MB or smaller.',
-      screenshotInvalidType: 'Screenshot must be a JPG, PNG or WEBP image.'
+      plannedDatePast: 'Planned payment date cannot be in the past.'
     },
 
     // Footer
@@ -406,11 +399,6 @@ const TRANSLATIONS = {
     donationAmountPlaceholder: 'రూపాయలలో మొత్తాన్ని నమోదు చేయండి',
     donationPaymentDateLabel: 'చెల్లింపు తేదీ',
     donationPlannedDateLabel: 'అనుకున్న చెల్లింపు తేదీ',
-    donationScreenshotLabel: 'చెల్లింపు స్క్రీన్‌షాట్',
-    donationOptionalTag: 'ఐచ్ఛికం',
-    donationScreenshotHint: 'JPG, PNG లేదా WEBP, 5 MB వరకు. మీ దగ్గర లేకపోతే దీన్ని వదిలేయవచ్చు.',
-    donationScreenshotChoose: 'చిత్రాన్ని ఎంచుకోండి',
-    donationScreenshotRemove: 'తొలగించు',
     donationSubmit: 'దాన వివరాలను సమర్పించండి',
     donationSubmitting: 'సమర్పిస్తోంది...',
     donationSuccessTitle: 'మీ సహకారానికి ధన్యవాదాలు!',
@@ -431,9 +419,7 @@ const TRANSLATIONS = {
       paymentDateRequired: 'దయచేసి చెల్లింపు తేదీని ఎంచుకోండి.',
       paymentDateFuture: 'చెల్లింపు తేదీ భవిష్యత్తులో ఉండకూడదు.',
       plannedDateRequired: 'దయచేసి అనుకున్న చెల్లింపు తేదీని ఎంచుకోండి.',
-      plannedDatePast: 'అనుకున్న చెల్లింపు తేదీ గతంలో ఉండకూడదు.',
-      screenshotTooLarge: 'స్క్రీన్‌షాట్ 5 MB లేదా అంతకంటే తక్కువ ఉండాలి.',
-      screenshotInvalidType: 'స్క్రీన్‌షాట్ JPG, PNG లేదా WEBP చిత్రం అయి ఉండాలి.'
+      plannedDatePast: 'అనుకున్న చెల్లింపు తేదీ గతంలో ఉండకూడదు.'
     },
 
     // Footer

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyAdminAuth } from '@/lib/admin-auth'
-import { DONATION_STORAGE_BUCKET, DONATION_TABLE, storagePathFromPublicUrl } from '@/lib/donation'
+import { DONATION_TABLE } from '@/lib/donation'
 
-// Deletes every donation record and its Payment Screenshot.
+// Deletes every donation record.
 //
 // This is irreversible and wipes the whole table, so it is a separate endpoint
 // from the single-record delete and additionally requires an explicit
@@ -32,10 +32,10 @@ export async function DELETE(request) {
       )
     }
 
-    // Collect the screenshots before the rows go, otherwise their paths are lost.
+    // Counted first so the response can report how many were removed.
     const { data: existing, error: fetchError } = await supabase
       .from(DONATION_TABLE)
-      .select('id, screenshot_url')
+      .select('id')
 
     if (fetchError) {
       console.error('Donations fetch before delete-all error:', fetchError)
@@ -54,21 +54,6 @@ export async function DELETE(request) {
     if (deleteError) {
       console.error('Donations delete-all error:', deleteError)
       return NextResponse.json({ error: 'Failed to delete donations' }, { status: 500 })
-    }
-
-    // Best-effort cleanup: orphaned screenshots must not fail an otherwise
-    // successful delete.
-    const objectPaths = existing
-      .map((donation) => storagePathFromPublicUrl(donation.screenshot_url))
-      .filter(Boolean)
-
-    if (objectPaths.length > 0) {
-      const { error: storageError } = await supabase.storage
-        .from(DONATION_STORAGE_BUCKET)
-        .remove(objectPaths)
-      if (storageError) {
-        console.error('Donation screenshots cleanup error:', storageError)
-      }
     }
 
     return NextResponse.json({

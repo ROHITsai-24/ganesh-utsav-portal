@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,6 +12,8 @@ import UpdatesManager from './UpdatesManager'
 import GameSettingsManager from './GameSettingsManager'
 import DonationsManager from './DonationsManager'
 import BrandLogo from '@/components/common/BrandLogo'
+import YearFilter from './YearFilter'
+import { availableYears, currentYear, matchesYear, YEAR_ALL } from '@/lib/year'
 import { isPhoneEmail, extractPhoneFromEmail } from '@/components/auth/AuthForm'
 import { cn } from '@/lib/utils'
 
@@ -491,7 +494,7 @@ const UsersTable = ({ rows, onDelete }) => {
   })
 }
 
-const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showTime }) => {
+const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showTime, emptyMessage }) => {
   const handleDelete = (gameResultId, username) => {
     if (window.confirm(`Are you sure you want to delete this game result for ${username}? This action cannot be undone.`)) {
       onDelete(gameResultId)
@@ -502,7 +505,7 @@ const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showT
     return (
       <tr>
         <td colSpan={TABLE_CONFIG.leaderboard.headers.length} className="py-4 text-center text-gray-500">
-          {TABLE_CONFIG.leaderboard.emptyMessage}
+          {emptyMessage || TABLE_CONFIG.leaderboard.emptyMessage}
         </td>
       </tr>
     )
@@ -564,10 +567,18 @@ const LeaderboardTable = ({ gameKey, leaderboard, onDelete, showMovesTime, showT
   })
 }
 
-const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValue, onSearchChange, searchPlaceholder }) => {
+const GameLeaderboard = ({ gameKey, rawScores, years, onDelete, onDeleteAll, searchValue, onSearchChange, searchPlaceholder }) => {
+  // Each festival gets its own leaderboard; opens on the current year.
+  const [year, setYear] = useState(currentYear())
+
+  const scoresForYear = useMemo(
+    () => rawScores.filter(s => s.game_key === gameKey && matchesYear(s, year)),
+    [rawScores, gameKey, year]
+  )
+
   const leaderboard = useMemo(() => {
-    const filteredScores = rawScores.filter(s => s.game_key === gameKey)
-    
+    const filteredScores = scoresForYear
+
     // Sort based on game type
     if (gameKey === 'guess') {
       // For guess game: sort by score first, then by time taken (faster is better)
@@ -602,7 +613,7 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValu
         })
         // Removed .slice(0, 20) to show ALL users
     }
-  }, [rawScores, gameKey])
+  }, [scoresForYear, gameKey])
 
   const gameConfig = GAME_CONFIG[gameKey]
   const showMovesTime = gameKey === 'puzzle'
@@ -611,8 +622,8 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValu
   const handleDeleteAll = () => {
     const gameName = gameConfig.title
     const resultCount = rawScores.filter(s => s.game_key === gameKey).length
-    
-    if (window.confirm(`⚠️ DANGER: Are you sure you want to delete ALL ${resultCount} game results for ${gameName}?\n\nThis will permanently remove ALL scores, moves, and time data for this game. This action CANNOT be undone!\n\nType "delete" to confirm.`)) {
+
+    if (window.confirm(`⚠️ DANGER: Are you sure you want to delete ALL ${resultCount} game results for ${gameName}, across EVERY year - not just the year currently shown?\n\nThis will permanently remove ALL scores, moves, and time data for this game. This action CANNOT be undone!\n\nType "delete" to confirm.`)) {
       const confirmation = prompt(`Type "delete" to confirm deletion of all ${gameName} results:`)
       if (confirmation === "delete") {
         onDeleteAll(gameKey)
@@ -627,7 +638,7 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValu
           <div>
             <CardTitle className="text-lg sm:text-xl">{gameConfig.title}</CardTitle>
             <CardDescription className="text-sm">
-              {gameConfig.description} • Total: {rawScores.filter(s => s.game_key === gameKey).length} results
+              {gameConfig.description} • {year === YEAR_ALL ? 'All years' : year}: {scoresForYear.length} results
             </CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -661,6 +672,7 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValu
         </div>
       </CardHeader>
       <CardContent>
+        <YearFilter years={years} value={year} onChange={setYear} className="mb-4" />
         <div className="overflow-x-auto">
           {searchValue && (
             <div className="mb-3 text-sm text-gray-600">
@@ -677,7 +689,14 @@ const GameLeaderboard = ({ gameKey, rawScores, onDelete, onDeleteAll, searchValu
                     : ['#', 'User ID', 'User', 'Score', 'When', 'Actions']
               }
             >
-              <LeaderboardTable gameKey={gameKey} leaderboard={leaderboard} onDelete={onDelete} showMovesTime={showMovesTime} showTime={showTime} />
+              <LeaderboardTable
+                gameKey={gameKey}
+                leaderboard={leaderboard}
+                onDelete={onDelete}
+                showMovesTime={showMovesTime}
+                showTime={showTime}
+                emptyMessage={`No scores yet for ${year === YEAR_ALL ? 'any year' : year}`}
+              />
             </DataTable>
           </div>
         </div>
@@ -712,6 +731,10 @@ export default function AdminDashboard() {
   } = useAdminData()
   const { signOut } = useAuth()
 
+  // Derived from every score, not the search-filtered ones, so searching does
+  // not make years appear and disappear from the filter.
+  const scoreYears = useMemo(() => availableYears(rawScores), [rawScores])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
@@ -739,13 +762,24 @@ export default function AdminDashboard() {
                 <p className="text-sm sm:text-base text-gray-600">Signed in as: {adminEmail}</p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={signOut}
-              className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 text-sm px-4 py-2"
-            >
-              {DASHBOARD_CONFIG.signOut}
-            </Button>
+            <div className="flex gap-2">
+              {/* Visiting the site no longer means signing out first. */}
+              <Link href="/">
+                <Button
+                  variant="outline"
+                  className="bg-white text-gray-700 border-gray-300 hover:bg-gray-100 text-sm px-4 py-2"
+                >
+                  ← Home
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                onClick={signOut}
+                className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 text-sm px-4 py-2"
+              >
+                {DASHBOARD_CONFIG.signOut}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -833,20 +867,22 @@ export default function AdminDashboard() {
 
         {/* Per-game leaderboards */}
         <div className="grid grid-cols-1 gap-6 mb-6 sm:mb-8">
-          <GameLeaderboard 
+          <GameLeaderboard
             key="guess"
-            gameKey="guess" 
-            rawScores={filteredGuessScores} 
+            gameKey="guess"
+            rawScores={filteredGuessScores}
+            years={scoreYears}
             onDelete={deleteGameResult}
             onDeleteAll={deleteAllGameResults}
             searchValue={guessSearch}
             onSearchChange={setGuessSearch}
             searchPlaceholder="Search guess game results..."
           />
-          <GameLeaderboard 
+          <GameLeaderboard
             key="puzzle"
-            gameKey="puzzle" 
-            rawScores={filteredPuzzleScores} 
+            gameKey="puzzle"
+            rawScores={filteredPuzzleScores}
+            years={scoreYears}
             onDelete={deleteGameResult}
             onDeleteAll={deleteAllGameResults}
             searchValue={puzzleSearch}
