@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import {
   DONATION_ERROR_MESSAGES_EN,
@@ -82,17 +82,27 @@ export async function POST(request) {
       )
     }
 
-    // Mirror into the Google Sheet. A failure here is recorded on the row so
-    // the Admin can see it, but the donation itself is already safe.
-    const sheetResult = await appendDonationToSheet(donation)
-    if (sheetResult.synced) {
-      await supabase
-        .from(DONATION_TABLE)
-        .update({ synced_to_sheet: true })
-        .eq('id', donation.id)
-    } else {
-      console.error('Google Sheet sync failed:', sheetResult.error)
-    }
+    // The donation is saved at this point, so the donor is done waiting. The
+    // Google Sheet is a mirror, and an Apps Script round trip takes seconds -
+    // there is no reason to hold the response open for it.
+    //
+    // `after` runs this once the response has been sent, but unlike a bare
+    // un-awaited promise it keeps the serverless function alive until it
+    // settles. Fire-and-forget would be killed the moment the function froze.
+    after(async () => {
+      const sheetResult = await appendDonationToSheet(donation)
+
+      if (sheetResult.synced) {
+        await supabase
+          .from(DONATION_TABLE)
+          .update({ synced_to_sheet: true })
+          .eq('id', donation.id)
+      } else {
+        // The row keeps synced_to_sheet = false, which the Admin panel shows
+        // as a warning and the Retry Sheet Sync action can pick up later.
+        console.error('Google Sheet sync failed:', sheetResult.error)
+      }
+    })
 
     return NextResponse.json({
       success: true,
@@ -103,8 +113,7 @@ export async function POST(request) {
         name: donation.name,
         amount: donation.amount,
         paymentDate: donation.payment_date
-      },
-      sheetSynced: sheetResult.synced
+      }
     })
   } catch (error) {
     console.error('Donation submission error:', error)
