@@ -99,6 +99,12 @@ const TRANSLATIONS = {
     devotion2024: 'Devotion 2024',
     festival2024: 'Festival 2024',
     memories2024: 'Memories 2024',
+
+    ganeshChaturthi2025: 'Ganesh Chaturthi 2025',
+    celebration2025: 'Celebration 2025',
+    devotion2025: 'Devotion 2025',
+    festival2025: 'Festival 2025',
+    memories2025: 'Memories 2025',
       2021: {
         title1: 'Enhanced Decorations',
         desc1: 'More elaborate festival setup',
@@ -315,6 +321,12 @@ const TRANSLATIONS = {
     devotion2024: 'భక్తి 2024',
     festival2024: 'పండుగ 2024',
     memories2024: 'జ్ఞాపకాలు 2024',
+
+    ganeshChaturthi2025: 'గణేష్ చతుర్థి 2025',
+    celebration2025: 'వేడుక 2025',
+    devotion2025: 'భక్తి 2025',
+    festival2025: 'పండుగ 2025',
+    memories2025: 'జ్ఞాపకాలు 2025',
       2021: {
         title1: 'మెరుగైన అలంకారాలు',
         desc1: 'మరింత వివరణాత్మకమైన పండుగ ఏర్పాటు',

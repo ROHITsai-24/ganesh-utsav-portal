@@ -33,8 +33,8 @@ const GAME_CONFIG = {
 }
 
 const JOURNEY_CONFIG = {
-  years: [2020, 2021, 2022, 2023, 2024],
-  defaultYear: 2020,
+  years: [2020, 2021, 2022, 2023, 2024, 2025],
+  defaultYear: 2025,
   // Year-specific content with carousel and gallery images
   yearContent: {
     2020: {
@@ -231,6 +231,61 @@ const JOURNEY_CONFIG = {
         { id: 41, titleKey: 'memories2024', image: '/2024/IMG_7073.JPG' },
         { id: 42, titleKey: 'memories2024', image: '/2024/IMG-20240909-WA0016.jpg' },
         { id: 43, titleKey: 'memories2024', image: '/2024/257610f7-50ae-428a-8e2a-f78983c73a8f.JPG' }
+      ]
+    },
+    2025: {
+      // Carousel images (5 selected highlights from the 2025 gallery)
+      memories: [
+        { id: 1, titleKey: 'ganeshChaturthi2025', descriptionKey: 'desc1', image: '/2025/IMG-20250901-WA0800.jpg.jpeg', gradient: 'from-orange-100 to-amber-100', border: 'border-orange-200', iconColor: 'text-orange-400' },
+        { id: 2, titleKey: 'celebration2025', descriptionKey: 'desc2', image: '/2025/IMG-20250901-WA0517.jpg.jpeg', gradient: 'from-rose-100 to-pink-100', border: 'border-rose-200', iconColor: 'text-rose-400' },
+        { id: 3, titleKey: 'devotion2025', descriptionKey: 'desc3', image: '/2025/IMG-20250901-WA0591.jpg.jpeg', gradient: 'from-emerald-100 to-teal-100', border: 'border-emerald-200', iconColor: 'text-emerald-400' },
+        { id: 4, titleKey: 'festival2025', descriptionKey: 'desc4', image: '/2025/IMG-20250901-WA0885.jpg.jpeg', gradient: 'from-violet-100 to-purple-100', border: 'border-violet-200', iconColor: 'text-violet-400' },
+        { id: 5, titleKey: 'memories2025', descriptionKey: 'desc5', image: '/2025/IMG-20250901-WA0935.jpg.jpeg', gradient: 'from-cyan-100 to-blue-100', border: 'border-cyan-200', iconColor: 'text-cyan-400' }
+      ],
+      // All gallery images for the year (including the selected carousel highlights)
+      gallery: [
+        { id: 1, titleKey: 'ganeshChaturthi2025', image: '/2025/IMG-20250901-WA0800.jpg.jpeg' },
+        { id: 2, titleKey: 'celebration2025', image: '/2025/IMG-20250901-WA0517.jpg.jpeg' },
+        { id: 3, titleKey: 'devotion2025', image: '/2025/IMG-20250901-WA0591.jpg.jpeg' },
+        { id: 4, titleKey: 'festival2025', image: '/2025/IMG-20250901-WA0885.jpg.jpeg' },
+        { id: 5, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0935.jpg.jpeg' },
+        { id: 6, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0077.jpg.jpeg' },
+        { id: 7, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0149.jpg.jpeg' },
+        { id: 8, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0155.jpg.jpeg' },
+        { id: 9, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0159.jpg.jpeg' },
+        { id: 10, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0165.jpg.jpeg' },
+        { id: 11, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0185.jpg.jpeg' },
+        { id: 12, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0283.jpg.jpeg' },
+        { id: 13, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0291.jpg.jpeg' },
+        { id: 14, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0487.jpg.jpeg' },
+        { id: 15, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0493.jpg.jpeg' },
+        { id: 16, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0549.jpg.jpeg' },
+        { id: 17, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0550.jpg.jpeg' },
+        { id: 18, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0589.jpg.jpeg' },
+        { id: 19, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0638.jpg.jpeg' },
+        { id: 20, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0672.jpg.jpeg' },
+        { id: 21, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0684.jpg.jpeg' },
+        { id: 22, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0690.jpg.jpeg' },
+        { id: 23, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0783.jpg.jpeg' },
+        { id: 24, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0876.jpg.jpeg' },
+        { id: 25, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0913.jpg.jpeg' },
+        { id: 26, titleKey: 'memories2025', image: '/2025/IMG-20250901-WA0931.jpg.jpeg' },
+        { id: 27, titleKey: 'memories2025', image: '/2025/177076.jpg.jpeg' },
+        { id: 28, titleKey: 'memories2025', image: '/2025/177077.jpg.jpeg' },
+        { id: 29, titleKey: 'memories2025', image: '/2025/177078.jpg.jpeg' },
+        { id: 30, titleKey: 'memories2025', image: '/2025/177079.jpg.jpeg' },
+        { id: 31, titleKey: 'memories2025', image: '/2025/177080.jpg.jpeg' },
+        { id: 32, titleKey: 'memories2025', image: '/2025/177081.jpg.jpeg' },
+        { id: 33, titleKey: 'memories2025', image: '/2025/177082.jpg.jpeg' },
+        { id: 34, titleKey: 'memories2025', image: '/2025/177083.jpg.jpeg' },
+        { id: 35, titleKey: 'memories2025', image: '/2025/177084.jpg.jpeg' },
+        { id: 36, titleKey: 'memories2025', image: '/2025/177085.jpg.jpeg' },
+        { id: 37, titleKey: 'memories2025', image: '/2025/177086.jpg.jpeg' },
+        { id: 38, titleKey: 'memories2025', image: '/2025/177087.jpg.jpeg' },
+        { id: 39, titleKey: 'memories2025', image: '/2025/177088.jpg.jpeg' },
+        { id: 40, titleKey: 'memories2025', image: '/2025/177089.jpg.jpeg' },
+        { id: 41, titleKey: 'memories2025', image: '/2025/177090.jpg.jpeg' },
+        { id: 42, titleKey: 'memories2025', image: '/2025/177091.jpg.jpeg' }
       ]
     }
   }
