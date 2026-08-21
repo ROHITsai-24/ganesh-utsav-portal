@@ -77,9 +77,9 @@ export default function DonationSection() {
   const [qrSource, setQrSource] = useState(QR_SOURCES.file)
   const [isAndroid, setIsAndroid] = useState(false)
 
-  const { upiId, payeeName, phone } = DONATION_PAYMENT_INFO
+  const { upiId, payeeName, transactionNote, phone } = DONATION_PAYMENT_INFO
   const hasPaymentDetails = Boolean(upiId || phone)
-  const upiPaymentUri = buildUpiPaymentUri({ upiId, payeeName })
+  const upiPaymentUri = buildUpiPaymentUri({ upiId, payeeName, transactionNote })
 
   // NPCI's generic UPI intent opens the Android app chooser, letting the donor
   // select any installed UPI app. Keep the QR for desktop and other devices.

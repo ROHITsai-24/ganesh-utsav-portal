@@ -31,6 +31,8 @@ export const DONATION_LIMITS = {
 export const DONATION_PAYMENT_INFO = {
   upiId: process.env.NEXT_PUBLIC_DONATION_UPI_ID || '',
   payeeName: process.env.NEXT_PUBLIC_DONATION_PAYEE_NAME || 'Unprofessional Players',
+  transactionNote:
+    process.env.NEXT_PUBLIC_DONATION_PAYMENT_NOTE || 'Ganesh Utsav Donation - Unprofessional Players',
   phone: process.env.NEXT_PUBLIC_DONATION_PHONE || '',
   // Preferred: a QR exported from your own payment app. The Donation section
   // falls back to a generated QR (/api/donation/qr) when this file is absent.
@@ -158,8 +160,8 @@ export const validateDonation = (values, options = {}) => {
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-/** Builds the `upi://` payload that a generated donation QR code encodes. */
-export const buildUpiPaymentUri = ({ upiId, payeeName }) => {
+/** Builds the `upi://` payload used by the donation QR code and Android UPI intent. */
+export const buildUpiPaymentUri = ({ upiId, payeeName, transactionNote }) => {
   if (!upiId) return null
 
   // Built by hand rather than with URLSearchParams: `@` is a legal query
@@ -168,6 +170,7 @@ export const buildUpiPaymentUri = ({ upiId, payeeName }) => {
   // some apps render verbatim. encodeURIComponent gives %20 instead.
   const params = [`pa=${String(upiId).trim()}`, 'cu=INR']
   if (payeeName) params.push(`pn=${encodeURIComponent(String(payeeName).trim())}`)
+  if (transactionNote) params.push(`tn=${encodeURIComponent(String(transactionNote).trim())}`)
 
   return `upi://pay?${params.join('&')}`
 }
