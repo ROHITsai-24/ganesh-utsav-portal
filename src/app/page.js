@@ -756,8 +756,6 @@ const GUESS_ARTWORK_PARTICLES = [
 const GuessGameArtwork = () => (
   <div className="guess-artwork relative mx-auto h-72 w-full max-w-sm overflow-hidden md:mx-0 md:h-[25rem] md:max-w-md" aria-hidden="true">
     <div className="guess-artwork__halo absolute inset-[12%] rounded-full" />
-    <div className="guess-artwork__mist guess-artwork__mist--one" />
-    <div className="guess-artwork__mist guess-artwork__mist--two" />
     <div className="absolute inset-0">
       <Image
         src="/guess-ganesha-foreground.png"
