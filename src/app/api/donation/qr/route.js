@@ -22,7 +22,8 @@ const QR_OPTIONS = {
 export async function GET() {
   const upiUri = buildUpiPaymentUri({
     upiId: DONATION_PAYMENT_INFO.upiId,
-    payeeName: DONATION_PAYMENT_INFO.payeeName
+    payeeName: DONATION_PAYMENT_INFO.payeeName,
+    transactionNote: DONATION_PAYMENT_INFO.transactionNote
   })
 
   if (!upiUri) {
