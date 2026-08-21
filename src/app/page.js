@@ -744,15 +744,57 @@ const SingleImageModal = ({ isOpen, onClose, image, currentIndex, totalImages, o
 
 
 
+const GUESS_ARTWORK_PARTICLES = [
+  { left: '12%', top: '24%', size: 3, delay: '0s', duration: '7s' },
+  { left: '24%', top: '68%', size: 4, delay: '-3s', duration: '8s' },
+  { left: '39%', top: '14%', size: 2, delay: '-5s', duration: '6s' },
+  { left: '66%', top: '18%', size: 4, delay: '-2s', duration: '9s' },
+  { left: '78%', top: '52%', size: 3, delay: '-6s', duration: '7s' },
+  { left: '58%', top: '82%', size: 2, delay: '-1s', duration: '8s' }
+]
+
+const GuessGameArtwork = () => (
+  <div className="guess-artwork relative mx-auto h-72 w-full max-w-sm overflow-hidden md:mx-0 md:h-[25rem] md:max-w-md" aria-hidden="true">
+    <div className="guess-artwork__halo absolute inset-[12%] rounded-full" />
+    <div className="guess-artwork__mist guess-artwork__mist--one" />
+    <div className="guess-artwork__mist guess-artwork__mist--two" />
+    <div className="absolute inset-0">
+      <Image
+        src="/guess-ganesha-foreground.png"
+        alt=""
+        fill
+        sizes="(max-width: 767px) 320px, 448px"
+        quality={90}
+        className="object-contain"
+      />
+    </div>
+    {GUESS_ARTWORK_PARTICLES.map((particle, index) => (
+      <span
+        key={index}
+        className="guess-artwork__particle"
+        style={{
+          left: particle.left,
+          top: particle.top,
+          width: particle.size,
+          height: particle.size,
+          animationDelay: particle.delay,
+          animationDuration: particle.duration
+        }}
+      />
+    ))}
+    <span className="guess-artwork__question guess-artwork__question--one">?</span>
+    <span className="guess-artwork__question guess-artwork__question--two">?</span>
+    <span className="guess-artwork__question guess-artwork__question--three">?</span>
+  </div>
+)
+
 // Optimized game card component
 const GameCard = ({ game, className = '' }) => {
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const [imageError, setImageError] = useState(false)
   const { translations } = useLanguage()
 
   return (
     <div className={`max-w-4xl mx-auto ${className}`}>
-      <div className="bg-[#CD5C5C] rounded-3xl p-6 md:p-12 shadow-2xl relative overflow-hidden">
+      <div className="bg-[#DE604E] rounded-3xl p-6 md:p-12 shadow-2xl relative overflow-hidden">
         {/* Game Tag */}
         <div className="inline-block bg-white text-black px-4 py-2 rounded-full text-sm font-medium mb-4 md:mb-8 border border-black">
           {translations[game.tag]}
@@ -762,42 +804,7 @@ const GameCard = ({ game, className = '' }) => {
         <div className="md:flex md:items-center md:gap-12">
           {/* Left Side - Illustration Section */}
           <div className="md:w-1/2 relative mb-4 md:mb-0">
-            {/* Light blob background */}
-            <div className="w-48 md:w-64 h-32 md:h-40 mx-auto md:mx-0 md:ml-8 bg-white/20 rounded-full blur-sm mb-3 md:mb-4"></div>
-            
-            {/* Main illustration with figures */}
-            <div className="relative z-10">
-              {!imageLoaded && !imageError && (
-                <div className="w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 bg-white/20 rounded-2xl flex items-center justify-center image-loading">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                </div>
-              )}
-              
-              {!imageError ? (
-                <img 
-                  src="/OBJECT.svg" 
-                  alt="Guess My Ganesha Game Illustration" 
-                  className={`w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 object-contain transition-opacity duration-300 ${
-                    imageLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageError(true)}
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-48 md:w-80 h-32 md:h-52 mx-auto md:mx-0 bg-white/20 rounded-2xl flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="text-4xl mb-2">🎮</div>
-                    <p className="text-sm">Game Illustration</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Floating question marks - restored to original inline positioning */}
-            <div className="absolute top-0 left-8 md:left-20 text-3xl md:text-4xl text-orange-300 animate-bounce">?</div>
-            <div className="absolute top-4 right-12 md:right-24 text-2xl md:text-3xl text-orange-200 animate-bounce-delay-1">?</div>
-            <div className="absolute bottom-8 left-16 md:left-28 text-xl md:text-2xl text-orange-100 animate-bounce-delay-2">?</div>
+            <GuessGameArtwork />
           </div>
 
           {/* Right Side - Content */}
