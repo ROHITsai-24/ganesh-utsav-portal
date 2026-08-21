@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { DONATION_PAYMENT_INFO, formatPhone } from '@/lib/donation'
+import { buildUpiPaymentUri, DONATION_PAYMENT_INFO, formatPhone } from '@/lib/donation'
 import DonationForm from './DonationForm'
 
 // QR resolution order:
@@ -75,9 +75,17 @@ const DonationStep = ({ number, children }) => (
 export default function DonationSection() {
   const { translations } = useLanguage()
   const [qrSource, setQrSource] = useState(QR_SOURCES.file)
+  const [isAndroid, setIsAndroid] = useState(false)
 
-  const { upiId, phone } = DONATION_PAYMENT_INFO
+  const { upiId, payeeName, phone } = DONATION_PAYMENT_INFO
   const hasPaymentDetails = Boolean(upiId || phone)
+  const upiPaymentUri = buildUpiPaymentUri({ upiId, payeeName })
+
+  // NPCI's generic UPI intent opens the Android app chooser, letting the donor
+  // select any installed UPI app. Keep the QR for desktop and other devices.
+  useEffect(() => {
+    setIsAndroid(/Android/i.test(navigator.userAgent))
+  }, [])
 
   // Fall back one step at a time as each QR source fails to load.
   const handleQrError = useCallback(() => {
@@ -153,6 +161,19 @@ export default function DonationSection() {
             {hasPaymentDetails ? (
               <div className="space-y-3">
                 {upiId && <CopyableDetail label={translations.donationUpiIdLabel} value={upiId} />}
+                {isAndroid && upiPaymentUri && (
+                  <a
+                    href={upiPaymentUri}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-center text-sm font-bold text-[#8B4513] shadow-lg transition-transform hover:scale-[1.02] hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#A0522D]"
+                    aria-label={translations.donationOpenUpiApp}
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="6" y="2.5" width="12" height="19" rx="2" />
+                      <path strokeLinecap="round" d="M10 18.5h4M9 6.5h6" />
+                    </svg>
+                    <span>{translations.donationOpenUpiApp}</span>
+                  </a>
+                )}
                 {phone && (
                   <CopyableDetail
                     label={translations.donationNumberLabel}
@@ -165,6 +186,12 @@ export default function DonationSection() {
               <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white/90">
                 {translations.donationDetailsUnavailable}
               </div>
+            )}
+
+            {isAndroid && upiPaymentUri && (
+              <p className="mt-2 text-center text-xs leading-relaxed text-white/75">
+                {translations.donationOpenUpiAppHint}
+              </p>
             )}
 
             {/* Instructions */}
