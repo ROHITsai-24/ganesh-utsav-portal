@@ -719,16 +719,14 @@ const SingleImageModal = ({ isOpen, onClose, image, currentIndex, totalImages, o
       </button>
 
       {/* Image container */}
-      <div className="relative w-full h-full flex items-center justify-center p-4">
-        <div className="max-w-4xl max-h-full">
-          <img
-            src={image.image}
-            alt={translations[image.titleKey] || 'Gallery Image'}
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-            // Prevent zoom on double-tap for mobile
-            style={{ touchAction: 'manipulation' }}
-          />
-        </div>
+      <div className="relative flex h-full w-full items-center justify-center p-4">
+        <img
+          src={image.image}
+          alt={translations[image.titleKey] || 'Gallery Image'}
+          className="block h-auto w-auto max-h-[calc(100vh-2rem)] max-w-[calc(100vw-2rem)] object-contain rounded-lg shadow-2xl md:max-w-[calc(100vw-8rem)]"
+          // Prevent zoom on double-tap for mobile
+          style={{ touchAction: 'manipulation' }}
+        />
       </div>
 
       {/* Image info */}
